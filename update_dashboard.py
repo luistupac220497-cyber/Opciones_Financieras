@@ -1386,9 +1386,12 @@ def run_once():
 
 
 def main():
-    if not HTML_FILE.exists():
-        HTML_FILE.write_text(html_template(), encoding="utf-8")
+    HTML_FILE.write_text(html_template(), encoding="utf-8")
+    state, history = run_once()
+    print(f"{state['updatedAt']} | {state['decisionLabel']} | Score {state['score']} | Historial {len(history)}")
 
+if __name__ == "__main__":
+    main()
     server = None
     if SERVE_LOCAL:
         server = start_server()
