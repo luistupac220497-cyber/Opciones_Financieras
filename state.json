@@ -1,0 +1,116 @@
+{
+  "ticker": "QQQ",
+  "updatedAt": "2026-06-30 08:36:05",
+  "decision": "esperar confirmación",
+  "decisionLabel": "🟡 Esperar confirmación",
+  "decisionTone": "yellow",
+  "score": 53.0,
+  "semaforo": "🟡 Riesgo medio",
+  "horaNy": "2026-06-30 03:36",
+  "precio": 724.02,
+  "precioFuente": "Después del cierre",
+  "shortStrike": 733,
+  "longStrike": 734.0,
+  "breakeven": 733.1,
+  "vwap": 718.0,
+  "vwapBias": "Muy por encima",
+  "tp": 0.04,
+  "stop": 0.2,
+  "riesgoMax": 90.0,
+  "reasons": [
+    {
+      "tone": "warn",
+      "title": "Precio fuera de horario regular",
+      "text": "Precio fuera de horario regular (-3)"
+    },
+    {
+      "tone": "ok",
+      "title": "Precio por encima del VWAP",
+      "text": "Precio por encima del VWAP"
+    },
+    {
+      "tone": "warn",
+      "title": "Premarket: falta validación de apertura",
+      "text": "Premarket: falta validación de apertura (-3)"
+    },
+    {
+      "tone": "warn",
+      "title": "Liquidez insuficiente",
+      "text": "Liquidez insuficiente (-10)"
+    },
+    {
+      "tone": "warn",
+      "title": "Decisión",
+      "text": "Precio fuera de horario regular"
+    }
+  ],
+  "alerts": [
+    {
+      "tone": "warn",
+      "title": "Bid-ask amplio en la short call.",
+      "text": "Bid-ask amplio en la short call."
+    },
+    {
+      "tone": "warn",
+      "title": "Bid-ask amplio en la long call.",
+      "text": "Bid-ask amplio en la long call."
+    },
+    {
+      "tone": "warn",
+      "title": "Open interest bajo en la short call.",
+      "text": "Open interest bajo en la short call."
+    },
+    {
+      "tone": "warn",
+      "title": "Open interest bajo en la long call.",
+      "text": "Open interest bajo en la long call."
+    },
+    {
+      "tone": "warn",
+      "title": "Setup en contra de posible trend day alcista",
+      "text": "Setup en contra de posible trend day alcista"
+    }
+  ],
+  "context": [
+    [
+      "Tramo",
+      "Premarket"
+    ],
+    [
+      "Régimen",
+      "Trend Alcista"
+    ],
+    [
+      "Premarket high",
+      "$716.70"
+    ],
+    [
+      "Premarket low",
+      "$705.99"
+    ]
+  ],
+  "events": [
+    [
+      "Próximo macro",
+      "ISM Manufacturero"
+    ],
+    [
+      "Impacto",
+      "Alto"
+    ],
+    [
+      "Mag 7 cercano",
+      "N/D"
+    ],
+    [
+      "Días",
+      "N/D"
+    ]
+  ],
+  "contextMap": {
+    "Tramo": "Premarket",
+    "Régimen": "Trend Alcista",
+    "Premarket high": "$716.70",
+    "Premarket low": "$705.99"
+  }
+}
