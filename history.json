@@ -290,5 +290,19 @@
     "vwap": 718.0,
     "regimen": "Rango",
     "tramo": "Premarket"
+  },
+  {
+    "timestamp": "2026-06-30 12:20:41 UTC",
+    "ticker": "QQQ",
+    "decision": "esperar confirmación",
+    "decisionLabel": "🟡 Esperar confirmación",
+    "score": 68.0,
+    "semaforo": "🟡 Riesgo medio",
+    "precio": 724.98,
+    "shortStrike": 734,
+    "longStrike": 735.0,
+    "vwap": 718.0,
+    "regimen": "Rango",
+    "tramo": "Premarket"
   }
 ]
