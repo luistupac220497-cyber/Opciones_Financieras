@@ -17,6 +17,8 @@ STOP_MULTIPLIER = 2.0
 MAX_HISTORY_ITEMS = 200
 
 NY_TZ = ZoneInfo("America/New_York")
+LOCAL_TZ = ZoneInfo("Europe/Lisbon")
+
 BASE_DIR = Path.cwd()
 HTML_FILE = BASE_DIR / "index.html"
 STATE_FILE = BASE_DIR / "state.json"
@@ -45,6 +47,9 @@ def fmt_price(x):
 
 def now_ny():
     return datetime.now(NY_TZ)
+
+def now_local():
+    return datetime.now(LOCAL_TZ)
 
 def load_json(path, default):
     if not path.exists():
@@ -237,7 +242,7 @@ def html_template():
     <table>
       <thead>
         <tr>
-          <th>Hora</th>
+          <th>Hora local</th>
           <th>Decisión</th>
           <th>Score</th>
           <th>Precio</th>
@@ -258,7 +263,7 @@ async function load(){
   d.className = 'pill ' + s.decisionTone;
 
   document.getElementById('updated').textContent =
-    'Actualizado local: ' + s.updatedAt + ' | Hora NY: ' + s.horaNy;
+    'Hora local: ' + s.updatedAt + ' | Hora NY: ' + s.horaNy;
 
   document.getElementById('score').textContent = s.score;
   document.getElementById('precio').textContent = (s.precio ?? 'N/D');
@@ -332,7 +337,7 @@ def build_state():
 
     return {
         "ticker": TICKER,
-        "updatedAt": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S"),
+        "updatedAt": now_local().strftime("%Y-%m-%d %H:%M:%S"),
         "horaNy": now_ny().strftime("%Y-%m-%d %H:%M"),
         "decision": decision,
         "decisionLabel": label,
@@ -349,12 +354,18 @@ def build_state():
 
 def append_history(state):
     history = load_json(HISTORY_FILE, [])
-    history.append({
+    row = {
         "timestamp": state["updatedAt"],
         "decisionLabel": state["decisionLabel"],
         "score": state["score"],
         "precio": state["precio"]
-    })
+    }
+
+    if history and history[-1]["timestamp"] == row["timestamp"]:
+        history[-1] = row
+    else:
+        history.append(row)
+
     history = history[-MAX_HISTORY_ITEMS:]
     save_json(HISTORY_FILE, history)
     return history
