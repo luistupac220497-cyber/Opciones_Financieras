@@ -430,5 +430,19 @@
     "vwap": 726.77,
     "regimen": "Indefinido",
     "tramo": "Apertura"
+  },
+  {
+    "timestamp": "2026-06-30 13:50:36 UTC",
+    "ticker": "QQQ",
+    "decision": "no entraría",
+    "decisionLabel": "🔴 No entraría",
+    "score": 75.0,
+    "semaforo": "🟢 Riesgo controlado",
+    "precio": 728.11,
+    "shortStrike": 737,
+    "longStrike": 738.0,
+    "vwap": 727.14,
+    "regimen": "Rango",
+    "tramo": "Apertura"
   }
 ]

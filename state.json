@@ -1,18 +1,18 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-06-30 13:40:43 UTC",
+  "updatedAt": "2026-06-30 13:50:36 UTC",
   "decision": "no entraría",
   "decisionLabel": "🔴 No entraría",
   "decisionTone": "red",
-  "score": 69.0,
-  "semaforo": "🟡 Riesgo medio",
-  "horaNy": "2026-06-30 09:40",
-  "precio": 728.38,
+  "score": 75.0,
+  "semaforo": "🟢 Riesgo controlado",
+  "horaNy": "2026-06-30 09:50",
+  "precio": 728.11,
   "precioFuente": "Durante la sesión",
   "shortStrike": 737,
   "longStrike": 738.0,
   "breakeven": 737.1,
-  "vwap": 726.77,
+  "vwap": 727.14,
   "vwapBias": "Cerca del VWAP",
   "tp": 0.04,
   "stop": 0.2,
@@ -20,8 +20,8 @@
   "reasons": [
     {
       "tone": "ok",
-      "title": "Precio ligeramente por encima del VWAP",
-      "text": "Precio ligeramente por encima del VWAP"
+      "title": "Cerca del VWAP",
+      "text": "Cerca del VWAP"
     },
     {
       "tone": "warn",
@@ -34,9 +34,9 @@
       "text": "Liquidez insuficiente (-10)"
     },
     {
-      "tone": "danger",
-      "title": "Régimen no claro",
-      "text": "Régimen no claro"
+      "tone": "ok",
+      "title": "Rango favorable para premium",
+      "text": "Rango favorable para premium (+3)"
     },
     {
       "tone": "warn",
@@ -63,7 +63,7 @@
     ],
     [
       "Régimen",
-      "Indefinido"
+      "Rango"
     ],
     [
       "Premarket high",
@@ -94,7 +94,7 @@
   ],
   "contextMap": {
     "Tramo": "Apertura",
-    "Régimen": "Indefinido",
+    "Régimen": "Rango",
     "Premarket high": "$728.30",
     "Premarket low": "$714.67"
   }
