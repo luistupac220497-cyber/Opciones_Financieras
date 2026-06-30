@@ -262,5 +262,19 @@
     "decisionLabel": "Entraría",
     "score": 100,
     "precio": 724.08
+  },
+  {
+    "timestamp": "2026-06-30 12:15:56 UTC",
+    "ticker": "QQQ",
+    "decision": "esperar confirmación",
+    "decisionLabel": "🟡 Esperar confirmación",
+    "score": 63.0,
+    "semaforo": "🟡 Riesgo medio",
+    "precio": 725.21,
+    "shortStrike": 734,
+    "longStrike": 735.0,
+    "vwap": 718.0,
+    "regimen": "Rango",
+    "tramo": "Premarket"
   }
 ]
