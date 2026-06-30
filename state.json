@@ -1,23 +1,28 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-06-30 13:30:51 UTC",
-  "decision": "esperar confirmación",
-  "decisionLabel": "🟡 Esperar confirmación",
-  "decisionTone": "yellow",
-  "score": 72.0,
+  "updatedAt": "2026-06-30 13:40:43 UTC",
+  "decision": "no entraría",
+  "decisionLabel": "🔴 No entraría",
+  "decisionTone": "red",
+  "score": 69.0,
   "semaforo": "🟡 Riesgo medio",
-  "horaNy": "2026-06-30 09:30",
-  "precio": 725.06,
+  "horaNy": "2026-06-30 09:40",
+  "precio": 728.38,
   "precioFuente": "Durante la sesión",
-  "shortStrike": 733,
-  "longStrike": 734.0,
-  "breakeven": 733.1,
-  "vwap": null,
-  "vwapBias": "VWAP regular no disponible",
+  "shortStrike": 737,
+  "longStrike": 738.0,
+  "breakeven": 737.1,
+  "vwap": 726.77,
+  "vwapBias": "Cerca del VWAP",
   "tp": 0.04,
   "stop": 0.2,
   "riesgoMax": 90.0,
   "reasons": [
+    {
+      "tone": "ok",
+      "title": "Precio ligeramente por encima del VWAP",
+      "text": "Precio ligeramente por encima del VWAP"
+    },
     {
       "tone": "warn",
       "title": "Apertura: volatilidad inicial alta",
@@ -25,23 +30,18 @@
     },
     {
       "tone": "warn",
-      "title": "Primeros 5 minutos",
-      "text": "Primeros 5 minutos (-5)"
-    },
-    {
-      "tone": "warn",
       "title": "Liquidez insuficiente",
       "text": "Liquidez insuficiente (-10)"
     },
     {
-      "tone": "ok",
-      "title": "Régimen bajista",
-      "text": "Régimen bajista (+5)"
+      "tone": "danger",
+      "title": "Régimen no claro",
+      "text": "Régimen no claro"
     },
     {
       "tone": "warn",
       "title": "Decisión",
-      "text": "Primeros 5 minutos"
+      "text": "Liquidez insuficiente"
     }
   ],
   "alerts": [
@@ -63,7 +63,7 @@
     ],
     [
       "Régimen",
-      "Trend Bajista"
+      "Indefinido"
     ],
     [
       "Premarket high",
@@ -94,7 +94,7 @@
   ],
   "contextMap": {
     "Tramo": "Apertura",
-    "Régimen": "Trend Bajista",
+    "Régimen": "Indefinido",
     "Premarket high": "$728.30",
     "Premarket low": "$714.67"
   }

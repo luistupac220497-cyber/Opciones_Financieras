@@ -416,5 +416,19 @@
     "vwap": null,
     "regimen": "Trend Bajista",
     "tramo": "Apertura"
+  },
+  {
+    "timestamp": "2026-06-30 13:40:43 UTC",
+    "ticker": "QQQ",
+    "decision": "no entraría",
+    "decisionLabel": "🔴 No entraría",
+    "score": 69.0,
+    "semaforo": "🟡 Riesgo medio",
+    "precio": 728.38,
+    "shortStrike": 737,
+    "longStrike": 738.0,
+    "vwap": 726.77,
+    "regimen": "Indefinido",
+    "tramo": "Apertura"
   }
 ]
