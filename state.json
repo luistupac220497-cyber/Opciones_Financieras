@@ -1,37 +1,32 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-06-30 13:20:42 UTC",
+  "updatedAt": "2026-06-30 13:30:51 UTC",
   "decision": "esperar confirmación",
   "decisionLabel": "🟡 Esperar confirmación",
   "decisionTone": "yellow",
-  "score": 68.0,
+  "score": 72.0,
   "semaforo": "🟡 Riesgo medio",
-  "horaNy": "2026-06-30 09:20",
-  "precio": 723.55,
-  "precioFuente": "Antes de la apertura",
-  "shortStrike": 732,
-  "longStrike": 733.0,
-  "breakeven": 732.1,
-  "vwap": 718.0,
-  "vwapBias": "Muy por encima",
+  "horaNy": "2026-06-30 09:30",
+  "precio": 725.06,
+  "precioFuente": "Durante la sesión",
+  "shortStrike": 733,
+  "longStrike": 734.0,
+  "breakeven": 733.1,
+  "vwap": null,
+  "vwapBias": "VWAP regular no disponible",
   "tp": 0.04,
   "stop": 0.2,
   "riesgoMax": 90.0,
   "reasons": [
     {
       "tone": "warn",
-      "title": "Precio fuera de horario regular",
-      "text": "Precio fuera de horario regular (-3)"
-    },
-    {
-      "tone": "ok",
-      "title": "Precio por encima del VWAP",
-      "text": "Precio por encima del VWAP"
+      "title": "Apertura: volatilidad inicial alta",
+      "text": "Apertura: volatilidad inicial alta (-6)"
     },
     {
       "tone": "warn",
-      "title": "Premarket: falta validación de apertura",
-      "text": "Premarket: falta validación de apertura (-3)"
+      "title": "Primeros 5 minutos",
+      "text": "Primeros 5 minutos (-5)"
     },
     {
       "tone": "warn",
@@ -39,9 +34,14 @@
       "text": "Liquidez insuficiente (-10)"
     },
     {
+      "tone": "ok",
+      "title": "Régimen bajista",
+      "text": "Régimen bajista (+5)"
+    },
+    {
       "tone": "warn",
       "title": "Decisión",
-      "text": "Precio fuera de horario regular"
+      "text": "Primeros 5 minutos"
     }
   ],
   "alerts": [
@@ -59,11 +59,11 @@
   "context": [
     [
       "Tramo",
-      "Premarket"
+      "Apertura"
     ],
     [
       "Régimen",
-      "Rango"
+      "Trend Bajista"
     ],
     [
       "Premarket high",
@@ -93,8 +93,8 @@
     ]
   ],
   "contextMap": {
-    "Tramo": "Premarket",
-    "Régimen": "Rango",
+    "Tramo": "Apertura",
+    "Régimen": "Trend Bajista",
     "Premarket high": "$728.30",
     "Premarket low": "$714.67"
   }
