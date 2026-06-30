@@ -90,7 +90,7 @@
     <table>
       <thead>
         <tr>
-          <th>Hora</th>
+          <th>Hora local</th>
           <th>Decisión</th>
           <th>Score</th>
           <th>Precio</th>
@@ -111,7 +111,7 @@ async function load(){
   d.className = 'pill ' + s.decisionTone;
 
   document.getElementById('updated').textContent =
-    'Actualizado local: ' + s.updatedAt + ' | Hora NY: ' + s.horaNy;
+    'Hora local: ' + s.updatedAt + ' | Hora NY: ' + s.horaNy;
 
   document.getElementById('score').textContent = s.score;
   document.getElementById('precio').textContent = (s.precio ?? 'N/D');
