@@ -1,7 +1,7 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-06-30 12:17:56",
-  "horaNy": "2026-06-30 07:17",
+  "updatedAt": "2026-06-30 12:30:40",
+  "horaNy": "2026-06-30 07:30",
   "decision": "entraría",
   "decisionLabel": "Entraría",
   "decisionTone": "green",
@@ -35,9 +35,9 @@
   ],
   "macro": [
     "ISM Manufacturero · 1d 2h · alto",
-    "Nóminas no agrícolas (NFP) · 2d 1h · alto",
-    "Tasa de desempleo · 2d 1h · alto",
-    "IPC (CPI) · 15d 1h · alto",
-    "IPP (PPI) · 16d 1h · alto"
+    "Nóminas no agrícolas (NFP) · 2d 0h · alto",
+    "Tasa de desempleo · 2d 0h · alto",
+    "IPC (CPI) · 15d 0h · alto",
+    "IPP (PPI) · 16d 0h · alto"
   ]
 }
