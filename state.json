@@ -1,17 +1,17 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-06-30 12:50:37 UTC",
+  "updatedAt": "2026-06-30 13:00:52 UTC",
   "decision": "esperar confirmación",
   "decisionLabel": "🟡 Esperar confirmación",
   "decisionTone": "yellow",
   "score": 68.0,
   "semaforo": "🟡 Riesgo medio",
-  "horaNy": "2026-06-30 08:50",
-  "precio": 724.07,
+  "horaNy": "2026-06-30 09:00",
+  "precio": 723.43,
   "precioFuente": "Antes de la apertura",
-  "shortStrike": 733,
-  "longStrike": 734.0,
-  "breakeven": 733.1,
+  "shortStrike": 732,
+  "longStrike": 733.0,
+  "breakeven": 732.1,
   "vwap": 718.0,
   "vwapBias": "Muy por encima",
   "tp": 0.04,
@@ -71,7 +71,7 @@
     ],
     [
       "Premarket low",
-      "$723.21"
+      "$714.67"
     ]
   ],
   "events": [
@@ -96,6 +96,6 @@
     "Tramo": "Premarket",
     "Régimen": "Rango",
     "Premarket high": "$728.30",
-    "Premarket low": "$723.21"
+    "Premarket low": "$714.67"
   }
 }
