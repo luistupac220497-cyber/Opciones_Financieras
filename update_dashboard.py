@@ -1,13 +1,8 @@
 import math
 import json
-import time
-import socket
-import threading
-import webbrowser
 from pathlib import Path
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 import numpy as np
 import pandas as pd
@@ -15,45 +10,41 @@ import yfinance as yf
 
 
 # =========================
-# CONFIG
+# QQQ BEAR CALL SPREAD - CRON VERSION
+# Ejecución única:
+# - calcula señal
+# - actualiza state.json
+# - actualiza history.json
+# - genera html
+# - termina
 # =========================
-TICKER = "QQQ"
 
+# -------- CONFIG --------
+TICKER = "QQQ"
 LOOKBACK_DAYS = 20
 SPREAD_WIDTH = 1.0
-
 NET_CREDIT = 0.10
+
 TARGET_CREDIT_MIN = 0.08
 TARGET_CREDIT_MAX = 0.12
 
 TAKE_PROFIT_PCT = 0.60
 STOP_MULTIPLIER = 2.0
-
 WAIT_MINUTES_AFTER_OPEN = 5
 OPENING_RANGE_MINUTES = 15
 POWER_HOUR_STRICT = True
 
-AUTO_REFRESH_SECONDS = 60
 MAX_HISTORY_ITEMS = 200
-
-SERVE_LOCAL = True
-PORT = 8000
-OPEN_BROWSER = True
 
 USE_FIXED_STRIKE_MARGIN = True
 FIXED_STRIKE_MARGIN_PCT = 0.0185
 
-MIN_SHORT_OI = 800
-MIN_LONG_OI = 200
-MAX_SHORT_BIDASK_PCT = 12
-MAX_LONG_BIDASK_PCT = 20
-
 MIN_SCORE_TO_ALLOW = 75
 MIN_SCORE_TO_WAIT = 50
 
-BLOCK_IF_MACRO_WITHIN_HOURS = 24
-BLOCK_IF_EARNINGS_TODAY = True
-BLOCK_IF_EARNINGS_TOMORROW = False
+SERVE_LOCAL = False
+OPEN_BROWSER = False
+PORT = 8000
 
 MAG7 = {
     "AAPL": "Apple",
@@ -68,18 +59,18 @@ MAG7 = {
 NY_TZ = ZoneInfo("America/New_York")
 
 MACRO_EVENTS = [
-    {"evento": "ISM Manufacturero", "datetimeny": "2026-07-01 10:00", "impacto": "alto"},
-    {"evento": "Nóminas no agrícolas NFP", "datetimeny": "2026-07-02 08:30", "impacto": "alto"},
-    {"evento": "Tasa de desempleo", "datetimeny": "2026-07-02 08:30", "impacto": "alto"},
-    {"evento": "IPC CPI", "datetimeny": "2026-07-15 08:30", "impacto": "alto"},
-    {"evento": "IPP PPI", "datetimeny": "2026-07-16 08:30", "impacto": "alto"},
-    {"evento": "Ventas minoristas", "datetimeny": "2026-07-16 08:30", "impacto": "medio"},
-    {"evento": "PIB", "datetimeny": "2026-07-30 08:30", "impacto": "alto"},
-    {"evento": "PCE subyacente", "datetimeny": "2026-07-31 08:30", "impacto": "alto"},
-    {"evento": "Decisión FOMC tipos de interés", "datetimeny": "2026-07-29 14:00", "impacto": "alto"},
+    {"evento": "ISM Manufacturero", "datetime_ny": "2026-07-01 10:00", "impacto": "alto"},
+    {"evento": "Nóminas no agrícolas (NFP)", "datetime_ny": "2026-07-02 08:30", "impacto": "alto"},
+    {"evento": "Tasa de desempleo", "datetime_ny": "2026-07-02 08:30", "impacto": "alto"},
+    {"evento": "IPC (CPI)", "datetime_ny": "2026-07-15 08:30", "impacto": "alto"},
+    {"evento": "IPP (PPI)", "datetime_ny": "2026-07-16 08:30", "impacto": "alto"},
+    {"evento": "Ventas minoristas", "datetime_ny": "2026-07-16 08:30", "impacto": "medio"},
+    {"evento": "PIB", "datetime_ny": "2026-07-30 08:30", "impacto": "alto"},
+    {"evento": "PCE subyacente", "datetime_ny": "2026-07-31 08:30", "impacto": "alto"},
+    {"evento": "Decisión FOMC / tipos de interés", "datetime_ny": "2026-07-29 14:00", "impacto": "alto"},
 ]
 
-BASE_DIR = Path.cwd() / "qqqdashboardv3"
+BASE_DIR = Path.cwd() / "qqq_dashboard_cron"
 BASE_DIR.mkdir(exist_ok=True)
 
 HTML_FILE = BASE_DIR / "qqq-spread-dashboard.html"
@@ -87,9 +78,7 @@ STATE_FILE = BASE_DIR / "state.json"
 HISTORY_FILE = BASE_DIR / "history.json"
 
 
-# =========================
-# HELPERS
-# =========================
+# -------- HELPERS --------
 def es_valor_numerico_real(x):
     try:
         return x is not None and not pd.isna(x) and np.isfinite(float(x))
@@ -97,12 +86,16 @@ def es_valor_numerico_real(x):
         return False
 
 
-def fmt_price(x, default="ND"):
-    return f"{float(x):.2f}" if es_valor_numerico_real(x) else default
+def fmt_price(x, default="N/D"):
+    if es_valor_numerico_real(x):
+        return f"${float(x):.2f}"
+    return default
 
 
-def fmt_pct(x, default="ND"):
-    return f"{float(x):.2f}%" if es_valor_numerico_real(x) else default
+def fmt_pct(x, default="N/D"):
+    if es_valor_numerico_real(x):
+        return f"{float(x):.2f}%"
+    return default
 
 
 def normalizar_fecha(x):
@@ -141,7 +134,7 @@ def traducir_momento(texto):
         return "Después del cierre"
     if "time not supplied" in t:
         return "Hora no especificada"
-    if t in {"as", "during market hours", "during market", "market hours"}:
+    if t in ["tas", "during market hours", "during market", "market hours"]:
         return "Durante la sesión"
     return str(texto)
 
@@ -162,7 +155,7 @@ def clasificar_sesion_por_hora_ny(dt_ny):
     close_mins = 16 * 60
     if mins < open_mins:
         return "Antes de la apertura"
-    if mins < close_mins:
+    if mins <= close_mins:
         return "Durante la sesión"
     return "Después del cierre"
 
@@ -173,53 +166,53 @@ def clasificar_tramo_horario_ny(dt_ny):
     noon_mins = 12 * 60
     power_hour_start = 15 * 60
     close_mins = 16 * 60
+
     if mins < open_mins:
         return "premarket"
     if open_mins <= mins < noon_mins:
         return "apertura"
     if noon_mins <= mins < power_hour_start:
-        return "mediasesion"
-    if power_hour_start <= mins < close_mins:
-        return "powerhour"
-    return "afterhours"
+        return "media_sesion"
+    if power_hour_start <= mins <= close_mins:
+        return "power_hour"
+    return "after_hours"
 
 
 def minutos_desde_apertura(dt_ny):
     open_dt = dt_ny.replace(hour=9, minute=30, second=0, microsecond=0)
-    return int((dt_ny - open_dt).total_seconds() / 60)
+    return int((dt_ny - open_dt).total_seconds() // 60)
 
 
 def tone_from_decision(decision):
-    if decision == "entrara":
-        return "green", "Entraría"
-    if decision == "esperar confirmacion":
-        return "yellow", "Esperar confirmación"
-    if decision == "entrara con cautela":
-        return "yellow", "Entraría con cautela"
-    return "red", "No entraría"
+    if decision == "entraría":
+        return "green", "🟢 Entraría"
+    if decision == "esperar confirmación":
+        return "yellow", "🟡 Esperar confirmación"
+    if decision == "entraría con cautela":
+        return "yellow", "🟡 Entraría con cautela"
+    return "red", "🔴 No entraría"
 
 
-def load_json(path_file, default):
-    if not path_file.exists():
+def load_json_file(path, default):
+    if not path.exists():
         return default
     try:
-        with open(path_file, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return default
 
 
-def save_json(path_file, data):
-    with open(path_file, "w", encoding="utf-8") as f:
+def save_json_file(path, data):
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-# =========================
-# DATOS
-# =========================
+# -------- DATOS --------
 def get_price_and_source(ticker_symbol):
     t = yf.Ticker(ticker_symbol)
     info = t.info
+
     current_price = None
     price_source = None
 
@@ -256,7 +249,6 @@ def descargar_historico_base(ticker_symbol):
         hist.columns = hist.columns.get_level_values(0)
     hist = hist[["Open", "High", "Low", "Close"]].dropna().copy()
     hist["up_move_pct"] = (hist["High"] - hist["Open"]) / hist["Open"]
-    hist["range_pct"] = (hist["High"] - hist["Low"]) / hist["Open"]
     return hist
 
 
@@ -267,7 +259,6 @@ def calcular_buffers(hist, lookback_days):
         "median_up_move": float(recent["up_move_pct"].median()),
         "p75_up_move": float(recent["up_move_pct"].quantile(0.75)),
         "p80_up_move": float(recent["up_move_pct"].quantile(0.80)),
-        "avg_range_pct": float(recent["range_pct"].mean()),
     }
 
 
@@ -297,15 +288,14 @@ def descargar_intradia_1m(ticker_symbol):
         return None
 
 
-# =========================
-# EARNINGS / MACRO
-# =========================
+# -------- EARNINGS --------
 def obtener_proximo_earnings(ticker_symbol):
     try:
         t = yf.Ticker(ticker_symbol)
         df = t.get_earnings_dates(limit=8)
         if df is None or df.empty:
             return None
+
         df = df.copy()
         if not isinstance(df.index, pd.RangeIndex):
             df = df.reset_index()
@@ -344,6 +334,7 @@ def obtener_proximo_earnings(ticker_symbol):
         row = df.iloc[0]
         fecha = normalizar_fecha(row["fecha"])
         momento_raw = row[time_col] if time_col in df.columns else None
+
         return {
             "ticker": ticker_symbol,
             "fecha": fecha,
@@ -369,22 +360,26 @@ def obtener_earnings_mag7(mag7_map):
     return sorted(earnings_list, key=lambda x: 9999 if x["dias"] is None else x["dias"])
 
 
+# -------- MACRO --------
 def preparar_eventos_macro(eventos):
     ahora_ny = get_now_ny()
     salida = []
+
     for ev in eventos:
         try:
-            dt_ny = datetime.strptime(ev["datetimeny"], "%Y-%m-%d %H:%M").replace(tzinfo=NY_TZ)
+            dt_ny = datetime.strptime(ev["datetime_ny"], "%Y-%m-%d %H:%M").replace(tzinfo=NY_TZ)
             delta = dt_ny - ahora_ny
             total_horas = delta.total_seconds() / 3600
             if total_horas < 0:
                 continue
+
             dias = int(total_horas // 24)
             horas = int(total_horas % 24)
+
             salida.append({
                 "evento": ev["evento"],
                 "impacto": ev.get("impacto", "medio"),
-                "datetimeny": dt_ny,
+                "datetime_ny": dt_ny,
                 "fecha": dt_ny.date(),
                 "dias": dias,
                 "horas": horas,
@@ -393,12 +388,11 @@ def preparar_eventos_macro(eventos):
             })
         except Exception:
             continue
-    return sorted(salida, key=lambda x: x["datetimeny"])
+
+    return sorted(salida, key=lambda x: x["datetime_ny"])
 
 
-# =========================
-# VWAP
-# =========================
+# -------- VWAP --------
 def calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=True):
     try:
         df = yf.download(
@@ -453,32 +447,27 @@ def clasificar_bias_vwap(dist_pct):
 
 def penalizacion_vwap(dist_pct):
     if not es_valor_numerico_real(dist_pct):
-        return 0, None, None
+        return 0, None
     if dist_pct > 1.00:
-        return -12, "Precio muy extendido por encima del VWAP", "Impulso intradía fuerte"
+        return -12, "Precio muy extendido por encima del VWAP"
     if dist_pct > 0.50:
-        return -7, "Precio por encima del VWAP", None
+        return -7, "Precio por encima del VWAP"
     if dist_pct > 0.20:
-        return -3, "Precio ligeramente por encima del VWAP", None
+        return -3, "Precio ligeramente por encima del VWAP"
     if dist_pct < -1.00:
-        return 5, "Precio claramente por debajo del VWAP", None
+        return 5, "Precio claramente por debajo del VWAP"
     if dist_pct < -0.50:
-        return 3, "Precio por debajo del VWAP", None
-    return 0, "Cerca del VWAP", None
+        return 3, "Precio por debajo del VWAP"
+    return 0, "Cerca del VWAP"
 
 
 def construir_contexto_vwap(ticker_symbol, current_price):
     vwap_rth_data = calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=False)
-    vwap_ext_data = calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=True)
 
     ctx = {
         "vwap_rth": None,
-        "vwap_ext": None,
         "dist_to_vwap_rth_pct": None,
-        "dist_to_vwap_ext_pct": None,
         "vwap_rth_bias": "VWAP regular no disponible",
-        "vwap_ext_bias": "VWAP extended no disponible",
-        "vwap_gap_pct": None,
     }
 
     if vwap_rth_data is not None:
@@ -488,156 +477,30 @@ def construir_contexto_vwap(ticker_symbol, current_price):
             ctx["dist_to_vwap_rth_pct"] = diff / ctx["vwap_rth"] * 100
             ctx["vwap_rth_bias"] = clasificar_bias_vwap(ctx["dist_to_vwap_rth_pct"])
 
-    if vwap_ext_data is not None:
-        ctx["vwap_ext"] = vwap_ext_data["vwap"]
-        diff = current_price - ctx["vwap_ext"]
-        if ctx["vwap_ext"] != 0:
-            ctx["dist_to_vwap_ext_pct"] = diff / ctx["vwap_ext"] * 100
-            ctx["vwap_ext_bias"] = clasificar_bias_vwap(ctx["dist_to_vwap_ext_pct"])
-
-    if es_valor_numerico_real(ctx["vwap_rth"]) and es_valor_numerico_real(ctx["vwap_ext"]) and ctx["vwap_rth"] != 0:
-        ctx["vwap_gap_pct"] = (ctx["vwap_ext"] - ctx["vwap_rth"]) / ctx["vwap_rth"] * 100
-
     return ctx
 
 
-# =========================
-# OPCIONES / LIQUIDEZ
-# =========================
-def obtener_expiracion_cercana(ticker_obj):
-    try:
-        expirations = ticker_obj.options
-        if not expirations:
-            return None
-        return expirations[0]
-    except Exception:
-        return None
-
-
-def obtener_option_chain_snapshot(ticker_symbol, expiration):
-    try:
-        t = yf.Ticker(ticker_symbol)
-        chain = t.option_chain(expiration)
-        return {"calls": chain.calls.copy(), "puts": chain.puts.copy()}
-    except Exception:
-        return None
-
-
-def buscar_strike_mas_cercano(df, strike_target):
-    if df is None or df.empty or "strike" not in df.columns:
-        return None
-    tmp = df.copy()
-    tmp["strike_diff"] = (tmp["strike"] - strike_target).abs()
-    tmp = tmp.sort_values("strike_diff")
-    if tmp.empty:
-        return None
-    return tmp.iloc[0].to_dict()
-
-
-def bidask_pct(bid, ask):
-    mid = (bid + ask) / 2
-    if mid <= 0:
-        return None
-    return (ask - bid) / mid * 100
-
-
-def evaluar_liquidez_call_spread(calls_df, short_strike, long_strike):
-    resultado = {"liquidez_ok": None, "quotes_validas": None, "motivos": []}
-
-    short_leg = buscar_strike_mas_cercano(calls_df, short_strike)
-    long_leg = buscar_strike_mas_cercano(calls_df, long_strike)
-
-    if short_leg is None or long_leg is None:
-        resultado["liquidez_ok"] = False
-        resultado["quotes_validas"] = False
-        resultado["motivos"].append("No se pudieron localizar las patas del spread.")
-        return resultado
-
-    def get_num(d, key):
-        v = d.get(key, np.nan)
-        return None if pd.isna(v) else float(v)
-
-    short_bid = get_num(short_leg, "bid")
-    short_ask = get_num(short_leg, "ask")
-    long_bid = get_num(long_leg, "bid")
-    long_ask = get_num(long_leg, "ask")
-
-    quotes_validas = all(v is not None for v in [short_bid, short_ask, long_bid, long_ask])
-    resultado["quotes_validas"] = quotes_validas
-
-    short_oi = short_leg.get("openInterest", 0)
-    long_oi = long_leg.get("openInterest", 0)
-    short_oi = 0 if pd.isna(short_oi) else int(short_oi)
-    long_oi = 0 if pd.isna(long_oi) else int(long_oi)
-
-    resultado["short_oi"] = short_oi
-    resultado["long_oi"] = long_oi
-    resultado["short_bid"] = short_bid
-    resultado["short_ask"] = short_ask
-    resultado["long_bid"] = long_bid
-    resultado["long_ask"] = long_ask
-    resultado["short_spread_pct"] = bidask_pct(short_bid, short_ask) if quotes_validas else None
-    resultado["long_spread_pct"] = bidask_pct(long_bid, long_ask) if quotes_validas else None
-
-    if not quotes_validas:
-        resultado["liquidez_ok"] = False
-        resultado["motivos"].append("Quotes no válidas o no disponibles.")
-        return resultado
-
-    liquidez_ok = True
-
-    if resultado["short_spread_pct"] is None or resultado["short_spread_pct"] > MAX_SHORT_BIDASK_PCT:
-        liquidez_ok = False
-        resultado["motivos"].append("Bid-ask amplio en la short call.")
-
-    if resultado["long_spread_pct"] is None or resultado["long_spread_pct"] > MAX_LONG_BIDASK_PCT:
-        liquidez_ok = False
-        resultado["motivos"].append("Bid-ask amplio en la long call.")
-
-    if short_oi < MIN_SHORT_OI:
-        liquidez_ok = False
-        resultado["motivos"].append(f"Open interest bajo en la short call ({short_oi} < {MIN_SHORT_OI}).")
-
-    if long_oi < MIN_LONG_OI:
-        liquidez_ok = False
-        resultado["motivos"].append(f"Open interest bajo en la long call ({long_oi} < {MIN_LONG_OI}).")
-
-    resultado["liquidez_ok"] = liquidez_ok
-    return resultado
-
-
-# =========================
-# CONTEXTO INTRADIA
-# =========================
+# -------- INTRADIA --------
 def clasificar_regimen_dia(current_price, premarket_high, premarket_low, opening_range_high, opening_range_low):
     if es_valor_numerico_real(opening_range_high) and current_price > opening_range_high:
-        return "trendalcista"
+        return "trend_alcista"
     if es_valor_numerico_real(opening_range_low) and current_price < opening_range_low:
-        return "trendbajista"
+        return "trend_bajista"
     if es_valor_numerico_real(premarket_high) and es_valor_numerico_real(premarket_low):
         if premarket_low <= current_price <= premarket_high:
             return "rango"
     return "indefinido"
 
 
-def construir_contexto_intradia(ticker_symbol, ticker_obj, short_strike, long_strike, current_price):
+def construir_contexto_intradia(ticker_symbol, current_price):
     now_ny = get_now_ny()
     tramo = clasificar_tramo_horario_ny(now_ny)
-
-    expiration = obtener_expiracion_cercana(ticker_obj)
-    liquidity = None
-    if expiration is not None:
-        chain_snapshot = obtener_option_chain_snapshot(ticker_symbol, expiration)
-        if chain_snapshot is not None:
-            liquidity = evaluar_liquidez_call_spread(chain_snapshot["calls"], short_strike, long_strike)
-
     intraday_1m = descargar_intradia_1m(ticker_symbol)
 
     premarket_high = None
     premarket_low = None
     opening_range_high = None
     opening_range_low = None
-    opening_range_ready = False
 
     if intraday_1m is not None and not intraday_1m.empty:
         premarket = intraday_1m.between_time("04:00", "09:29")
@@ -654,9 +517,6 @@ def construir_contexto_intradia(ticker_symbol, ticker_obj, short_strike, long_st
                 opening_range_high = float(orb["High"].max())
                 opening_range_low = float(orb["Low"].min())
 
-        if minutos_desde_apertura(now_ny) >= OPENING_RANGE_MINUTES:
-            opening_range_ready = opening_range_high is not None and opening_range_low is not None
-
     regime = clasificar_regimen_dia(
         current_price,
         premarket_high,
@@ -668,20 +528,15 @@ def construir_contexto_intradia(ticker_symbol, ticker_obj, short_strike, long_st
     return {
         "now_ny": now_ny,
         "tramo_horario": tramo,
-        "expiration": expiration,
-        "liquidity": liquidity,
         "premarket_high": premarket_high,
         "premarket_low": premarket_low,
         "opening_range_high": opening_range_high,
         "opening_range_low": opening_range_low,
-        "opening_range_ready": opening_range_ready,
         "regime": regime,
     }
 
 
-# =========================
-# SETUP
-# =========================
+# -------- TRADE SETUP --------
 def construir_setup_trade(current_price, buffer_pct):
     fixed_margin_price = current_price * (1 + FIXED_STRIKE_MARGIN_PCT) if USE_FIXED_STRIKE_MARGIN else None
     hist_buffer_price = current_price * (1 + buffer_pct)
@@ -690,19 +545,19 @@ def construir_setup_trade(current_price, buffer_pct):
 
     short_strike = math.ceil(projected_upside_price)
     long_strike = short_strike + SPREAD_WIDTH
-
     credit_ok = TARGET_CREDIT_MIN <= NET_CREDIT <= TARGET_CREDIT_MAX
+
     breakeven = short_strike + NET_CREDIT
     dist_to_short = short_strike - current_price
     dist_to_breakeven = breakeven - current_price
     dist_to_short_pct = (dist_to_short / current_price * 100) if current_price else None
 
     if credit_ok and current_price < short_strike:
-        decision = "entrara"
+        decision = "entraría"
     elif credit_ok and current_price < breakeven:
-        decision = "entrara con cautela"
+        decision = "entraría con cautela"
     else:
-        decision = "no entrara"
+        decision = "no entraría"
 
     return {
         "buffer_pct_usado": max(buffer_pct, FIXED_STRIKE_MARGIN_PCT if USE_FIXED_STRIKE_MARGIN else 0),
@@ -721,9 +576,7 @@ def construir_setup_trade(current_price, buffer_pct):
     }
 
 
-# =========================
-# SCORE / DECISION
-# =========================
+# -------- SCORE --------
 def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx, earnings_list, macro_events, intraday_ctx):
     score = 100.0
     motivos = []
@@ -749,12 +602,10 @@ def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx,
         score -= 8
         motivos.append("Margen al short limitado (-8)")
 
-    pen, txt, alerta = penalizacion_vwap(vwap_ctx["dist_to_vwap_rth_pct"])
+    pen, txt = penalizacion_vwap(vwap_ctx["dist_to_vwap_rth_pct"])
     score += pen
     if txt:
         motivos.append(txt)
-    if alerta:
-        alertas.append(alerta)
 
     tramo = intraday_ctx["tramo_horario"]
     if tramo == "premarket":
@@ -766,53 +617,30 @@ def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx,
         if 0 <= minutos_desde_apertura(intraday_ctx["now_ny"]) < WAIT_MINUTES_AFTER_OPEN:
             score -= 5
             motivos.append(f"Primeros {WAIT_MINUTES_AFTER_OPEN} minutos (-5)")
-    elif tramo == "mediasesion":
+    elif tramo == "media_sesion":
         score += 2
         motivos.append("Media sesión más estable (+2)")
-    elif tramo == "powerhour":
+    elif tramo == "power_hour":
         score -= 10
         motivos.append("Power hour más agresiva (-10)")
         if POWER_HOUR_STRICT and trade_setup["dist_to_short"] <= 3:
             score -= 8
             motivos.append("Power hour con strike cercano (-8)")
-    elif tramo == "afterhours":
+    elif tramo == "after_hours":
         score -= 12
         motivos.append("Fuera de mercado regular (-12)")
 
-    liq = intraday_ctx.get("liquidity")
-    if liq is None:
-        score -= 5
-        motivos.append("Sin validación de liquidez (-5)")
-        alertas.append("No hay validación de liquidez")
-    else:
-        if liq.get("quotes_validas") is False:
-            if tramo == "premarket":
-                motivos.append("Quotes aún no válidas en premarket")
-            else:
-                score -= 6
-                motivos.append("Quotes no válidas (-6)")
-                alertas.append("Bid-ask no utilizable")
-        elif liq.get("liquidez_ok") is False:
-            score -= 12
-            motivos.append("Liquidez insuficiente (-12)")
-            alertas.extend(liq.get("motivos", []))
-        elif liq.get("liquidez_ok") is True:
-            score += 3
-            motivos.append("Liquidez aceptable (+3)")
-
     regime = intraday_ctx["regime"]
-    if regime == "trendalcista":
+    if regime == "trend_alcista":
         score -= 15
         motivos.append("Régimen alcista intradía (-15)")
         alertas.append("Setup en contra de posible trend day alcista")
-    elif regime == "trendbajista":
+    elif regime == "trend_bajista":
         score += 5
         motivos.append("Régimen bajista (+5)")
     elif regime == "rango":
         score += 3
         motivos.append("Rango favorable para premium (+3)")
-    else:
-        motivos.append("Régimen no claro")
 
     if not trade_setup["credit_ok"]:
         score -= 10
@@ -825,14 +653,11 @@ def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx,
             score -= 35
             motivos.append(f"Resultados hoy durante sesión de {e['empresa']} (-35)")
             alertas.append(f"Resultados hoy de {e['empresa']}")
-            if BLOCK_IF_EARNINGS_TODAY:
-                bloqueo = True
+            bloqueo = True
         elif e["dias"] == 1:
             score -= 10
             motivos.append(f"Resultados mañana de {e['empresa']} (-10)")
             alertas.append(f"Resultados mañana de {e['empresa']}")
-            if BLOCK_IF_EARNINGS_TOMORROW:
-                bloqueo = True
         elif e["dias"] == 2:
             score -= 5
             motivos.append(f"Resultados en 2 días de {e['empresa']} (-5)")
@@ -844,12 +669,7 @@ def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx,
         momento = ev["momento"]
 
         if momento == "Durante la sesión":
-            if th <= 6:
-                score -= 35
-                motivos.append(f"{ev['evento']} durante sesión en <6h (-35)")
-                alertas.append(f"{ev['evento']} en {ev['dias']}d {ev['horas']}h")
-                bloqueo = True
-            elif th <= BLOCK_IF_MACRO_WITHIN_HOURS:
+            if th <= 24:
                 score -= 25
                 motivos.append(f"{ev['evento']} durante sesión en <24h (-25)")
                 alertas.append(f"{ev['evento']} en {ev['dias']}d {ev['horas']}h")
@@ -888,53 +708,33 @@ def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx,
 
 def ajustar_decision_final(trade_setup, intraday_ctx, score_data, price_source):
     decision = trade_setup["decision_base"]
-    motivos = []
-
-    tramo = intraday_ctx["tramo_horario"]
-    liq = intraday_ctx.get("liquidity")
-
-    quotes_validas = None if liq is None else liq.get("quotes_validas")
-    liquidez_ok = None if liq is None else liq.get("liquidez_ok")
 
     if score_data["bloqueo_operativa"]:
-        return "no entrara", ["Bloqueo operativo activado"]
+        return "no entraría", ["Bloqueo operativo activado"]
 
-    if tramo == "premarket":
-        if quotes_validas is False:
-            return "esperar confirmacion", ["Premarket sin quotes válidas"]
-        if price_source in {"preMarketPrice", "postMarketPrice"}:
-            return "esperar confirmacion", ["Precio fuera de horario regular"]
-
-    if tramo == "apertura":
-        mins = minutos_desde_apertura(intraday_ctx["now_ny"])
-        if 0 <= mins < WAIT_MINUTES_AFTER_OPEN:
-            return "esperar confirmacion", [f"Esperar primeros {WAIT_MINUTES_AFTER_OPEN} minutos"]
-
-    if liquidez_ok is False:
-        return "no entrara", ["Liquidez insuficiente"]
-
-    if intraday_ctx["regime"] == "trendalcista":
-        return "no entrara", ["Régimen alcista en contra del bear call spread"]
+    if intraday_ctx["regime"] == "trend_alcista":
+        return "no entraría", ["Régimen alcista en contra del bear call spread"]
 
     if trade_setup["dist_to_short"] <= 1:
-        return "no entrara", ["Short strike demasiado cerca"]
+        return "no entraría", ["Short strike demasiado cerca"]
 
     if score_data["score"] < MIN_SCORE_TO_WAIT:
-        return "no entrara", ["Score insuficiente"]
+        return "no entraría", ["Score insuficiente"]
 
     if MIN_SCORE_TO_WAIT <= score_data["score"] < MIN_SCORE_TO_ALLOW:
-        if decision == "entrara":
-            return "esperar confirmacion", ["Score medio"]
-        return decision, motivos
+        if decision == "entraría":
+            return "esperar confirmación", ["Score medio"]
+        return decision, []
 
-    return decision, motivos
+    if price_source in {"preMarketPrice", "postMarketPrice"} and decision == "entraría":
+        return "esperar confirmación", ["Precio fuera de horario regular"]
+
+    return decision, []
 
 
-# =========================
-# HISTORICO
-# =========================
+# -------- HISTÓRICO --------
 def append_history(state):
-    history = load_json(HISTORY_FILE, [])
+    history = load_json_file(HISTORY_FILE, [])
     row = {
         "timestamp": state["updatedAt"],
         "ticker": state["ticker"],
@@ -956,32 +756,23 @@ def append_history(state):
         history.append(row)
 
     history = history[-MAX_HISTORY_ITEMS:]
-    save_json(HISTORY_FILE, history)
+    save_json_file(HISTORY_FILE, history)
     return history
 
 
-# =========================
-# STATE
-# =========================
+# -------- STATE --------
 def construir_state():
     current_price, price_source, ticker_obj = get_price_and_source(TICKER)
 
     hist = descargar_historico_base(TICKER)
     buffers = calcular_buffers(hist, LOOKBACK_DAYS)
-
     buffer_pct = buffers["p75_up_move"]
-    trade_setup = construir_setup_trade(current_price, buffer_pct)
 
+    trade_setup = construir_setup_trade(current_price, buffer_pct)
     vwap_ctx = construir_contexto_vwap(TICKER, current_price)
     earnings_list = obtener_earnings_mag7(MAG7)
     macro_events = preparar_eventos_macro(MACRO_EVENTS)
-    intraday_ctx = construir_contexto_intradia(
-        TICKER,
-        ticker_obj,
-        trade_setup["short_strike"],
-        trade_setup["long_strike"],
-        current_price
-    )
+    intraday_ctx = construir_contexto_intradia(TICKER, current_price)
 
     score_data = calcular_score_operativo(
         price_source,
@@ -1003,13 +794,12 @@ def construir_state():
     tone, decision_label = tone_from_decision(decision_final)
 
     reasons = []
-    base_reasons = score_data["motivos_score"][:5]
-    for txt in base_reasons:
-        low = txt.lower()
+    for txt in score_data["motivos_score"][:5]:
         r_tone = "ok"
-        if "-" in txt or "riesgo" in low or "bloqueo" in low or "insuficiente" in low:
+        low = txt.lower()
+        if "-" in txt or "fuera" in low or "cerca" in low:
             r_tone = "warn"
-        if "-35" in txt or "-40" in txt or "no " in low:
+        if "(-35)" in txt or "(-40)" in txt or "bloqueo" in low:
             r_tone = "danger"
         reasons.append({"tone": r_tone, "title": txt.split(" (")[0], "text": txt})
 
@@ -1027,7 +817,7 @@ def construir_state():
     for a in score_data["alertas"][:5]:
         tone_a = "warn"
         low = a.lower()
-        if "bloqueo" in low or "hoy" in low or "muy cerca" in low:
+        if "hoy" in low or "alcista" in low:
             tone_a = "danger"
         alerts.append({"tone": tone_a, "title": a, "text": a})
 
@@ -1040,7 +830,6 @@ def construir_state():
 
     prox_macro = macro_events[0] if macro_events else None
     prox_earn = earnings_list[0] if earnings_list else None
-    liq = intraday_ctx.get("liquidity")
 
     context_rows = [
         ("Tramo", intraday_ctx["tramo_horario"].replace("_", " ").title()),
@@ -1049,15 +838,13 @@ def construir_state():
         ("Premarket low", fmt_price(intraday_ctx["premarket_low"])),
         ("Distancia short", fmt_price(trade_setup["dist_to_short"])),
         ("Distancia short %", fmt_pct(trade_setup["dist_to_short_pct"])),
-        ("OI short", str(liq.get("short_oi")) if liq and liq.get("short_oi") is not None else "ND"),
-        ("OI long", str(liq.get("long_oi")) if liq and liq.get("long_oi") is not None else "ND"),
     ]
 
     events_rows = [
-        ("Próximo macro", prox_macro["evento"] if prox_macro else "ND"),
-        ("Impacto", prox_macro["impacto"].title() if prox_macro else "ND"),
-        ("Mag 7 cercano", prox_earn["empresa"] if prox_earn else "ND"),
-        ("Días", str(prox_earn["dias"]) if prox_earn and prox_earn["dias"] is not None else "ND"),
+        ("Próximo macro", prox_macro["evento"] if prox_macro else "N/D"),
+        ("Impacto", prox_macro["impacto"].title() if prox_macro else "N/D"),
+        ("Mag 7 cercano", prox_earn["empresa"] if prox_earn else "N/D"),
+        ("Días", str(prox_earn["dias"]) if prox_earn and prox_earn["dias"] is not None else "N/D"),
     ]
 
     state = {
@@ -1089,70 +876,38 @@ def construir_state():
     return state
 
 
-# =========================
-# HTML
-# =========================
+# -------- HTML --------
 def html_template():
     return """<!doctype html>
 <html lang="es" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>qqq-spread-dashboard-v3</title>
+  <title>qqq-spread-dashboard</title>
   <style>
-    :root, [data-theme="light"]{
+    :root, [data-theme="light"] {
       --font-body: Inter, system-ui, sans-serif;
-      --text-xs: clamp(.75rem, .7rem + .25vw, .875rem);
-      --text-sm: clamp(.875rem, .8rem + .35vw, 1rem);
-      --text-base: clamp(1rem, .95rem + .25vw, 1.125rem);
-      --text-lg: clamp(1.125rem, 1rem + .75vw, 1.5rem);
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
       --text-xl: clamp(1.45rem, 1.1rem + 1.3vw, 2rem);
-      --space-1: .25rem;
-      --space-2: .5rem;
-      --space-3: .75rem;
-      --space-4: 1rem;
-      --space-5: 1.25rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
-      --color-bg: #f7f6f2;
-      --color-surface: #f9f8f5;
-      --color-surface-2: #fbfbf9;
-      --color-border: #d4d1ca;
-      --color-text: #28251d;
-      --color-text-muted: #6d6b66;
-      --color-text-faint: #9d9b95;
-      --color-primary: #01696f;
-      --color-primary-highlight: #dbe9e6;
-      --color-success: #437a22;
-      --color-success-highlight: #dfe9d7;
-      --color-warning: #a86b12;
-      --color-warning-highlight: #f0e3c8;
-      --color-error: #a13544;
-      --color-error-highlight: #efd8dc;
-      --radius-md: .85rem;
-      --radius-lg: 1.15rem;
-      --radius-full: 9999px;
-      --shadow-sm: 0 1px 2px rgba(27,24,18,.05), 0 10px 30px rgba(27,24,18,.04);
-      --shadow-md: 0 3px 10px rgba(27,24,18,.06), 0 16px 44px rgba(27,24,18,.08);
+      --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem;
+      --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9; --color-border:#d4d1ca;
+      --color-text:#28251d; --color-text-muted:#6d6b66; --color-text-faint:#9d9b95;
+      --color-primary:#01696f; --color-primary-highlight:#dbe9e6; --color-success:#437a22; --color-success-highlight:#dfe9d7;
+      --color-warning:#a86b12; --color-warning-highlight:#f0e3c8; --color-error:#a13544; --color-error-highlight:#efd8dc;
+      --radius-md:.85rem; --radius-lg:1.15rem; --radius-full:9999px;
+      --shadow-sm:0 1px 2px rgba(27,24,18,.05), 0 10px 30px rgba(27,24,18,.04);
+      --shadow-md:0 3px 10px rgba(27,24,18,.06), 0 16px 44px rgba(27,24,18,.08);
     }
-    [data-theme="dark"]{
-      --color-bg: #171614;
-      --color-surface: #1c1b19;
-      --color-surface-2: #22211f;
-      --color-border: #393836;
-      --color-text: #ebe8e1;
-      --color-text-muted: #b4b0a7;
-      --color-text-faint: #848077;
-      --color-primary: #4f98a3;
-      --color-primary-highlight: #25373a;
-      --color-success: #7db35c;
-      --color-success-highlight: #263022;
-      --color-warning: #efb347;
-      --color-warning-highlight: #3d3220;
-      --color-error: #df6d7a;
-      --color-error-highlight: #3d252a;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,.18), 0 10px 30px rgba(0,0,0,.18);
-      --shadow-md: 0 3px 10px rgba(0,0,0,.25), 0 16px 44px rgba(0,0,0,.24);
+    [data-theme="dark"] {
+      --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#22211f; --color-border:#393836;
+      --color-text:#ebe8e1; --color-text-muted:#b4b0a7; --color-text-faint:#848077;
+      --color-primary:#4f98a3; --color-primary-highlight:#25373a; --color-success:#7db35c; --color-success-highlight:#263022;
+      --color-warning:#efb347; --color-warning-highlight:#3d3220; --color-error:#df6d7a; --color-error-highlight:#3d252a;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.18), 0 10px 30px rgba(0,0,0,.18);
+      --shadow-md:0 3px 10px rgba(0,0,0,.25), 0 16px 44px rgba(0,0,0,.24);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);line-height:1.5;color:var(--color-text);background:var(--color-bg)}
@@ -1185,9 +940,7 @@ def html_template():
     .summary-list,.alerts-list{display:grid;gap:.7rem}
     .summary-item,.alerts-item{display:flex;gap:.75rem;align-items:flex-start;padding:.85rem .95rem;border-radius:var(--radius-md);background:var(--color-surface-2);border:1px solid rgba(0,0,0,.06)}
     .dot{width:.65rem;height:.65rem;border-radius:999px;flex:0 0 auto;margin-top:.4rem;background:var(--color-primary)}
-    .dot.warn{background:var(--color-warning)}
-    .dot.danger{background:var(--color-error)}
-    .dot.ok{background:var(--color-success)}
+    .dot.warn{background:var(--color-warning)} .dot.danger{background:var(--color-error)} .dot.ok{background:var(--color-success)}
     .summary-item strong,.alerts-item strong{display:block;font-size:var(--text-sm)}
     .summary-item span,.alerts-item span{color:var(--color-text-muted);font-size:var(--text-sm)}
     .mini-table{display:grid;gap:.65rem}
@@ -1219,8 +972,8 @@ def html_template():
           </svg>
         </div>
         <div>
-          <h1>QQQ Spread Dashboard V3</h1>
-          <p>Resumen móvil con histórico y autoactualización</p>
+          <h1>QQQ Spread Dashboard</h1>
+          <p>Versión cron-job, una ejecución por disparo</p>
         </div>
       </div>
       <button class="theme-toggle" data-theme-toggle aria-label="Cambiar tema"></button>
@@ -1231,7 +984,7 @@ def html_template():
         <div class="eyebrow">Modelo operativo resumido</div>
         <div class="hero-main">
           <h2 id="resumen-title">Cargando...</h2>
-          <p>Vista compacta para revisar la decisión, niveles clave y alertas desde cualquier dispositivo de tu red local.</p>
+          <p>Vista compacta para revisar la decisión, niveles clave y alertas generadas por cada ejecución del cron-job.</p>
         </div>
         <div class="decision-row">
           <div>
@@ -1320,12 +1073,12 @@ def html_template():
         </article>
       </section>
 
-      <p class="footer-note">La página se refresca sola leyendo state.json e history.json. Para verla en móvil, usa la URL local que imprime el script.</p>
+      <p class="footer-note">Esta versión no necesita bucle continuo: cada ejecución del cron-job reescribe state.json e history.json.</p>
     </main>
   </div>
 
   <script>
-    function safe(v, fallback="ND"){ return (v===null || v===undefined || v==="") ? fallback : v; }
+    function safe(v, fallback="N/D"){ return (v===null || v===undefined || v==="") ? fallback : v; }
 
     function renderList(targetId, items){
       const target = document.getElementById(targetId);
@@ -1369,16 +1122,16 @@ def html_template():
       document.getElementById("hora-ny").textContent = safe(state.horaNy);
       document.getElementById("score").textContent = safe(state.score, "100");
       document.getElementById("semaforo").textContent = safe(state.semaforo);
-      document.getElementById("precio").textContent = state.precio != null ? Number(state.precio).toFixed(2) : "ND";
+      document.getElementById("precio").textContent = state.precio != null ? Number(state.precio).toFixed(2) : "N/D";
       document.getElementById("precio-fuente").textContent = safe(state.precioFuente);
       document.getElementById("strikes").textContent = `${safe(state.shortStrike)}/${safe(state.longStrike)}`;
-      document.getElementById("break-even").textContent = state.breakeven != null ? `Break-even ${Number(state.breakeven).toFixed(2)}` : "Break-even ND";
-      document.getElementById("vwap").textContent = state.vwap != null ? Number(state.vwap).toFixed(2) : "ND";
+      document.getElementById("break-even").textContent = state.breakeven != null ? `Break-even ${Number(state.breakeven).toFixed(2)}` : "Break-even N/D";
+      document.getElementById("vwap").textContent = state.vwap != null ? Number(state.vwap).toFixed(2) : "N/D";
       document.getElementById("vwap-bias").textContent = safe(state.vwapBias);
       const salidaTxt = `${Number(state.tp).toFixed(2)} / ${Number(state.stop).toFixed(2)}`;
       document.getElementById("salida").textContent = salidaTxt;
       document.getElementById("salida-riesgo").textContent = salidaTxt;
-      document.getElementById("riesgo-max").textContent = state.riesgoMax != null ? Number(state.riesgoMax).toFixed(2) : "ND";
+      document.getElementById("riesgo-max").textContent = state.riesgoMax != null ? Number(state.riesgoMax).toFixed(2) : "N/D";
       document.getElementById("ticker-name").textContent = safe(state.ticker);
 
       renderList("reasons-list", state.reasons || []);
@@ -1403,8 +1156,8 @@ def html_template():
           item.timestamp || "",
           item.decisionLabel || item.decision || "",
           String(item.score ?? ""),
-          item.precio != null ? Number(item.precio).toFixed(2) : "ND",
-          item.tramo || "ND"
+          item.precio != null ? Number(item.precio).toFixed(2) : "N/D",
+          item.tramo || "N/D"
         ]);
         renderHistory(recent);
       }catch(e){
@@ -1433,52 +1186,20 @@ def html_template():
     })();
 
     loadAll();
-    setInterval(loadAll, 15000);
   </script>
 </body>
 </html>"""
 
 
-# =========================
-# SERVER
-# =========================
-class SilentHandler(SimpleHTTPRequestHandler):
-    def log_message(self, format, *args):
-        pass
-
-
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = "127.0.0.1"
-    finally:
-        s.close()
-    return ip
-
-
-def start_server():
-    os_cwd = Path.cwd()
-    if os_cwd != BASE_DIR:
-        import os
-        os.chdir(BASE_DIR)
-    httpd = ThreadingHTTPServer(("0.0.0.0", PORT), SilentHandler)
-    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
-    thread.start()
-    return httpd
-
-
-# =========================
-# RUN
-# =========================
+# -------- WRITE FILES --------
 def write_dashboard_assets(state):
-    save_json(STATE_FILE, state)
+    save_json_file(STATE_FILE, state)
     history = append_history(state)
-    save_json(HISTORY_FILE, history)
+    save_json_file(HISTORY_FILE, history)
+
     if not HTML_FILE.exists():
         HTML_FILE.write_text(html_template(), encoding="utf-8")
+
     return history
 
 
@@ -1492,40 +1213,16 @@ def main():
     if not HTML_FILE.exists():
         HTML_FILE.write_text(html_template(), encoding="utf-8")
 
-    server = None
-    if SERVE_LOCAL:
-        server = start_server()
-        local_ip = get_local_ip()
-        local_url = f"http://127.0.0.1:{PORT}/qqq-spread-dashboard.html"
-        lan_url = f"http://{local_ip}:{PORT}/qqq-spread-dashboard.html"
-        print("Dashboard local:", local_url)
-        print("Dashboard móvil/tablet:", lan_url)
+    state, history = run_once()
 
-        if OPEN_BROWSER:
-            try:
-                webbrowser.open(local_url)
-            except Exception:
-                pass
-
-    print("Iniciando bucle de actualización...")
-    print(f"Frecuencia: cada {AUTO_REFRESH_SECONDS} segundos")
-    print("Pulsa Ctrl+C para detener.")
-
-    try:
-        while True:
-            try:
-                state, history = run_once()
-                print(
-                    f"[{state['updatedAt']}] {state['decisionLabel']} | "
-                    f"Score {state['score']} | Precio {state['precio']} | Histórico {len(history)}"
-                )
-            except Exception as e:
-                print("Error en actualización:", e)
-            time.sleep(AUTO_REFRESH_SECONDS)
-    except KeyboardInterrupt:
-        print("Detenido por usuario.")
-        if server:
-            server.shutdown()
+    print("Actualización completada.")
+    print("HTML:", HTML_FILE)
+    print("STATE:", STATE_FILE)
+    print("HISTORY:", HISTORY_FILE)
+    print(
+        f"[{state['updatedAt']}] {state['decisionLabel']} | "
+        f"Score {state['score']} | Precio {state['precio']} | Histórico {len(history)}"
+    )
 
 
 if __name__ == "__main__":
