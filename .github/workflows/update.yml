@@ -1,4 +1,4 @@
-name: Update dashboard data
+name: Update dashboard
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "7/10 * * * *"
+    - cron: "*/10 * * * *"
 
 jobs:
   update:
@@ -14,6 +14,10 @@ jobs:
 
     permissions:
       contents: write
+
+    env:
+      TZ: Europe/Lisbon
+      PYTHONUTF8: "1"
 
     steps:
       - name: Checkout repository
