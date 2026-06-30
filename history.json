@@ -208,5 +208,11 @@
     "vwap": 718.0,
     "regimen": "Trend Alcista",
     "tramo": "Premarket"
+  },
+  {
+    "timestamp": "2026-06-30 09:00:47",
+    "decisionLabel": "Entraría",
+    "score": 100,
+    "precio": 724.08
   }
 ]
