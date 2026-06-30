@@ -1,13 +1,13 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-06-30 12:15:56 UTC",
+  "updatedAt": "2026-06-30 12:16:49 UTC",
   "decision": "esperar confirmación",
   "decisionLabel": "🟡 Esperar confirmación",
   "decisionTone": "yellow",
-  "score": 63.0,
+  "score": 68.0,
   "semaforo": "🟡 Riesgo medio",
-  "horaNy": "2026-06-30 08:15",
-  "precio": 725.21,
+  "horaNy": "2026-06-30 08:16",
+  "precio": 725.07,
   "precioFuente": "Antes de la apertura",
   "shortStrike": 734,
   "longStrike": 735.0,
@@ -25,8 +25,8 @@
     },
     {
       "tone": "ok",
-      "title": "Precio muy extendido por encima del VWAP",
-      "text": "Precio muy extendido por encima del VWAP"
+      "title": "Precio por encima del VWAP",
+      "text": "Precio por encima del VWAP"
     },
     {
       "tone": "warn",
@@ -45,11 +45,6 @@
     }
   ],
   "alerts": [
-    {
-      "tone": "warn",
-      "title": "Impulso intradía fuerte",
-      "text": "Impulso intradía fuerte"
-    },
     {
       "tone": "warn",
       "title": "Bid-ask amplio en la short call.",
