@@ -152,21 +152,57 @@ def html_template():
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>QQQ Dashboard</title>
   <style>
-    :root{--bg:#f7f6f2;--surface:#fbfbf9;--text:#28251d;--muted:#6d6b66;--border:#d4d1ca;--green:#437a22;--yellow:#a86b12;--red:#a13544}
+    :root{
+      --bg:#0f1115;
+      --surface:#171a21;
+      --text:#f3f5f7;
+      --muted:#a7b0ba;
+      --border:#2a2f3a;
+      --green:#4ade80;
+      --yellow:#fbbf24;
+      --red:#fb7185;
+    }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
     .wrap{max-width:1100px;margin:0 auto;padding:16px}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+    .card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      margin-bottom:16px;
+    }
     .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     .k{font-size:12px;color:var(--muted);text-transform:uppercase}
     .v{font-size:22px;font-weight:800}
-    .pill{display:inline-block;padding:8px 12px;border-radius:999px;font-weight:700}
-    .green{background:#dfe9d7;color:var(--green)}
-    .yellow{background:#f0e3c8;color:var(--yellow)}
-    .red{background:#efd8dc;color:var(--red)}
+    .pill{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+    .green{background:rgba(74,222,128,.15);color:var(--green)}
+    .yellow{background:rgba(251,191,36,.15);color:var(--yellow)}
+    .red{background:rgba(251,113,133,.15);color:var(--red)}
+    h1,h3{margin-top:0}
+    p{color:var(--muted)}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
+    th,td{
+      padding:8px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      color:var(--text);
+    }
+    th{color:var(--muted)}
     ul{margin:0;padding-left:18px}
+    li{margin:8px 0;color:var(--text)}
+    strong{color:var(--text)}
     @media(max-width:800px){.grid{grid-template-columns:1fr 1fr}}
     @media(max-width:520px){.grid{grid-template-columns:1fr}}
   </style>
@@ -221,7 +257,9 @@ async function load(){
   d.textContent = s.decisionLabel;
   d.className = 'pill ' + s.decisionTone;
 
-  document.getElementById('updated').textContent = 'Actualizado: ' + s.updatedAt + ' | NY: ' + s.horaNy;
+  document.getElementById('updated').textContent =
+    'Actualizado local: ' + s.updatedAt + ' | Hora NY: ' + s.horaNy;
+
   document.getElementById('score').textContent = s.score;
   document.getElementById('precio').textContent = (s.precio ?? 'N/D');
   document.getElementById('strikes').textContent = s.shortStrike + ' / ' + s.longStrike;
@@ -294,7 +332,7 @@ def build_state():
 
     return {
         "ticker": TICKER,
-        "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "updatedAt": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S"),
         "horaNy": now_ny().strftime("%Y-%m-%d %H:%M"),
         "decision": decision,
         "decisionLabel": label,
