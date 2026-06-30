@@ -1,4 +1,4 @@
-name: Update dashboard
+name: Update Dashboard
 
 on:
   workflow_dispatch:
@@ -11,6 +11,7 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     permissions:
       contents: write
@@ -22,6 +23,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -35,7 +38,7 @@ jobs:
 
       - name: Run dashboard update
         run: |
-          python update_dashboard.py
+          python -u update_dashboard.py
 
       - name: Commit changes
         run: |
