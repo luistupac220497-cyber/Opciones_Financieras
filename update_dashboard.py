@@ -1,26 +1,18 @@
-import math
 import json
-import time
-import socket
-import threading
-import webbrowser
+import math
+from datetime import date, datetime
 from pathlib import Path
-from datetime import datetime, date
 from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-
 
 # =========================
-# QQQ BEAR CALL SPREAD - V2
-# + HTML local responsive
-# + Auto refresh
-# + Histórico JSON
-# + Últimas señales
-# + Servidor local opcional
+# QQQ BEAR CALL SPREAD - CI
+# pensado para GitHub Actions
+# genera state.json, history.json e index.html
+# y termina en una sola ejecución
 # =========================
 
 # -------- CONFIG --------
@@ -38,11 +30,7 @@ WAIT_MINUTES_AFTER_OPEN = 5
 OPENING_RANGE_MINUTES = 15
 POWER_HOUR_STRICT = True
 
-AUTO_REFRESH_SECONDS = 60
 MAX_HISTORY_ITEMS = 200
-SERVE_LOCAL = False
-PORT = 8000
-OPEN_BROWSER = False
 
 MAG7 = {
     "AAPL": "Apple",
@@ -68,10 +56,8 @@ MACRO_EVENTS = [
     {"evento": "Decisión FOMC / tipos de interés", "datetime_ny": "2026-07-29 14:00", "impacto": "alto"},
 ]
 
-BASE_DIR = Path.cwd() / "qqq_dashboard_v2"
-BASE_DIR.mkdir(exist_ok=True)
-
-HTML_FILE = BASE_DIR / "qqq-spread-dashboard.html"
+BASE_DIR = Path.cwd()
+HTML_FILE = BASE_DIR / "index.html"
 STATE_FILE = BASE_DIR / "state.json"
 HISTORY_FILE = BASE_DIR / "history.json"
 
@@ -87,12 +73,6 @@ def es_valor_numerico_real(x):
 def fmt_price(x, default="N/D"):
     if es_valor_numerico_real(x):
         return f"${float(x):.2f}"
-    return default
-
-
-def fmt_pct(x, default="N/D"):
-    if es_valor_numerico_real(x):
-        return f"{float(x):.2f}%"
     return default
 
 
@@ -208,6 +188,7 @@ def save_json_file(path, data):
 
 # -------- DATOS --------
 def get_price_and_source(ticker_symbol):
+    print("Paso 1/8: obteniendo precio actual...")
     t = yf.Ticker(ticker_symbol)
     info = t.info
 
@@ -240,7 +221,15 @@ def get_price_and_source(ticker_symbol):
 
 
 def descargar_historico_base(ticker_symbol):
-    hist = yf.download(ticker_symbol, period="3mo", interval="1d", auto_adjust=True, progress=False)
+    print("Paso 2/8: descargando histórico base...")
+    hist = yf.download(
+        ticker_symbol,
+        period="3mo",
+        interval="1d",
+        auto_adjust=True,
+        progress=False,
+        threads=False,
+    )
     if hist is None or hist.empty:
         raise ValueError("No se pudo descargar histórico.")
     if isinstance(hist.columns, pd.MultiIndex):
@@ -261,6 +250,7 @@ def calcular_buffers(hist, lookback_days):
 
 
 def descargar_intradia_1m(ticker_symbol):
+    print("Paso 6/8: descargando intradía 1m...")
     try:
         df = yf.download(
             ticker_symbol,
@@ -268,7 +258,8 @@ def descargar_intradia_1m(ticker_symbol):
             interval="1m",
             auto_adjust=True,
             progress=False,
-            prepost=True
+            prepost=True,
+            threads=False,
         )
         if df is None or df.empty:
             return None
@@ -282,7 +273,8 @@ def descargar_intradia_1m(ticker_symbol):
         else:
             df.index = df.index.tz_convert(NY_TZ)
         return df
-    except Exception:
+    except Exception as e:
+        print(f"Intradía no disponible: {e}")
         return None
 
 
@@ -336,13 +328,14 @@ def obtener_proximo_earnings(ticker_symbol):
             "ticker": ticker_symbol,
             "fecha": fecha,
             "dias": dias_restantes(fecha),
-            "momento": traducir_momento(momento_raw)
+            "momento": traducir_momento(momento_raw),
         }
     except Exception:
         return None
 
 
 def obtener_earnings_mag7(mag7_map):
+    print("Paso 4/8: consultando earnings...")
     earnings_list = []
     for tk, nombre in mag7_map.items():
         data = obtener_proximo_earnings(tk)
@@ -352,13 +345,14 @@ def obtener_earnings_mag7(mag7_map):
                 "ticker": tk,
                 "dias": data["dias"],
                 "fecha": data["fecha"],
-                "momento": data["momento"]
+                "momento": data["momento"],
             })
     return sorted(earnings_list, key=lambda x: (9999 if x["dias"] is None else x["dias"]))
 
 
 # -------- MACRO --------
 def preparar_eventos_macro(eventos):
+    print("Paso 5/8: preparando eventos macro...")
     ahora_ny = get_now_ny()
     salida = []
     for ev in eventos:
@@ -380,7 +374,7 @@ def preparar_eventos_macro(eventos):
                 "dias": dias,
                 "horas": horas,
                 "total_horas": total_horas,
-                "momento": clasificar_sesion_por_hora_ny(dt_ny)
+                "momento": clasificar_sesion_por_hora_ny(dt_ny),
             })
         except Exception:
             continue
@@ -397,7 +391,8 @@ def calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=True):
             interval=interval,
             auto_adjust=True,
             progress=False,
-            prepost=include_prepost
+            prepost=include_prepost,
+            threads=False,
         )
         if df is None or df.empty:
             return None
@@ -422,7 +417,7 @@ def calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=True):
         return {
             "vwap": float(df["vwap"].iloc[-1]),
             "last_intraday_close": float(df["Close"].iloc[-1]),
-            "bars": int(len(df))
+            "bars": int(len(df)),
         }
     except Exception:
         return None
@@ -459,6 +454,7 @@ def penalizacion_vwap(dist_pct):
 
 
 def construir_contexto_vwap(ticker_symbol, current_price):
+    print("Paso 3/8: calculando VWAP...")
     vwap_rth_data = calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=False)
     vwap_ext_data = calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=True)
 
@@ -527,7 +523,7 @@ def evaluar_liquidez_call_spread(calls_df, short_strike, long_strike):
     resultado = {
         "liquidez_ok": None,
         "quotes_validas": None,
-        "motivos": []
+        "motivos": [],
     }
 
     short_leg = buscar_strike_mas_cercano(calls_df, short_strike)
@@ -837,7 +833,7 @@ def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx,
         "motivos_score": motivos,
         "alertas": alertas,
         "bloqueo_operativa": bloqueo,
-        "semaforo": semaforo
+        "semaforo": semaforo,
     }
 
 
@@ -907,21 +903,6 @@ def append_history(state):
     return history
 
 
-def build_recent_signals(history, limit=8):
-    recent = history[-limit:]
-    recent = list(reversed(recent))
-    rows = []
-    for item in recent:
-        rows.append([
-            item.get("timestamp", ""),
-            item.get("decisionLabel", item.get("decision", "")),
-            str(item.get("score", "")),
-            fmt_price(item.get("precio")),
-            item.get("tramo", "N/D"),
-        ])
-    return rows
-
-
 # -------- STATE --------
 def construir_state():
     current_price, price_source, ticker_obj = get_price_and_source(TICKER)
@@ -957,7 +938,11 @@ def construir_state():
         reasons.append({"tone": "warn", "title": "Decisión", "text": note})
 
     if not reasons:
-        reasons.append({"tone": "ok", "title": "Sin penalizaciones críticas", "text": "No se detectaron bloqueos relevantes."})
+        reasons.append({
+            "tone": "ok",
+            "title": "Sin penalizaciones críticas",
+            "text": "No se detectaron bloqueos relevantes.",
+        })
 
     alerts = []
     for a in score_data["alertas"][:5]:
@@ -968,7 +953,11 @@ def construir_state():
         alerts.append({"tone": tone_a, "title": a, "text": a})
 
     if not alerts:
-        alerts.append({"tone": "ok", "title": "Sin alertas cercanas", "text": "No hay alertas inmediatas por macro o resultados."})
+        alerts.append({
+            "tone": "ok",
+            "title": "Sin alertas cercanas",
+            "text": "No hay alertas inmediatas por macro o resultados.",
+        })
 
     prox_macro = macro_events[0] if macro_events else None
     prox_earn = earnings_list[0] if earnings_list else None
@@ -989,7 +978,7 @@ def construir_state():
 
     state = {
         "ticker": TICKER,
-        "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "updatedAt": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
         "decision": decision_final,
         "decisionLabel": decision_label,
         "decisionTone": tone,
@@ -1010,7 +999,7 @@ def construir_state():
         "alerts": alerts,
         "context": context_rows,
         "events": events_rows,
-        "contextMap": {k: v for k, v in context_rows}
+        "contextMap": {k: v for k, v in context_rows},
     }
 
     return state
@@ -1023,7 +1012,7 @@ def html_template():
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>qqq-spread-dashboard-v2</title>
+  <title>QQQ Spread Dashboard</title>
   <style>
     :root, [data-theme="light"] {
       --font-body: Inter, system-ui, sans-serif;
@@ -1051,7 +1040,7 @@ def html_template():
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);line-height:1.5;color:var(--color-text);background:var(--color-bg)}
-    button{font:inherit;color:inherit}
+    button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     .shell{max-width:1120px;margin:0 auto;padding:var(--space-4)}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-4) 0 var(--space-6)}
     .brand{display:flex;align-items:center;gap:.85rem}
@@ -1112,8 +1101,8 @@ def html_template():
           </svg>
         </div>
         <div>
-          <h1>QQQ Spread Dashboard V2</h1>
-          <p>Resumen móvil con histórico y autoactualización</p>
+          <h1>QQQ Spread Dashboard</h1>
+          <p>Actualización automática desde GitHub Actions</p>
         </div>
       </div>
       <button class="theme-toggle" data-theme-toggle aria-label="Cambiar tema"></button>
@@ -1124,7 +1113,7 @@ def html_template():
         <div class="eyebrow">Modelo operativo resumido</div>
         <div class="hero-main">
           <h2 id="resumen-title">Cargando...</h2>
-          <p>Vista compacta para revisar la decisión, niveles clave y alertas desde cualquier dispositivo de tu red local.</p>
+          <p>Vista compacta para revisar la decisión, niveles clave y alertas.</p>
         </div>
 
         <div class="decision-row">
@@ -1214,7 +1203,7 @@ def html_template():
         </article>
       </section>
 
-      <p class="footer-note">La página se refresca sola leyendo state.json e history.json. Para verla en móvil, usa la URL local que imprime el script.</p>
+      <p class="footer-note">Página generada automáticamente por GitHub Actions.</p>
     </main>
   </div>
 
@@ -1251,11 +1240,11 @@ def html_template():
       }
       body.innerHTML = history.map(item => `
         <tr>
-          <td>${safe(item[0])}</td>
-          <td>${safe(item[1])}</td>
-          <td>${safe(item[2])}</td>
-          <td>${safe(item[3])}</td>
-          <td>${safe(item[4])}</td>
+          <td>${safe(item.timestamp)}</td>
+          <td>${safe(item.decisionLabel || item.decision)}</td>
+          <td>${safe(item.score)}</td>
+          <td>${item.precio != null ? ('$' + Number(item.precio).toFixed(2)) : 'N/D'}</td>
+          <td>${safe(item.tramo)}</td>
         </tr>
       `).join('');
     }
@@ -1297,14 +1286,7 @@ def html_template():
       try {
         const histRes = await fetch('./history.json?_=' + Date.now(), { cache: 'no-store' });
         const historyRaw = await histRes.json();
-        const recent = historyRaw.slice(-8).reverse().map(item => [
-          item.timestamp || '',
-          item.decisionLabel || item.decision || '',
-          String(item.score ?? ''),
-          item.precio != null ? `$${Number(item.precio).toFixed(2)}` : 'N/D',
-          item.tramo || 'N/D'
-        ]);
-        renderHistory(recent);
+        renderHistory(historyRaw.slice(-8).reverse());
       } catch (e) {
         console.error('Error cargando history.json', e);
       }
@@ -1331,97 +1313,34 @@ def html_template():
     })();
 
     loadAll();
-    setInterval(loadAll, 15000);
   </script>
 </body>
 </html>
 """
 
 
-# -------- SERVER --------
-class SilentHandler(SimpleHTTPRequestHandler):
-    def log_message(self, format, *args):
-        pass
-
-
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = "127.0.0.1"
-    finally:
-        s.close()
-    return ip
-
-
-def start_server():
-    os_cwd = Path.cwd()
-    if os_cwd != BASE_DIR:
-        import os
-        os.chdir(BASE_DIR)
-
-    httpd = ThreadingHTTPServer(("0.0.0.0", PORT), SilentHandler)
-    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
-    thread.start()
-    return httpd
-
-
 # -------- OUTPUT --------
 def write_dashboard_assets(state):
     save_json_file(STATE_FILE, state)
     history = append_history(state)
-    save_json_file(HISTORY_FILE, history)
     if not HTML_FILE.exists():
+        HTML_FILE.write_text(html_template(), encoding="utf-8")
+    else:
         HTML_FILE.write_text(html_template(), encoding="utf-8")
     return history
 
 
-def run_once():
+def main():
+    print("Iniciando actualización única para GitHub Actions...")
     state = construir_state()
     history = write_dashboard_assets(state)
-    return state, history
-
-
-def main():
-    if not HTML_FILE.exists():
-        HTML_FILE.write_text(html_template(), encoding="utf-8")
-
-    server = None
-    if SERVE_LOCAL:
-        server = start_server()
-        local_ip = get_local_ip()
-        local_url = f"http://127.0.0.1:{PORT}/qqq-spread-dashboard.html"
-        lan_url = f"http://{local_ip}:{PORT}/qqq-spread-dashboard.html"
-        print(f"Dashboard local: {local_url}")
-        print(f"Dashboard móvil/tablet: {lan_url}")
-        if OPEN_BROWSER:
-            try:
-                webbrowser.open(local_url)
-            except Exception:
-                pass
-
-    print("Iniciando bucle de actualización...")
-    print(f"Frecuencia: cada {AUTO_REFRESH_SECONDS} segundos")
-    print("Pulsa Ctrl+C para detener.")
-
-    try:
-        while True:
-            try:
-                state, history = run_once()
-                print(
-                    f"[{state['updatedAt']}] {state['decisionLabel']} | "
-                    f"Score {state['score']} | Precio {state['precio']} | "
-                    f"Histórico {len(history)}"
-                )
-            except Exception as e:
-                print(f"Error en actualización: {e}")
-            time.sleep(AUTO_REFRESH_SECONDS)
-    except KeyboardInterrupt:
-        print("Detenido por usuario.")
-        if server:
-            server.shutdown()
+    print(
+        f"[{state['updatedAt']}] {state['decisionLabel']} | "
+        f"Score {state['score']} | Precio {state['precio']} | "
+        f"Histórico {len(history)}"
+    )
+    print("Archivos generados: index.html, state.json, history.json")
+    print("Proceso finalizado correctamente.")
 
 
 if __name__ == "__main__":
