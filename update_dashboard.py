@@ -68,10 +68,10 @@ MACRO_EVENTS = [
     {"evento": "Decisión FOMC / tipos de interés", "datetime_ny": "2026-07-29 14:00", "impacto": "alto"},
 ]
 
-BASE_DIR = Path.cwd() / "qqq_dashboard_v2"
+BASE_DIR = Path.cwd() 
 BASE_DIR.mkdir(exist_ok=True)
 
-HTML_FILE = BASE_DIR / "qqq-spread-dashboard.html"
+HTML_FILE = BASE_DIR / "index.html"
 STATE_FILE = BASE_DIR / "state.json"
 HISTORY_FILE = BASE_DIR / "history.json"
 
