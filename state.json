@@ -1,18 +1,18 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-07-01 10:10:29",
+  "updatedAt": "2026-07-01 10:20:34",
   "decision": "no entraría",
   "decisionLabel": "🔴 No entraría",
   "decisionTone": "red",
   "score": 62.0,
   "semaforo": "🟡 Riesgo medio",
-  "horaCanarias": "2026-07-01 10:10:29",
-  "horaNy": "2026-07-01 06:10:29",
-  "precio": 732.15,
+  "horaCanarias": "2026-07-01 10:20:34",
+  "horaNy": "2026-07-01 06:20:33",
+  "precio": 732.97,
   "precioFuente": "Intradía",
-  "shortStrike": 746,
-  "longStrike": 747.0,
-  "breakeven": 746.1,
+  "shortStrike": 747,
+  "longStrike": 748.0,
+  "breakeven": 747.1,
   "vwap": 733.95,
   "vwapBias": "Cerca del VWAP",
   "tp": 0.04,
@@ -88,7 +88,7 @@
     ],
     [
       "Distancia al short",
-      "$13.85"
+      "$14.03"
     ]
   ],
   "events": [
@@ -102,11 +102,11 @@
     ],
     [
       "Canarias",
-      "2026-07-01 10:10:29"
+      "2026-07-01 10:20:34"
     ],
     [
       "NY",
-      "2026-07-01 06:10:29"
+      "2026-07-01 06:20:33"
     ]
   ],
   "contextMap": {
@@ -117,6 +117,6 @@
     "Buffer modelo": "1.85%",
     "P75 20d": "1.12%",
     "P80 20d": "1.23%",
-    "Distancia al short": "$13.85"
+    "Distancia al short": "$14.03"
   }
 }
