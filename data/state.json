@@ -1,14 +1,14 @@
 {
   "ticker": "QQQ",
-  "price": 726.64,
+  "price": 725.13,
   "prevClose": 736.4,
-  "change": -9.76,
-  "changePct": -1.33,
+  "change": -11.27,
+  "changePct": -1.53,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-01T19:50:31.689433+00:00",
-  "updatedAtText": "2026-07-01 19:50:31 UTC",
-  "updatedAtNY": "2026-07-01 15:50:31 ET",
+  "updatedAt": "2026-07-01T20:00:45.931616+00:00",
+  "updatedAtText": "2026-07-01 20:00:45 UTC",
+  "updatedAtNY": "2026-07-01 16:00:45 ET",
   "session": {
     "code": "power_hour",
     "label": "Power hour"
@@ -16,12 +16,12 @@
   "summary": "macro Nóminas no agrícolas (NFP) en 1d 16h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 21d · tramo actual: power hour",
   "trade": {
     "bufferPct": 1.85,
-    "shortStrike": 741,
-    "longStrike": 742.0,
-    "breakeven": 741.1,
+    "shortStrike": 739,
+    "longStrike": 740.0,
+    "breakeven": 739.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 14.36
+    "distToShort": 13.87
   },
   "options": {
     "expiration": "2026-07-01",
@@ -31,19 +31,19 @@
     "longCallAsk": 0.01,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 3644.0,
-    "longCallOI": 2880.0,
-    "shortCallVolume": 19201.0,
-    "longCallVolume": 13280.0,
+    "shortCallOI": 2918.0,
+    "longCallOI": 12890.0,
+    "shortCallVolume": 14750.0,
+    "longCallVolume": 37182.0,
     "quotesUsable": true,
     "notes": "OK"
   },
   "vwap": {
-    "value": 731.33,
-    "distPct": -0.64,
-    "zScore": -1.48,
-    "sigma": 3.17,
-    "bias": "Por debajo"
+    "value": 731.0,
+    "distPct": -0.8,
+    "zScore": -1.84,
+    "sigma": 3.18,
+    "bias": "Muy por debajo"
   },
   "openingRange": {
     "available": true,
@@ -72,10 +72,10 @@
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 2.1,
-    "move": 15.23,
+    "move": 15.24,
     "movePct": 2.1,
-    "upper": 741.87,
-    "lower": 711.41,
+    "upper": 740.37,
+    "lower": 709.89,
     "status": "OK"
   },
   "freshness": {
@@ -114,7 +114,7 @@
       "timeNY": "08:30",
       "dias": 1,
       "horas": 16,
-      "totalHoras": 40.66,
+      "totalHoras": 40.49,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -125,8 +125,8 @@
       "dateNY": "2026-07-01",
       "timeNY": "10:00",
       "dias": -1,
-      "horas": 5,
-      "totalHoras": -5.84,
+      "horas": 6,
+      "totalHoras": -6.01,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -139,7 +139,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.66,
+        "totalHoras": 40.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -151,7 +151,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.66,
+        "totalHoras": 40.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -163,7 +163,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 16,
-        "totalHoras": 328.66,
+        "totalHoras": 328.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -175,7 +175,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.66,
+        "totalHoras": 352.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -187,7 +187,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.66,
+        "totalHoras": 352.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -200,8 +200,8 @@
         "dateNY": "2026-07-01",
         "timeNY": "10:00",
         "dias": -1,
-        "horas": 5,
-        "totalHoras": -5.84,
+        "horas": 6,
+        "totalHoras": -6.01,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -213,7 +213,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.66,
+        "totalHoras": 40.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -225,7 +225,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.66,
+        "totalHoras": 40.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -237,7 +237,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 16,
-        "totalHoras": 328.66,
+        "totalHoras": 328.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -249,7 +249,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.66,
+        "totalHoras": 352.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -261,7 +261,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.66,
+        "totalHoras": 352.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -272,8 +272,8 @@
         "dateNY": "2026-07-29",
         "timeNY": "14:00",
         "dias": 27,
-        "horas": 22,
-        "totalHoras": 670.16,
+        "horas": 21,
+        "totalHoras": 669.99,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -285,7 +285,7 @@
         "timeNY": "08:30",
         "dias": 28,
         "horas": 16,
-        "totalHoras": 688.66,
+        "totalHoras": 688.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -297,7 +297,7 @@
         "timeNY": "08:30",
         "dias": 29,
         "horas": 16,
-        "totalHoras": 712.66,
+        "totalHoras": 712.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
