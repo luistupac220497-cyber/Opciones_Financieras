@@ -362,6 +362,10 @@
       ? `/${REPO_NAME}`
       : '';
 
+    const REFRESH_MS = 30000;
+    let refreshTimer = null;
+    let isRefreshing = false;
+
     function money(v) {
       return v == null ? '--' : `$${Number(v).toFixed(2)}`;
     }
@@ -375,13 +379,17 @@
     }
 
     async function loadState() {
-      const res = await fetch(`${BASE_PATH}/data/state.json?t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`${BASE_PATH}/data/state.json?t=${Date.now()}`, {
+        cache: 'no-store'
+      });
       if (!res.ok) throw new Error(`state.json HTTP ${res.status}`);
       return await res.json();
     }
 
     async function loadHistory() {
-      const res = await fetch(`${BASE_PATH}/data/history.json?t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`${BASE_PATH}/data/history.json?t=${Date.now()}`, {
+        cache: 'no-store'
+      });
       if (!res.ok) throw new Error(`history.json HTTP ${res.status}`);
       return await res.json();
     }
@@ -528,22 +536,53 @@
       `).join('');
     }
 
-    async function init() {
+    async function refreshData() {
+      if (isRefreshing) return;
+      isRefreshing = true;
+
       const errorEl = document.getElementById('error');
-      errorEl.textContent = '';
 
       try {
         const [state, history] = await Promise.all([loadState(), loadHistory()]);
         renderState(state);
         renderHistory(history);
+        errorEl.textContent = '';
       } catch (err) {
         document.getElementById('status').textContent = 'Error cargando datos';
         errorEl.textContent = err.message;
         console.error(err);
+      } finally {
+        isRefreshing = false;
       }
     }
 
-    init();
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      refreshTimer = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          refreshData();
+        }
+      }, REFRESH_MS);
+    }
+
+    function stopAutoRefresh() {
+      if (refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        refreshData();
+        startAutoRefresh();
+      } else {
+        stopAutoRefresh();
+      }
+    });
+
+    refreshData();
+    startAutoRefresh();
   </script>
 </body>
 </html>
