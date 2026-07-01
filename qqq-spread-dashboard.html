@@ -12,349 +12,307 @@
       --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
       --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
       --text-xl: clamp(1.45rem, 1.1rem + 1.3vw, 2rem);
-      --space-1: .25rem;
-      --space-2: .5rem;
-      --space-3: .75rem;
-      --space-4: 1rem;
-      --space-5: 1.25rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
-      --color-bg: #f7f6f2;
-      --color-surface: #f9f8f5;
-      --color-surface-2: #fbfbf9;
-      --color-border: #d4d1ca;
-      --color-text: #28251d;
-      --color-text-muted: #6d6b66;
-      --color-text-faint: #9d9b95;
-      --color-primary: #01696f;
-      --color-primary-highlight: #dbe9e6;
-      --color-success: #437a22;
-      --color-success-highlight: #dfe9d7;
-      --color-warning: #a86b12;
-      --color-warning-highlight: #f0e3c8;
-      --color-error: #a13544;
-      --color-error-highlight: #efd8dc;
-      --radius-md: .85rem;
-      --radius-lg: 1.15rem;
-      --radius-full: 9999px;
-      --shadow-sm: 0 1px 2px rgba(27,24,18,.05), 0 10px 30px rgba(27,24,18,.04);
-      --shadow-md: 0 3px 10px rgba(27,24,18,.06), 0 16px 44px rgba(27,24,18,.08);
+      --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem;
+      --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9; --color-border:#d4d1ca;
+      --color-text:#28251d; --color-text-muted:#6d6b66; --color-text-faint:#9d9b95;
+      --color-primary:#01696f; --color-primary-highlight:#dbe9e6; --color-success:#437a22; --color-success-highlight:#dfe9d7;
+      --color-warning:#a86b12; --color-warning-highlight:#f0e3c8; --color-error:#a13544; --color-error-highlight:#efd8dc;
+      --radius-md:.85rem; --radius-lg:1.15rem; --radius-full:9999px;
+      --shadow-sm:0 1px 2px rgba(27,24,18,.05), 0 10px 30px rgba(27,24,18,.04);
+      --shadow-md:0 3px 10px rgba(27,24,18,.06), 0 16px 44px rgba(27,24,18,.08);
     }
 
     [data-theme="dark"] {
-      --color-bg: #171614;
-      --color-surface: #1c1b19;
-      --color-surface-2: #22211f;
-      --color-border: #393836;
-      --color-text: #ebe8e1;
-      --color-text-muted: #b4b0a7;
-      --color-text-faint: #848077;
-      --color-primary: #4f98a3;
-      --color-primary-highlight: #25373a;
-      --color-success: #7db35c;
-      --color-success-highlight: #263022;
-      --color-warning: #efb347;
-      --color-warning-highlight: #3d3220;
-      --color-error: #df6d7a;
-      --color-error-highlight: #3d252a;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,.18), 0 10px 30px rgba(0,0,0,.18);
-      --shadow-md: 0 3px 10px rgba(0,0,0,.25), 0 16px 44px rgba(0,0,0,.24);
+      --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#22211f; --color-border:#393836;
+      --color-text:#ebe8e1; --color-text-muted:#b4b0a7; --color-text-faint:#848077;
+      --color-primary:#4f98a3; --color-primary-highlight:#25373a; --color-success:#7db35c; --color-success-highlight:#263022;
+      --color-warning:#efb347; --color-warning-highlight:#3d3220; --color-error:#df6d7a; --color-error-highlight:#3d252a;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.18), 0 10px 30px rgba(0,0,0,.18);
+      --shadow-md:0 3px 10px rgba(0,0,0,.25), 0 16px 44px rgba(0,0,0,.24);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    * { box-sizing:border-box; margin:0; padding:0; }
     body {
-      min-height: 100dvh;
-      font-family: var(--font-body);
-      font-size: var(--text-base);
-      line-height: 1.5;
-      color: var(--color-text);
-      background: var(--color-bg);
+      min-height:100dvh;
+      font-family:var(--font-body);
+      font-size:var(--text-base);
+      line-height:1.5;
+      color:var(--color-text);
+      background:var(--color-bg);
     }
 
     button {
-      font: inherit;
-      color: inherit;
-      background: none;
-      border: none;
-      cursor: pointer;
+      font:inherit;
+      color:inherit;
+      background:none;
+      border:none;
+      cursor:pointer;
     }
 
     .shell {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: var(--space-4);
+      max-width:1120px;
+      margin:0 auto;
+      padding:var(--space-4);
     }
 
     .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-4);
-      padding: var(--space-4) 0 var(--space-6);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:var(--space-4);
+      padding:var(--space-4) 0 var(--space-6);
     }
 
     .brand {
-      display: flex;
-      align-items: center;
-      gap: .85rem;
+      display:flex;
+      align-items:center;
+      gap:.85rem;
     }
 
     .logo {
-      width: 2.4rem;
-      height: 2.4rem;
-      border-radius: .8rem;
-      background: var(--color-primary-highlight);
-      display: grid;
-      place-items: center;
-      color: var(--color-primary);
-      box-shadow: var(--shadow-sm);
+      width:2.4rem;
+      height:2.4rem;
+      border-radius:.8rem;
+      background:var(--color-primary-highlight);
+      display:grid;
+      place-items:center;
+      color:var(--color-primary);
+      box-shadow:var(--shadow-sm);
     }
 
     .brand h1 {
-      font-size: var(--text-lg);
-      font-weight: 800;
-      letter-spacing: -.03em;
+      font-size:var(--text-lg);
+      font-weight:800;
+      letter-spacing:-.03em;
     }
 
     .brand p {
-      color: var(--color-text-muted);
-      font-size: var(--text-sm);
+      color:var(--color-text-muted);
+      font-size:var(--text-sm);
     }
 
     .theme-toggle {
-      min-width: 44px;
-      min-height: 44px;
-      border: 1px solid rgba(0,0,0,.08);
-      background: var(--color-surface);
-      border-radius: var(--radius-full);
-      display: grid;
-      place-items: center;
-      box-shadow: var(--shadow-sm);
+      min-width:44px;
+      min-height:44px;
+      border:1px solid rgba(0,0,0,.08);
+      background:var(--color-surface);
+      border-radius:var(--radius-full);
+      display:grid;
+      place-items:center;
+      box-shadow:var(--shadow-sm);
     }
 
     .hero, .card {
-      background: var(--color-surface);
-      border: 1px solid rgba(0,0,0,.08);
-      border-radius: var(--radius-lg);
+      background:var(--color-surface);
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:var(--radius-lg);
     }
 
     .hero {
-      display: grid;
-      gap: var(--space-4);
-      padding: clamp(1.1rem,3vw,1.8rem);
-      box-shadow: var(--shadow-md);
+      display:grid;
+      gap:var(--space-4);
+      padding:clamp(1.1rem,3vw,1.8rem);
+      box-shadow:var(--shadow-md);
     }
 
     .eyebrow {
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: .14em;
-      color: var(--color-text-muted);
+      font-size:var(--text-xs);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:var(--color-text-muted);
     }
 
     .hero-main h2 {
-      font-size: var(--text-xl);
-      line-height: 1.05;
-      letter-spacing: -.04em;
+      font-size:var(--text-xl);
+      line-height:1.05;
+      letter-spacing:-.04em;
     }
 
     .hero-main p {
-      color: var(--color-text-muted);
-      max-width: 62ch;
-      margin-top: .5rem;
+      color:var(--color-text-muted);
+      max-width:62ch;
+      margin-top:.5rem;
     }
 
     .decision-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--space-3);
+      display:grid;
+      grid-template-columns:1fr;
+      gap:var(--space-3);
     }
 
     .decision-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: .6rem;
-      width: fit-content;
-      padding: .7rem 1rem;
-      border-radius: var(--radius-full);
-      font-weight: 700;
-      font-size: var(--text-sm);
+      display:inline-flex;
+      align-items:center;
+      gap:.6rem;
+      width:fit-content;
+      padding:.7rem 1rem;
+      border-radius:var(--radius-full);
+      font-weight:700;
+      font-size:var(--text-sm);
     }
 
-    .decision-pill.green {
-      background: var(--color-success-highlight);
-      color: var(--color-success);
-    }
-
-    .decision-pill.yellow {
-      background: var(--color-warning-highlight);
-      color: var(--color-warning);
-    }
-
-    .decision-pill.red {
-      background: var(--color-error-highlight);
-      color: var(--color-error);
-    }
+    .decision-pill.green { background:var(--color-success-highlight); color:var(--color-success); }
+    .decision-pill.yellow { background:var(--color-warning-highlight); color:var(--color-warning); }
+    .decision-pill.red { background:var(--color-error-highlight); color:var(--color-error); }
 
     .grid {
-      display: grid;
-      gap: var(--space-4);
-      margin-top: var(--space-4);
-      grid-template-columns: repeat(12,minmax(0,1fr));
+      display:grid;
+      gap:var(--space-4);
+      margin-top:var(--space-4);
+      grid-template-columns:repeat(12,minmax(0,1fr));
     }
 
     .card {
-      grid-column: span 12;
-      padding: var(--space-4);
-      box-shadow: var(--shadow-sm);
+      grid-column:span 12;
+      padding:var(--space-4);
+      box-shadow:var(--shadow-sm);
     }
 
     .card h3 {
-      font-size: var(--text-sm);
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      color: var(--color-text-muted);
-      margin-bottom: var(--space-3);
+      font-size:var(--text-sm);
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      color:var(--color-text-muted);
+      margin-bottom:var(--space-3);
     }
 
     .kpis {
-      display: grid;
-      grid-template-columns: repeat(2,minmax(0,1fr));
-      gap: var(--space-3);
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:var(--space-3);
     }
 
     .kpi {
-      background: var(--color-surface-2);
-      border-radius: var(--radius-md);
-      padding: var(--space-3);
-      border: 1px solid rgba(0,0,0,.06);
+      background:var(--color-surface-2);
+      border-radius:var(--radius-md);
+      padding:var(--space-3);
+      border:1px solid rgba(0,0,0,.06);
     }
 
     .kpi-label {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
+      font-size:var(--text-xs);
+      color:var(--color-text-muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
     }
 
     .kpi-value {
-      font-size: clamp(1.15rem,2vw,1.6rem);
-      font-weight: 800;
-      margin-top: .2rem;
-      letter-spacing: -.03em;
+      font-size:clamp(1.15rem,2vw,1.6rem);
+      font-weight:800;
+      margin-top:.2rem;
+      letter-spacing:-.03em;
     }
 
     .kpi-note {
-      font-size: var(--text-xs);
-      color: var(--color-text-faint);
-      margin-top: .25rem;
+      font-size:var(--text-xs);
+      color:var(--color-text-faint);
+      margin-top:.25rem;
     }
 
     .summary-list, .alerts-list {
-      display: grid;
-      gap: .7rem;
+      display:grid;
+      gap:.7rem;
     }
 
     .summary-item, .alerts-item {
-      display: flex;
-      gap: .75rem;
-      align-items: flex-start;
-      padding: .85rem .95rem;
-      border-radius: var(--radius-md);
-      background: var(--color-surface-2);
-      border: 1px solid rgba(0,0,0,.06);
+      display:flex;
+      gap:.75rem;
+      align-items:flex-start;
+      padding:.85rem .95rem;
+      border-radius:var(--radius-md);
+      background:var(--color-surface-2);
+      border:1px solid rgba(0,0,0,.06);
     }
 
     .dot {
-      width: .65rem;
-      height: .65rem;
-      border-radius: 999px;
-      flex: 0 0 auto;
-      margin-top: .4rem;
-      background: var(--color-primary);
+      width:.65rem;
+      height:.65rem;
+      border-radius:999px;
+      flex:0 0 auto;
+      margin-top:.4rem;
+      background:var(--color-primary);
     }
 
-    .dot.warn { background: var(--color-warning); }
-    .dot.danger { background: var(--color-error); }
-    .dot.ok { background: var(--color-success); }
+    .dot.warn { background:var(--color-warning); }
+    .dot.danger { background:var(--color-error); }
+    .dot.ok { background:var(--color-success); }
 
     .summary-item strong, .alerts-item strong {
-      display: block;
-      font-size: var(--text-sm);
+      display:block;
+      font-size:var(--text-sm);
     }
 
     .summary-item span, .alerts-item span {
-      color: var(--color-text-muted);
-      font-size: var(--text-sm);
+      color:var(--color-text-muted);
+      font-size:var(--text-sm);
     }
 
     .mini-table {
-      display: grid;
-      gap: .65rem;
+      display:grid;
+      gap:.65rem;
     }
 
     .mini-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      padding-bottom: .65rem;
-      border-bottom: 1px solid rgba(0,0,0,.06);
+      display:flex;
+      justify-content:space-between;
+      gap:1rem;
+      padding-bottom:.65rem;
+      border-bottom:1px solid rgba(0,0,0,.06);
     }
 
     .mini-row:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
+      border-bottom:0;
+      padding-bottom:0;
     }
 
     .mini-row dt {
-      color: var(--color-text-muted);
-      font-size: var(--text-sm);
+      color:var(--color-text-muted);
+      font-size:var(--text-sm);
     }
 
     .mini-row dd {
-      font-weight: 700;
-      text-align: right;
+      font-weight:700;
+      text-align:right;
     }
 
     .footer-note {
-      color: var(--color-text-faint);
-      font-size: var(--text-xs);
-      margin: var(--space-6) 0 var(--space-4);
+      color:var(--color-text-faint);
+      font-size:var(--text-xs);
+      margin:var(--space-6) 0 var(--space-4);
     }
 
     table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: var(--text-sm);
+      width:100%;
+      border-collapse:collapse;
+      font-size:var(--text-sm);
     }
 
     th, td {
-      padding: .7rem .55rem;
-      border-bottom: 1px solid rgba(0,0,0,.08);
-      text-align: left;
+      padding:.7rem .55rem;
+      border-bottom:1px solid rgba(0,0,0,.08);
+      text-align:left;
     }
 
     th {
-      color: var(--color-text-muted);
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: .08em;
+      color:var(--color-text-muted);
+      font-size:var(--text-xs);
+      text-transform:uppercase;
+      letter-spacing:.08em;
     }
 
     .status-line {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .75rem;
-      color: var(--color-text-muted);
-      font-size: var(--text-sm);
+      display:flex;
+      flex-wrap:wrap;
+      gap:.75rem;
+      color:var(--color-text-muted);
+      font-size:var(--text-sm);
     }
 
     @media (min-width:700px) {
-      .decision-row { grid-template-columns: 1.2fr .8fr; }
-      .card.span-6 { grid-column: span 6; }
-      .card.span-4 { grid-column: span 4; }
-      .kpis { grid-template-columns: repeat(4,minmax(0,1fr)); }
+      .decision-row { grid-template-columns:1.2fr .8fr; }
+      .card.span-6 { grid-column:span 6; }
+      .card.span-4 { grid-column:span 4; }
+      .kpis { grid-template-columns:repeat(4,minmax(0,1fr)); }
     }
   </style>
 </head>
@@ -369,8 +327,8 @@
           </svg>
         </div>
         <div>
-          <h1>QQQ Spread Dashboard V2</h1>
-          <p>Resumen móvil con histórico y autoactualización</p>
+          <h1>QQQ Spread Dashboard</h1>
+          <p>Actualización automática desde GitHub Actions</p>
         </div>
       </div>
       <button class="theme-toggle" data-theme-toggle aria-label="Cambiar tema"></button>
@@ -381,7 +339,7 @@
         <div class="eyebrow">Modelo operativo resumido</div>
         <div class="hero-main">
           <h2 id="resumen-title">Cargando...</h2>
-          <p>Vista compacta para revisar la decisión, niveles clave y alertas desde cualquier dispositivo.</p>
+          <p>Vista compacta para revisar la decisión, niveles clave y alertas.</p>
         </div>
 
         <div class="decision-row">
@@ -416,7 +374,7 @@
               <div class="kpi-note" id="break-even">-</div>
             </div>
             <div class="kpi">
-              <div class="kpi-label">VWAP salida</div>
+              <div class="kpi-label">VWAP / salida</div>
               <div class="kpi-value" id="vwap">-</div>
               <div class="kpi-note" id="vwap-bias">-</div>
               <div class="kpi-note" id="salida">-</div>
@@ -448,7 +406,7 @@
           <h3>Riesgo</h3>
           <dl class="mini-table">
             <div class="mini-row"><dt>Riesgo máximo</dt><dd id="riesgo-max">-</dd></div>
-            <div class="mini-row"><dt>Take profit stop</dt><dd id="salida-riesgo">-</dd></div>
+            <div class="mini-row"><dt>Take profit / stop</dt><dd id="salida-riesgo">-</dd></div>
             <div class="mini-row"><dt>Ticker</dt><dd id="ticker-name">QQQ</dd></div>
           </dl>
         </article>
@@ -472,7 +430,7 @@
         </article>
       </section>
 
-      <p class="footer-note">La página se refresca sola leyendo state.json e history.json.</p>
+      <p class="footer-note">Página generada automáticamente por GitHub Actions.</p>
     </main>
   </div>
 
@@ -481,9 +439,36 @@
       return v === null || v === undefined || v === '' ? fallback : v;
     }
 
+    function numOrNull(v) {
+      return (v === null || v === undefined || Number.isNaN(Number(v))) ? null : Number(v);
+    }
+
+    function fmtMoney(v, fallback = 'N/D') {
+      const n = numOrNull(v);
+      return n === null ? fallback : `$${n.toFixed(2)}`;
+    }
+
+    function fmtPlain(v, fallback = 'N/D') {
+      const n = numOrNull(v);
+      return n === null ? fallback : n.toFixed(2);
+    }
+
     function renderList(targetId, items) {
       const target = document.getElementById(targetId);
-      target.innerHTML = (items || []).map(item => `
+      if (!items || !items.length) {
+        target.innerHTML = `
+          <div class="${targetId === 'alerts-list' ? 'alerts-item' : 'summary-item'}">
+            <div class="dot ok"></div>
+            <div>
+              <strong>Sin datos</strong>
+              <span>No hay elementos para mostrar.</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      target.innerHTML = items.map(item => `
         <div class="${targetId === 'alerts-list' ? 'alerts-item' : 'summary-item'}">
           <div class="dot ${safe(item.tone, 'ok')}"></div>
           <div>
@@ -496,7 +481,12 @@
 
     function renderTable(targetId, rows) {
       const target = document.getElementById(targetId);
-      target.innerHTML = (rows || []).map(([k, v]) => `
+      if (!rows || !rows.length) {
+        target.innerHTML = `<div class="mini-row"><dt>Sin datos</dt><dd>N/D</dd></div>`;
+        return;
+      }
+
+      target.innerHTML = rows.map(([k, v]) => `
         <div class="mini-row"><dt>${safe(k)}</dt><dd>${safe(v)}</dd></div>
       `).join('');
     }
@@ -510,38 +500,42 @@
 
       body.innerHTML = history.map(item => `
         <tr>
-          <td>${safe(item[0])}</td>
-          <td>${safe(item[1])}</td>
-          <td>${safe(item[2])}</td>
-          <td>${safe(item[3])}</td>
-          <td>${safe(item[4])}</td>
+          <td>${safe(item.timestamp)}</td>
+          <td>${safe(item.decisionLabel || item.decision)}</td>
+          <td>${safe(item.score)}</td>
+          <td>${item.precio != null ? ('$' + Number(item.precio).toFixed(2)) : 'N/D'}</td>
+          <td>${safe(item.tramo)}</td>
         </tr>
       `).join('');
     }
 
     function renderState(state) {
-      document.getElementById('decision-pill').className = `decision-pill ${state.decisionTone}`;
-      document.getElementById('decision-pill').textContent = state.decisionLabel;
-      document.getElementById('resumen-title').textContent = `${state.decisionLabel.replace(/^.[ ]*/, '')} antes de vender el bear call spread.`;
+      const decisionLabel = safe(state.decisionLabel, 'Sin decisión');
+      const decisionTone = safe(state.decisionTone, 'yellow');
 
+      document.getElementById('decision-pill').className = `decision-pill ${decisionTone}`;
+      document.getElementById('decision-pill').textContent = decisionLabel;
+      document.getElementById('resumen-title').textContent = `${decisionLabel} antes de vender el bear call spread.`;
       document.getElementById('updated-at').textContent = safe(state.updatedAt);
       document.getElementById('hora-local').textContent = safe(state.horaLocal);
       document.getElementById('hora-ny').textContent = safe(state.horaNy);
-
       document.getElementById('score').textContent = `${safe(state.score)} / 100`;
       document.getElementById('semaforo').textContent = safe(state.semaforo);
-      document.getElementById('precio').textContent = state.precio !== null && state.precio !== undefined ? `$${Number(state.precio).toFixed(2)}` : 'N/D';
+      document.getElementById('precio').textContent = fmtMoney(state.precio);
       document.getElementById('precio-fuente').textContent = safe(state.precioFuente);
       document.getElementById('strikes').textContent = `${safe(state.shortStrike)} / ${safe(state.longStrike)}`;
-      document.getElementById('break-even').textContent = state.breakeven !== null && state.breakeven !== undefined ? `Break-even ${Number(state.breakeven).toFixed(2)}` : 'Break-even N/D';
-      document.getElementById('vwap').textContent = state.vwap !== null && state.vwap !== undefined ? Number(state.vwap).toFixed(2) : 'N/D';
+      document.getElementById('break-even').textContent = `Break-even ${fmtPlain(state.breakeven)}`;
+      document.getElementById('vwap').textContent = fmtPlain(state.vwap);
       document.getElementById('vwap-bias').textContent = safe(state.vwapBias);
 
-      const salidaTxt = `${Number(state.tp).toFixed(2)} / ${Number(state.stop).toFixed(2)}`;
+      const tp = fmtPlain(state.tp);
+      const stop = fmtPlain(state.stop);
+      const salidaTxt = `${tp} / ${stop}`;
+
       document.getElementById('salida').textContent = salidaTxt;
       document.getElementById('salida-riesgo').textContent = salidaTxt;
-      document.getElementById('riesgo-max').textContent = state.riesgoMax !== null && state.riesgoMax !== undefined ? `$${Number(state.riesgoMax).toFixed(2)}` : 'N/D';
-      document.getElementById('ticker-name').textContent = safe(state.ticker);
+      document.getElementById('riesgo-max').textContent = fmtMoney(state.riesgoMax);
+      document.getElementById('ticker-name').textContent = safe(state.ticker, 'QQQ');
 
       renderList('reasons-list', state.reasons || []);
       renderList('alerts-list', state.alerts || []);
@@ -549,26 +543,33 @@
       renderTable('events-table', state.events || []);
     }
 
+    async function fetchJsonNoCache(url) {
+      const res = await fetch(`${url}?_=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} en ${url}`);
+      }
+
+      return res.json();
+    }
+
     async function loadAll() {
       try {
-        const stateRes = await fetch('./state.json?_=' + Date.now(), { cache: 'no-store' });
-        const state = await stateRes.json();
+        const state = await fetchJsonNoCache('./state.json');
         renderState(state);
       } catch (e) {
         console.error('Error cargando state.json', e);
       }
 
       try {
-        const histRes = await fetch('./history.json?_=' + Date.now(), { cache: 'no-store' });
-        const historyRaw = await histRes.json();
-        const recent = historyRaw.slice(-8).reverse().map(item => [
-          item.timestamp || '',
-          item.decisionLabel || item.decision || '',
-          String(item.score ?? ''),
-          item.precio != null ? `$${Number(item.precio).toFixed(2)}` : 'N/D',
-          item.tramo || 'N/D'
-        ]);
-        renderHistory(recent);
+        const historyRaw = await fetchJsonNoCache('./history.json');
+        renderHistory((historyRaw || []).slice(-8).reverse());
       } catch (e) {
         console.error('Error cargando history.json', e);
       }
@@ -597,6 +598,9 @@
 
     loadAll();
     setInterval(loadAll, 15000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) loadAll();
+    });
   </script>
 </body>
 </html>
