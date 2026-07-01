@@ -316,6 +316,7 @@
         <h2>Próximo macro</h2>
         <div class="substatus" id="macroStatus">Macro status: --</div>
         <div class="kv" id="macroNextBox"></div>
+        <div class="kv" id="macroRecentBox" style="margin-top:14px;"></div>
       </article>
 
       <article class="card half">
@@ -450,13 +451,24 @@
 
       const macroNext = macro.next;
       document.getElementById('macroNextBox').innerHTML = macroNext ? `
-        <div class="kv-row"><span>Evento</span><span>${txt(macroNext.evento)}</span></div>
+        <div class="kv-row"><span>Próximo evento</span><span>${txt(macroNext.evento)}</span></div>
         <div class="kv-row"><span>Impacto</span><span>${txt(macroNext.impacto)}</span></div>
         <div class="kv-row"><span>Hora NY</span><span>${txt(macroNext.datetimeNY)}</span></div>
         <div class="kv-row"><span>Cuenta atrás</span><span>${txt(macroNext.dias)}d ${txt(macroNext.horas)}h</span></div>
         <div class="kv-row"><span>Momento</span><span>${txt(macroNext.momento)}</span></div>
       ` : `
         <div class="kv-row"><span>Próximo macro</span><span>No disponible</span></div>
+      `;
+
+      const macroRecent = macro.recent;
+      document.getElementById('macroRecentBox').innerHTML = macroRecent ? `
+        <div class="kv-row"><span>Último evento</span><span>${txt(macroRecent.evento)}</span></div>
+        <div class="kv-row"><span>Impacto</span><span>${txt(macroRecent.impacto)}</span></div>
+        <div class="kv-row"><span>Hora NY</span><span>${txt(macroRecent.datetimeNY)}</span></div>
+        <div class="kv-row"><span>Estado</span><span>Ya publicado</span></div>
+        <div class="kv-row"><span>Momento</span><span>${txt(macroRecent.momento)}</span></div>
+      ` : `
+        <div class="kv-row"><span>Último macro</span><span>No disponible</span></div>
       `;
 
       const earnings = state.earnings ?? {};
