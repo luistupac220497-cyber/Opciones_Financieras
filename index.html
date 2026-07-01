@@ -260,7 +260,7 @@
   <div class="wrap">
     <header>
       <h1>QQQ Dashboard</h1>
-      <p>Señal base para bear call spread con score, VWAP, horario, macro y earnings.</p>
+      <p>Señal base para bear call spread con score, VWAP, OR, horario, macro y earnings.</p>
     </header>
 
     <section class="hero">
@@ -293,8 +293,9 @@
       </article>
 
       <article class="card third">
-        <h2>VWAP</h2>
+        <h2>VWAP y OR</h2>
         <div class="kv" id="vwapBox"></div>
+        <div class="kv" id="orBox" style="margin-top:14px;"></div>
       </article>
 
       <article class="card third">
@@ -433,7 +434,20 @@
       document.getElementById('vwapBox').innerHTML = `
         <div class="kv-row"><span>VWAP</span><span>${money(vwap.value)}</span></div>
         <div class="kv-row"><span>Distancia %</span><span>${pct(vwap.distPct)}</span></div>
+        <div class="kv-row"><span>Z-score</span><span>${vwap.zScore != null ? vwap.zScore : '--'}</span></div>
+        <div class="kv-row"><span>Sigma</span><span>${vwap.sigma != null ? vwap.sigma : '--'}</span></div>
         <div class="kv-row"><span>Bias</span><span>${txt(vwap.bias)}</span></div>
+      `;
+
+      const or = state.openingRange ?? {};
+      document.getElementById('orBox').innerHTML = or && or.high != null ? `
+        <div class="kv-row"><span>OR 5m high</span><span>${money(or.high)}</span></div>
+        <div class="kv-row"><span>OR 5m low</span><span>${money(or.low)}</span></div>
+        <div class="kv-row"><span>OR size</span><span>${money(or.size)}</span></div>
+        <div class="kv-row"><span>OR %</span><span>${pct(or.sizePct)}</span></div>
+        <div class="kv-row"><span>Estado</span><span>${txt(or.state)}</span></div>
+      ` : `
+        <div class="kv-row"><span>Opening Range</span><span>No disponible</span></div>
       `;
 
       const options = state.options ?? {};
