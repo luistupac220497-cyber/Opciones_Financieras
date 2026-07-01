@@ -1,19 +1,20 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-07-01 03:40:38",
+  "updatedAt": "2026-07-01 04:47:58",
   "decision": "no entraría",
   "decisionLabel": "🔴 No entraría",
   "decisionTone": "red",
-  "score": 44.0,
-  "semaforo": "🔴 Riesgo alto",
-  "horaNy": "2026-07-01 03:40:38",
-  "precio": 736.29,
-  "precioFuente": "Después del cierre",
-  "shortStrike": 745,
-  "longStrike": 746.0,
-  "breakeven": 745.1,
+  "score": 52.0,
+  "semaforo": "🟡 Riesgo medio",
+  "horaNy": "2026-07-01 04:47:58",
+  "horaCanarias": "2026-07-01 09:47:58",
+  "precio": 732.04,
+  "precioFuente": "Antes de la apertura",
+  "shortStrike": 741,
+  "longStrike": 742.0,
+  "breakeven": 741.1,
   "vwap": 733.95,
-  "vwapBias": "Por encima",
+  "vwapBias": "Cerca del VWAP",
   "tp": 0.04,
   "stop": 0.2,
   "riesgoMax": 90.0,
@@ -25,8 +26,8 @@
     },
     {
       "tone": "ok",
-      "title": "Precio ligeramente por encima del VWAP",
-      "text": "Precio ligeramente por encima del VWAP"
+      "title": "Cerca del VWAP",
+      "text": "Cerca del VWAP"
     },
     {
       "tone": "warn",
@@ -67,8 +68,8 @@
     },
     {
       "tone": "warn",
-      "title": "Setup en contra de posible trend day alcista",
-      "text": "Setup en contra de posible trend day alcista"
+      "title": "ISM Manufacturero en 0d 5h",
+      "text": "ISM Manufacturero en 0d 5h"
     }
   ],
   "context": [
@@ -78,39 +79,88 @@
     ],
     [
       "Régimen",
-      "Trend Alcista"
+      "Rango"
     ],
     [
       "Premarket high",
-      "$728.30"
+      "$736.40"
     ],
     [
       "Premarket low",
-      "$714.67"
+      "$730.91"
     ]
   ],
-  "events": [
+  "strikeLogic": [
     [
-      "Próximo macro",
-      "ISM Manufacturero"
+      "Buffer modelo",
+      "1.12%"
     ],
     [
-      "Impacto",
-      "Alto"
+      "P75 20d",
+      "1.12%"
     ],
     [
-      "Mag 7 cercano",
-      "N/D"
+      "P80 20d",
+      "1.23%"
     ],
     [
-      "Días",
-      "N/D"
+      "Distancia al short",
+      "$8.96"
     ]
   ],
+  "macroList": [
+    {
+      "tone": "danger",
+      "label": "Macro",
+      "evento": "ISM Manufacturero",
+      "countdown": "0d 5h",
+      "impacto": "Alto",
+      "ny": "2026-07-01 10:00",
+      "canarias": "2026-07-01 15:00"
+    },
+    {
+      "tone": "danger",
+      "label": "Macro",
+      "evento": "Nóminas no agrícolas (NFP)",
+      "countdown": "1d 3h",
+      "impacto": "Alto",
+      "ny": "2026-07-02 08:30",
+      "canarias": "2026-07-02 13:30"
+    },
+    {
+      "tone": "danger",
+      "label": "Macro",
+      "evento": "Tasa de desempleo",
+      "countdown": "1d 3h",
+      "impacto": "Alto",
+      "ny": "2026-07-02 08:30",
+      "canarias": "2026-07-02 13:30"
+    },
+    {
+      "tone": "danger",
+      "label": "Macro",
+      "evento": "IPC (CPI)",
+      "countdown": "14d 3h",
+      "impacto": "Alto",
+      "ny": "2026-07-15 08:30",
+      "canarias": "2026-07-15 13:30"
+    }
+  ],
+  "earningsList": [],
+  "topSummary": {
+    "score": 52.0,
+    "semaforo": "🟡 Riesgo medio",
+    "precio": 732.04,
+    "precioFuente": "Antes de la apertura",
+    "strikes": "741 / 742.0",
+    "breakEven": 741.1,
+    "nextMacro": "ISM Manufacturero",
+    "nextMacroCountdown": "0d 5h"
+  },
   "contextMap": {
     "Tramo": "Premarket",
-    "Régimen": "Trend Alcista",
-    "Premarket high": "$728.30",
-    "Premarket low": "$714.67"
+    "Régimen": "Rango",
+    "Premarket high": "$736.40",
+    "Premarket low": "$730.91"
   }
 }
