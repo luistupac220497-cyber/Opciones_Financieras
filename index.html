@@ -199,15 +199,42 @@
   </div>
 
   <script>
-    function safe(v, fallback='N/D') {
+    function safe(v, fallback = 'N/D') {
       return v === null || v === undefined || v === '' ? fallback : v;
+    }
+
+    function numOrNull(v) {
+      return (v === null || v === undefined || Number.isNaN(Number(v))) ? null : Number(v);
+    }
+
+    function fmtMoney(v, fallback = 'N/D') {
+      const n = numOrNull(v);
+      return n === null ? fallback : `$${n.toFixed(2)}`;
+    }
+
+    function fmtPlain(v, fallback = 'N/D') {
+      const n = numOrNull(v);
+      return n === null ? fallback : n.toFixed(2);
     }
 
     function renderList(targetId, items) {
       const target = document.getElementById(targetId);
+      if (!items || !items.length) {
+        target.innerHTML = `
+          <div class="${targetId === 'alerts-list' ? 'alerts-item' : 'summary-item'}">
+            <div class="dot ok"></div>
+            <div>
+              <strong>Sin datos</strong>
+              <span>No hay elementos para mostrar.</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       target.innerHTML = items.map(item => `
         <div class="${targetId === 'alerts-list' ? 'alerts-item' : 'summary-item'}">
-          <div class="dot ${item.tone}"></div>
+          <div class="dot ${safe(item.tone, 'ok')}"></div>
           <div>
             <strong>${safe(item.title)}</strong>
             <span>${safe(item.text)}</span>
@@ -218,6 +245,11 @@
 
     function renderTable(targetId, rows) {
       const target = document.getElementById(targetId);
+      if (!rows || !rows.length) {
+        target.innerHTML = `<div class="mini-row"><dt>Sin datos</dt><dd>N/D</dd></div>`;
+        return;
+      }
+
       target.innerHTML = rows.map(([k, v]) => `
         <div class="mini-row"><dt>${safe(k)}</dt><dd>${safe(v)}</dd></div>
       `).join('');
@@ -229,6 +261,7 @@
         body.innerHTML = '<tr><td colspan="5">Sin histórico todavía.</td></tr>';
         return;
       }
+
       body.innerHTML = history.map(item => `
         <tr>
           <td>${safe(item.timestamp)}</td>
@@ -241,43 +274,65 @@
     }
 
     function renderState(state) {
-      document.getElementById('decision-pill').className = `decision-pill ${state.decisionTone}`;
-      document.getElementById('decision-pill').textContent = state.decisionLabel;
-      document.getElementById('resumen-title').textContent = `${state.decisionLabel.replace(/^.[ ]*/, '')} antes de vender el bear call spread.`;
+      const decisionLabel = safe(state.decisionLabel, 'Sin decisión');
+      const decisionTone = safe(state.decisionTone, 'yellow');
+
+      document.getElementById('decision-pill').className = `decision-pill ${decisionTone}`;
+      document.getElementById('decision-pill').textContent = decisionLabel;
+      document.getElementById('resumen-title').textContent = `${decisionLabel} antes de vender el bear call spread.`;
       document.getElementById('updated-at').textContent = safe(state.updatedAt);
       document.getElementById('hora-ny').textContent = safe(state.horaNy);
       document.getElementById('score').textContent = `${safe(state.score)} / 100`;
       document.getElementById('semaforo').textContent = safe(state.semaforo);
-      document.getElementById('precio').textContent = state.precio !== null && state.precio !== undefined ? `$${Number(state.precio).toFixed(2)}` : 'N/D';
+      document.getElementById('precio').textContent = fmtMoney(state.precio);
       document.getElementById('precio-fuente').textContent = safe(state.precioFuente);
       document.getElementById('strikes').textContent = `${safe(state.shortStrike)} / ${safe(state.longStrike)}`;
-      document.getElementById('break-even').textContent = state.breakeven !== null && state.breakeven !== undefined ? `Break-even ${Number(state.breakeven).toFixed(2)}` : 'Break-even N/D';
-      document.getElementById('vwap').textContent = state.vwap !== null && state.vwap !== undefined ? Number(state.vwap).toFixed(2) : 'N/D';
+      document.getElementById('break-even').textContent = `Break-even ${fmtPlain(state.breakeven)}`;
+      document.getElementById('vwap').textContent = fmtPlain(state.vwap);
       document.getElementById('vwap-bias').textContent = safe(state.vwapBias);
-      const salidaTxt = `${Number(state.tp).toFixed(2)} / ${Number(state.stop).toFixed(2)}`;
+
+      const tp = fmtPlain(state.tp);
+      const stop = fmtPlain(state.stop);
+      const salidaTxt = `${tp} / ${stop}`;
+
       document.getElementById('salida').textContent = salidaTxt;
       document.getElementById('salida-riesgo').textContent = salidaTxt;
-      document.getElementById('riesgo-max').textContent = state.riesgoMax !== null && state.riesgoMax !== undefined ? `$${Number(state.riesgoMax).toFixed(2)}` : 'N/D';
-      document.getElementById('ticker-name').textContent = safe(state.ticker);
+      document.getElementById('riesgo-max').textContent = fmtMoney(state.riesgoMax);
+      document.getElementById('ticker-name').textContent = safe(state.ticker, 'QQQ');
+
       renderList('reasons-list', state.reasons || []);
       renderList('alerts-list', state.alerts || []);
       renderTable('context-table', state.context || []);
       renderTable('events-table', state.events || []);
     }
 
+    async function fetchJsonNoCache(url) {
+      const res = await fetch(`${url}?_=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} en ${url}`);
+      }
+
+      return res.json();
+    }
+
     async function loadAll() {
       try {
-        const stateRes = await fetch('./state.json?_=' + Date.now(), { cache: 'no-store' });
-        const state = await stateRes.json();
+        const state = await fetchJsonNoCache('./state.json');
         renderState(state);
       } catch (e) {
         console.error('Error cargando state.json', e);
       }
 
       try {
-        const histRes = await fetch('./history.json?_=' + Date.now(), { cache: 'no-store' });
-        const historyRaw = await histRes.json();
-        renderHistory(historyRaw.slice(-8).reverse());
+        const historyRaw = await fetchJsonNoCache('./history.json');
+        renderHistory((historyRaw || []).slice(-8).reverse());
       } catch (e) {
         console.error('Error cargando history.json', e);
       }
@@ -296,6 +351,7 @@
       }
 
       paint();
+
       toggle.addEventListener('click', () => {
         theme = theme === 'dark' ? 'light' : 'dark';
         root.setAttribute('data-theme', theme);
@@ -304,6 +360,10 @@
     })();
 
     loadAll();
+    setInterval(loadAll, 15000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) loadAll();
+    });
   </script>
 </body>
 </html>
