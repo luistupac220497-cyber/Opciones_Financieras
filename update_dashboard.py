@@ -23,6 +23,9 @@ NET_CREDIT = 0.10
 
 TARGET_CREDIT_MIN = 0.08
 TARGET_CREDIT_MAX = 0.12
+MIN_STRIKE_DISTANCE_PCT = 0.0185
+MAX_MACRO_ITEMS = 5
+MAX_EARNINGS_ITEMS = 5
 
 TAKE_PROFIT_PCT = 0.60
 STOP_MULTIPLIER = 2.0
@@ -77,6 +80,12 @@ def es_valor_numerico_real(x):
 def fmt_price(x, default="N/D"):
     if es_valor_numerico_real(x):
         return f"${float(x):.2f}"
+    return default
+
+
+def fmt_pct(x, default="N/D"):
+    if es_valor_numerico_real(x):
+        return f"{float(x) * 100:.2f}%"
     return default
 
 
@@ -356,14 +365,17 @@ def preparar_eventos_macro(eventos):
 
             dias = int(total_horas // 24)
             horas = int(total_horas % 24)
+            minutos = int((delta.total_seconds() % 3600) // 60)
 
             salida.append({
                 "evento": ev["evento"],
                 "impacto": ev.get("impacto", "medio"),
                 "datetime_ny": dt_ny,
+                "datetime_local": dt_ny.astimezone(LOCAL_TZ),
                 "fecha": dt_ny.date(),
                 "dias": dias,
                 "horas": horas,
+                "minutos": minutos,
                 "total_horas": total_horas,
                 "momento": clasificar_sesion_por_hora_ny(dt_ny)
             })
@@ -885,11 +897,57 @@ def append_history(state):
     return history
 
 
+def formatear_tiempo_restante_macro(ev):
+    dias = ev.get("dias", 0)
+    horas = ev.get("horas", 0)
+    minutos = ev.get("minutos", 0)
+
+    if dias > 0:
+        return f"{dias}d {horas}h"
+    if horas > 0:
+        return f"{horas}h {minutos}m"
+    return f"{minutos}m"
+
+
+def construir_event_rows(macro_events, earnings_list):
+    rows = []
+
+    top_macro = macro_events[:MAX_MACRO_ITEMS]
+    top_earn = earnings_list[:MAX_EARNINGS_ITEMS]
+
+    if top_macro:
+        for i, ev in enumerate(top_macro, start=1):
+            restante = formatear_tiempo_restante_macro(ev)
+            ny_txt = ev["datetime_ny"].strftime("%Y-%m-%d %H:%M")
+            local_txt = ev["datetime_local"].strftime("%Y-%m-%d %H:%M")
+            rows.append([
+                f"Macro {i}",
+                f"{ev['evento']} | {ev['impacto'].title()} | en {restante} | NY {ny_txt} | Canarias {local_txt}"
+            ])
+    else:
+        rows.append(["Macro", "N/D"])
+
+    if top_earn:
+        for i, ev in enumerate(top_earn, start=1):
+            dias_txt = "N/D" if ev["dias"] is None else f"{ev['dias']}d"
+            fecha_txt = ev["fecha"].strftime("%Y-%m-%d") if ev["fecha"] else "N/D"
+            rows.append([
+                f"Earnings {i}",
+                f"{ev['empresa']} ({ev['ticker']}) | {fecha_txt} | {dias_txt} | {ev['momento']}"
+            ])
+    else:
+        rows.append(["Earnings", "N/D"])
+
+    return rows
+
+
 def construir_state():
     current_price, price_source, ticker_obj = get_price_and_source(TICKER)
     hist = descargar_historico_base(TICKER)
     buffers = calcular_buffers(hist, LOOKBACK_DAYS)
-    buffer_pct = buffers["p75_up_move"]
+
+    buffer_pct_modelo = buffers["p75_up_move"]
+    buffer_pct = max(buffer_pct_modelo, MIN_STRIKE_DISTANCE_PCT)
 
     trade_setup = construir_setup_trade(current_price, buffer_pct)
     vwap_ctx = construir_contexto_vwap(TICKER, current_price)
@@ -903,12 +961,11 @@ def construir_state():
     )
     decision_final, decision_notes = ajustar_decision_final(trade_setup, intraday_ctx, score_data, price_source)
     tone, decision_label = tone_from_decision(decision_final)
-
     now_ny = intraday_ctx["now_ny"]
-    now_local = now_ny.astimezone(LOCAL_TZ)
+    now_local = get_now_local()
 
     reasons = []
-    for txt in score_data["motivos_score"][:4]:
+    for txt in score_data["motivos_score"][:6]:
         rtone = "ok"
         low = txt.lower()
         if "-" in txt or "riesgo" in low or "bloqueo" in low or "insuficiente" in low:
@@ -921,14 +978,10 @@ def construir_state():
         reasons.append({"tone": "warn", "title": "Decisión", "text": note})
 
     if not reasons:
-        reasons.append({
-            "tone": "ok",
-            "title": "Sin penalizaciones críticas",
-            "text": "No se detectaron bloqueos relevantes."
-        })
+        reasons.append({"tone": "ok", "title": "Sin penalizaciones críticas", "text": "No se detectaron bloqueos relevantes."})
 
     alerts = []
-    for a in score_data["alertas"][:5]:
+    for a in score_data["alertas"][:8]:
         tone_a = "warn"
         low = a.lower()
         if "bloqueo" in low or "hoy" in low or "muy cerca" in low:
@@ -936,39 +989,31 @@ def construir_state():
         alerts.append({"tone": tone_a, "title": a, "text": a})
 
     if not alerts:
-        alerts.append({
-            "tone": "ok",
-            "title": "Sin alertas cercanas",
-            "text": "No hay alertas inmediatas por macro o resultados."
-        })
-
-    prox_macro = macro_events[0] if macro_events else None
-    prox_earn = earnings_list[0] if earnings_list else None
+        alerts.append({"tone": "ok", "title": "Sin alertas cercanas", "text": "No hay alertas inmediatas por macro o resultados."})
 
     context_rows = [
         ["Tramo", intraday_ctx["tramo_horario"].replace("_", " ").title()],
         ["Régimen", intraday_ctx["regime"].replace("_", " ").title()],
         ["Premarket high", fmt_price(intraday_ctx["premarket_high"])],
         ["Premarket low", fmt_price(intraday_ctx["premarket_low"])],
+        ["Buffer modelo", fmt_pct(buffer_pct_modelo)],
+        ["Buffer aplicado", fmt_pct(buffer_pct)],
+        ["Distancia mínima", fmt_pct(MIN_STRIKE_DISTANCE_PCT)],
+        ["Distancia al short", fmt_price(trade_setup["dist_to_short"])],
     ]
 
-    events_rows = [
-        ["Próximo macro", prox_macro["evento"] if prox_macro else "N/D"],
-        ["Impacto", prox_macro["impacto"].title() if prox_macro else "N/D"],
-        ["Mag 7 cercano", prox_earn["empresa"] if prox_earn else "N/D"],
-        ["Días", str(prox_earn["dias"]) if prox_earn and prox_earn["dias"] is not None else "N/D"],
-    ]
+    events_rows = construir_event_rows(macro_events, earnings_list)
 
     return {
         "ticker": TICKER,
         "updatedAt": now_local.strftime("%Y-%m-%d %H:%M:%S"),
-        "horaLocal": now_local.strftime("%Y-%m-%d %H:%M:%S"),
-        "horaNy": now_ny.strftime("%Y-%m-%d %H:%M:%S"),
         "decision": decision_final,
         "decisionLabel": decision_label,
         "decisionTone": tone,
         "score": score_data["score"],
         "semaforo": score_data["semaforo"],
+        "horaNy": now_ny.strftime("%Y-%m-%d %H:%M:%S"),
+        "horaLocal": now_local.strftime("%Y-%m-%d %H:%M:%S"),
         "precio": round(current_price, 2),
         "precioFuente": traducir_fuente_precio(price_source),
         "shortStrike": trade_setup["short_strike"],
@@ -1050,16 +1095,14 @@ def html_template():
     .summary-list,.alerts-list{display:grid;gap:.7rem}
     .summary-item,.alerts-item{display:flex;gap:.75rem;align-items:flex-start;padding:.85rem .95rem;border-radius:var(--radius-md);background:var(--color-surface-2);border:1px solid rgba(0,0,0,.06)}
     .dot{width:.65rem;height:.65rem;border-radius:999px;flex:0 0 auto;margin-top:.4rem;background:var(--color-primary)}
-    .dot.warn{background:var(--color-warning)}
-    .dot.danger{background:var(--color-error)}
-    .dot.ok{background:var(--color-success)}
+    .dot.warn{background:var(--color-warning)} .dot.danger{background:var(--color-error)} .dot.ok{background:var(--color-success)}
     .summary-item strong,.alerts-item strong{display:block;font-size:var(--text-sm)}
     .summary-item span,.alerts-item span{color:var(--color-text-muted);font-size:var(--text-sm)}
     .mini-table{display:grid;gap:.65rem}
     .mini-row{display:flex;justify-content:space-between;gap:1rem;padding-bottom:.65rem;border-bottom:1px solid rgba(0,0,0,.06)}
     .mini-row:last-child{border-bottom:0;padding-bottom:0}
     .mini-row dt{color:var(--color-text-muted);font-size:var(--text-sm)}
-    .mini-row dd{font-weight:700;text-align:right}
+    .mini-row dd{font-weight:700;text-align:right;max-width:58%;word-break:break-word}
     .footer-note{color:var(--color-text-faint);font-size:var(--text-xs);margin:var(--space-6) 0 var(--space-4)}
     table{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
     th,td{padding:.7rem .55rem;border-bottom:1px solid rgba(0,0,0,.08);text-align:left}
