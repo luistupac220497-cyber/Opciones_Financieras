@@ -458,5 +458,19 @@
     "vwap": 733.95,
     "regimen": "Trend Alcista",
     "tramo": "Premarket"
+  },
+  {
+    "timestamp": "2026-07-01 03:40:38",
+    "ticker": "QQQ",
+    "decision": "no entraría",
+    "decisionLabel": "🔴 No entraría",
+    "score": 44.0,
+    "semaforo": "🔴 Riesgo alto",
+    "precio": 736.29,
+    "shortStrike": 745,
+    "longStrike": 746.0,
+    "vwap": 733.95,
+    "regimen": "Trend Alcista",
+    "tramo": "Premarket"
   }
 ]
