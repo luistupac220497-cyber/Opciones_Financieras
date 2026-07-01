@@ -97,7 +97,7 @@
       font-size: 14px;
       line-height: 1.5;
       border: 1px solid var(--border);
-      max-width: 760px;
+      max-width: 780px;
     }
 
     .decision-pill {
@@ -499,6 +499,7 @@
       const em = state.expectedMove ?? {};
       document.getElementById('emBox').innerHTML = `
         <div class="kv-row"><span>Método</span><span>${txt(em.method)}</span></div>
+        <div class="kv-row"><span>Status</span><span>${txt(em.status)}</span></div>
         <div class="kv-row"><span>Vol diaria</span><span>${pct(em.dailyVolPct)}</span></div>
         <div class="kv-row"><span>Expected move</span><span>${money(em.move)}</span></div>
         <div class="kv-row"><span>Upper</span><span>${money(em.upper)}</span></div>
