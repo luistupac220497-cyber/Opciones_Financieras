@@ -235,7 +235,7 @@
   <div class="wrap">
     <header>
       <h1>QQQ Dashboard</h1>
-      <p>Señal base para bear call spread con score, VWAP y snapshot de opciones.</p>
+      <p>Señal base para bear call spread con score, VWAP, horario y snapshot de opciones.</p>
     </header>
 
     <section class="hero">
@@ -249,7 +249,9 @@
 
         <div class="meta">
           <div><strong>Ticker:</strong> <span id="ticker">--</span></div>
-          <div><strong>Hora actualización:</strong> <span id="updatedAt">--</span></div>
+          <div><strong>Hora UTC:</strong> <span id="updatedAt">--</span></div>
+          <div><strong>Hora NY:</strong> <span id="updatedAtNY">--</span></div>
+          <div><strong>Tramo:</strong> <span id="sessionLabel">--</span></div>
           <div><strong>Fuente:</strong> <span id="source">--</span></div>
           <div><strong>Cierre previo:</strong> <span id="prevClose">--</span></div>
           <div><strong>Score:</strong> <span id="score">--</span></div>
@@ -285,15 +287,16 @@
         <table>
           <thead>
             <tr>
-              <th>Hora</th>
+              <th>Hora NY</th>
               <th>Precio</th>
               <th>Cambio %</th>
               <th>Score</th>
               <th>Señal</th>
+              <th>Tramo</th>
             </tr>
           </thead>
           <tbody id="historyTable">
-            <tr><td colspan="5">Cargando histórico...</td></tr>
+            <tr><td colspan="6">Cargando histórico...</td></tr>
           </tbody>
         </table>
       </article>
@@ -330,6 +333,8 @@
       document.getElementById('status').textContent = 'Datos cargados correctamente';
       document.getElementById('ticker').textContent = state.ticker ?? '--';
       document.getElementById('updatedAt').textContent = state.updatedAtText ?? state.updatedAt ?? '--';
+      document.getElementById('updatedAtNY').textContent = state.updatedAtNY ?? '--';
+      document.getElementById('sessionLabel').textContent = state.session?.label ?? '--';
       document.getElementById('source').textContent = state.source ?? '--';
       document.getElementById('prevClose').textContent = money(state.prevClose);
       document.getElementById('score').textContent = state.score != null ? `${state.score}/100` : '--';
@@ -388,17 +393,18 @@
       const rows = Array.isArray(history) ? history.slice().reverse().slice(0, 12) : [];
 
       if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="5">Sin histórico todavía.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6">Sin histórico todavía.</td></tr>';
         return;
       }
 
       tbody.innerHTML = rows.map(row => `
         <tr>
-          <td>${row.updatedAtText ?? row.updatedAt ?? '--'}</td>
+          <td>${row.updatedAtNY ?? row.updatedAtText ?? row.updatedAt ?? '--'}</td>
           <td>${money(row.price)}</td>
           <td>${pct(row.changePct)}</td>
           <td>${row.score != null ? row.score : '--'}</td>
           <td>${row.decisionLabel ?? '--'}</td>
+          <td>${row.sessionLabel ?? '--'}</td>
         </tr>
       `).join('');
     }
