@@ -1,19 +1,19 @@
 {
   "ticker": "QQQ",
-  "price": 724.53,
+  "price": 724.34,
   "prevClose": 736.4,
-  "change": -11.87,
-  "changePct": -1.61,
+  "change": -12.07,
+  "changePct": -1.64,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-01T20:10:33.012985+00:00",
-  "updatedAtText": "2026-07-01 20:10:33 UTC",
-  "updatedAtNY": "2026-07-01 16:10:33 ET",
+  "updatedAt": "2026-07-01T20:17:13.574424+00:00",
+  "updatedAtText": "2026-07-01 20:17:13 UTC",
+  "updatedAtNY": "2026-07-01 16:17:13 ET",
   "session": {
     "code": "after_hours",
     "label": "After hours"
   },
-  "summary": "macro Nóminas no agrícolas (NFP) en 1d 16h · short strike dentro o cerca del expected move · próximo earnings relevante: Alphabet en 22d · tramo actual: after hours",
+  "summary": "macro Nóminas no agrícolas (NFP) en 1d 16h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 21d · tramo actual: after hours",
   "trade": {
     "bufferPct": 1.85,
     "shortStrike": 738,
@@ -21,7 +21,7 @@
     "breakeven": 738.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 13.47
+    "distToShort": 13.66
   },
   "options": {
     "expiration": "2026-07-01",
@@ -33,16 +33,16 @@
     "longCallDelta": null,
     "shortCallOI": 10963.0,
     "longCallOI": 2918.0,
-    "shortCallVolume": 35824.0,
-    "longCallVolume": 14758.0,
+    "shortCallVolume": 35835.0,
+    "longCallVolume": 14764.0,
     "quotesUsable": true,
     "notes": "OK"
   },
   "vwap": {
     "value": 730.98,
-    "distPct": -0.88,
-    "zScore": -1.99,
-    "sigma": 3.24,
+    "distPct": -0.91,
+    "zScore": -2.04,
+    "sigma": 3.26,
     "bias": "Muy por debajo"
   },
   "openingRange": {
@@ -74,8 +74,8 @@
     "dailyVolPct": 2.1,
     "move": 15.23,
     "movePct": 2.1,
-    "upper": 739.76,
-    "lower": 709.3,
+    "upper": 739.56,
+    "lower": 709.11,
     "status": "OK"
   },
   "freshness": {
@@ -84,7 +84,7 @@
     "isStale": false,
     "status": "OK"
   },
-  "score": 64,
+  "score": 59,
   "decision": "no entraría",
   "decisionTone": "red",
   "decisionLabel": "🔴 No entraría",
@@ -93,7 +93,7 @@
     "Distancia razonable al short",
     "Sesgo bajista favorable",
     "Por debajo del VWAP",
-    "VWAP algo estirado",
+    "VWAP estirado a más de 2 sigma",
     "Opening range normal",
     "Short strike dentro o cerca del expected move",
     "Bid/ask muy amplio",
@@ -114,7 +114,7 @@
       "timeNY": "08:30",
       "dias": 1,
       "horas": 16,
-      "totalHoras": 40.32,
+      "totalHoras": 40.21,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -126,7 +126,7 @@
       "timeNY": "10:00",
       "dias": -1,
       "horas": 6,
-      "totalHoras": -6.18,
+      "totalHoras": -6.29,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -139,7 +139,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.32,
+        "totalHoras": 40.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -151,7 +151,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.32,
+        "totalHoras": 40.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -163,7 +163,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 16,
-        "totalHoras": 328.32,
+        "totalHoras": 328.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -175,7 +175,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.32,
+        "totalHoras": 352.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -187,7 +187,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.32,
+        "totalHoras": 352.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -201,7 +201,7 @@
         "timeNY": "10:00",
         "dias": -1,
         "horas": 6,
-        "totalHoras": -6.18,
+        "totalHoras": -6.29,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -213,7 +213,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.32,
+        "totalHoras": 40.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -225,7 +225,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.32,
+        "totalHoras": 40.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -237,7 +237,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 16,
-        "totalHoras": 328.32,
+        "totalHoras": 328.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -249,7 +249,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.32,
+        "totalHoras": 352.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -261,7 +261,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.32,
+        "totalHoras": 352.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -273,7 +273,7 @@
         "timeNY": "14:00",
         "dias": 27,
         "horas": 21,
-        "totalHoras": 669.82,
+        "totalHoras": 669.71,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -285,7 +285,7 @@
         "timeNY": "08:30",
         "dias": 28,
         "horas": 16,
-        "totalHoras": 688.32,
+        "totalHoras": 688.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -297,7 +297,7 @@
         "timeNY": "08:30",
         "dias": 29,
         "horas": 16,
-        "totalHoras": 712.32,
+        "totalHoras": 712.21,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -306,14 +306,22 @@
   "earnings": {
     "status": "OK",
     "next": {
-      "empresa": "Alphabet",
-      "ticker": "GOOGL",
-      "fecha": "2026-07-23",
-      "dias": 22,
+      "empresa": "Tesla",
+      "ticker": "TSLA",
+      "fecha": "2026-07-22",
+      "dias": 21,
       "momento": "Hora no especificada",
       "status": "OK"
     },
     "items": [
+      {
+        "empresa": "Tesla",
+        "ticker": "TSLA",
+        "fecha": "2026-07-22",
+        "dias": 21,
+        "momento": "Hora no especificada",
+        "status": "OK"
+      },
       {
         "empresa": "Alphabet",
         "ticker": "GOOGL",
@@ -361,14 +369,6 @@
         "dias": 56,
         "momento": "Hora no especificada",
         "status": "OK"
-      },
-      {
-        "empresa": "Tesla",
-        "ticker": "TSLA",
-        "fecha": null,
-        "dias": null,
-        "momento": "No disponible",
-        "status": "Error Yahoo: ['Earnings Date']"
       }
     ]
   }
