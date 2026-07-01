@@ -1,21 +1,26 @@
 {
   "ticker": "QQQ",
-  "price": 733.57,
+  "price": 733.3,
   "prevClose": 724.08,
-  "change": 9.49,
-  "changePct": 1.31,
+  "change": 9.22,
+  "changePct": 1.27,
   "tone": "up",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-01T11:10:29.591382+00:00",
-  "updatedAtText": "2026-07-01 11:10:29 UTC",
+  "updatedAt": "2026-07-01T11:20:32.003606+00:00",
+  "updatedAtText": "2026-07-01 11:20:32 UTC",
+  "updatedAtNY": "2026-07-01 07:20:32 ET",
+  "session": {
+    "code": "premarket",
+    "label": "Premarket"
+  },
   "trade": {
     "bufferPct": 1.85,
-    "shortStrike": 748,
-    "longStrike": 749.0,
-    "breakeven": 748.1,
+    "shortStrike": 747,
+    "longStrike": 748.0,
+    "breakeven": 747.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 14.43
+    "distToShort": 13.7
   },
   "options": {
     "expiration": "2026-07-01",
@@ -27,18 +32,85 @@
   },
   "vwap": {
     "value": 733.95,
-    "distPct": -0.05,
+    "distPct": -0.09,
     "bias": "Cerca del VWAP"
   },
-  "score": 92,
-  "decision": "entraría",
-  "decisionTone": "green",
-  "decisionLabel": "🟢 Entraría",
-  "riskLabel": "🟢 Riesgo controlado",
+  "score": 59,
+  "decision": "esperar confirmación",
+  "decisionTone": "yellow",
+  "decisionLabel": "🟡 Esperar confirmación",
+  "riskLabel": "🟡 Riesgo medio",
   "reasons": [
     "Distancia razonable al short",
     "Sesgo alcista moderado",
     "Cerca del VWAP",
-    "Bid/ask razonable"
-  ]
+    "Bid/ask razonable",
+    "Premarket: menor liquidez",
+    "Macro alta en <24h: ISM Manufacturero"
+  ],
+  "alerts": [
+    "ISM Manufacturero en 0d 2h"
+  ],
+  "macro": {
+    "next": {
+      "evento": "ISM Manufacturero",
+      "impacto": "alto",
+      "datetimeNY": "2026-07-01 10:00 ET",
+      "dias": 0,
+      "horas": 2,
+      "totalHoras": 2.66,
+      "momento": "Durante la sesión"
+    },
+    "items": [
+      {
+        "evento": "ISM Manufacturero",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-01 10:00 ET",
+        "dias": 0,
+        "horas": 2,
+        "totalHoras": 2.66,
+        "momento": "Durante la sesión"
+      },
+      {
+        "evento": "Nóminas no agrícolas (NFP)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-03 08:30 ET",
+        "dias": 2,
+        "horas": 1,
+        "totalHoras": 49.16,
+        "momento": "Antes de la apertura"
+      },
+      {
+        "evento": "Tasa de desempleo",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-03 08:30 ET",
+        "dias": 2,
+        "horas": 1,
+        "totalHoras": 49.16,
+        "momento": "Antes de la apertura"
+      },
+      {
+        "evento": "IPC (CPI)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-15 08:30 ET",
+        "dias": 14,
+        "horas": 1,
+        "totalHoras": 337.16,
+        "momento": "Antes de la apertura"
+      },
+      {
+        "evento": "IPP (PPI)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-16 08:30 ET",
+        "dias": 15,
+        "horas": 1,
+        "totalHoras": 361.16,
+        "momento": "Antes de la apertura"
+      }
+    ]
+  },
+  "earnings": {
+    "next": null,
+    "items": []
+  }
 }
