@@ -1,14 +1,14 @@
 {
   "ticker": "QQQ",
-  "price": 733.3,
+  "price": 733.14,
   "prevClose": 724.08,
-  "change": 9.22,
-  "changePct": 1.27,
+  "change": 9.06,
+  "changePct": 1.25,
   "tone": "up",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-01T11:20:32.003606+00:00",
-  "updatedAtText": "2026-07-01 11:20:32 UTC",
-  "updatedAtNY": "2026-07-01 07:20:32 ET",
+  "updatedAt": "2026-07-01T11:30:45.294484+00:00",
+  "updatedAtText": "2026-07-01 11:30:45 UTC",
+  "updatedAtNY": "2026-07-01 07:30:45 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
@@ -20,7 +20,7 @@
     "breakeven": 747.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 13.7
+    "distToShort": 13.86
   },
   "options": {
     "expiration": "2026-07-01",
@@ -32,7 +32,7 @@
   },
   "vwap": {
     "value": 733.95,
-    "distPct": -0.09,
+    "distPct": -0.11,
     "bias": "Cerca del VWAP"
   },
   "score": 59,
@@ -52,14 +52,16 @@
     "ISM Manufacturero en 0d 2h"
   ],
   "macro": {
+    "status": "OK",
     "next": {
       "evento": "ISM Manufacturero",
       "impacto": "alto",
       "datetimeNY": "2026-07-01 10:00 ET",
       "dias": 0,
       "horas": 2,
-      "totalHoras": 2.66,
-      "momento": "Durante la sesión"
+      "totalHoras": 2.49,
+      "momento": "Durante la sesión",
+      "status": "upcoming"
     },
     "items": [
       {
@@ -68,49 +70,204 @@
         "datetimeNY": "2026-07-01 10:00 ET",
         "dias": 0,
         "horas": 2,
-        "totalHoras": 2.66,
-        "momento": "Durante la sesión"
+        "totalHoras": 2.49,
+        "momento": "Durante la sesión",
+        "status": "upcoming"
       },
       {
         "evento": "Nóminas no agrícolas (NFP)",
         "impacto": "alto",
         "datetimeNY": "2026-07-03 08:30 ET",
         "dias": 2,
-        "horas": 1,
-        "totalHoras": 49.16,
-        "momento": "Antes de la apertura"
+        "horas": 0,
+        "totalHoras": 48.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
       },
       {
         "evento": "Tasa de desempleo",
         "impacto": "alto",
         "datetimeNY": "2026-07-03 08:30 ET",
         "dias": 2,
-        "horas": 1,
-        "totalHoras": 49.16,
-        "momento": "Antes de la apertura"
+        "horas": 0,
+        "totalHoras": 48.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
       },
       {
         "evento": "IPC (CPI)",
         "impacto": "alto",
         "datetimeNY": "2026-07-15 08:30 ET",
         "dias": 14,
-        "horas": 1,
-        "totalHoras": 337.16,
-        "momento": "Antes de la apertura"
+        "horas": 0,
+        "totalHoras": 336.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
       },
       {
         "evento": "IPP (PPI)",
         "impacto": "alto",
         "datetimeNY": "2026-07-16 08:30 ET",
         "dias": 15,
-        "horas": 1,
-        "totalHoras": 361.16,
-        "momento": "Antes de la apertura"
+        "horas": 0,
+        "totalHoras": 360.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      }
+    ],
+    "all": [
+      {
+        "evento": "ISM Manufacturero",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-01 10:00 ET",
+        "dias": 0,
+        "horas": 2,
+        "totalHoras": 2.49,
+        "momento": "Durante la sesión",
+        "status": "upcoming"
+      },
+      {
+        "evento": "Nóminas no agrícolas (NFP)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-03 08:30 ET",
+        "dias": 2,
+        "horas": 0,
+        "totalHoras": 48.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "Tasa de desempleo",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-03 08:30 ET",
+        "dias": 2,
+        "horas": 0,
+        "totalHoras": 48.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "IPC (CPI)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-15 08:30 ET",
+        "dias": 14,
+        "horas": 0,
+        "totalHoras": 336.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "IPP (PPI)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-16 08:30 ET",
+        "dias": 15,
+        "horas": 0,
+        "totalHoras": 360.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "Ventas minoristas",
+        "impacto": "medio",
+        "datetimeNY": "2026-07-16 08:30 ET",
+        "dias": 15,
+        "horas": 0,
+        "totalHoras": 360.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "Decisión FOMC / tipos",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-29 14:00 ET",
+        "dias": 28,
+        "horas": 6,
+        "totalHoras": 678.49,
+        "momento": "Durante la sesión",
+        "status": "upcoming"
+      },
+      {
+        "evento": "PIB",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-30 08:30 ET",
+        "dias": 29,
+        "horas": 0,
+        "totalHoras": 696.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "PCE subyacente",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-31 08:30 ET",
+        "dias": 30,
+        "horas": 0,
+        "totalHoras": 720.99,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
       }
     ]
   },
   "earnings": {
+    "status": "Yahoo no devolvió earnings",
     "next": null,
-    "items": []
+    "items": [
+      {
+        "empresa": "Apple",
+        "ticker": "AAPL",
+        "fecha": null,
+        "dias": null,
+        "momento": "No disponible",
+        "status": "Error Yahoo: `Import lxml` failed.  Use pip or conda to install the lxml package."
+      },
+      {
+        "empresa": "Microsoft",
+        "ticker": "MSFT",
+        "fecha": null,
+        "dias": null,
+        "momento": "No disponible",
+        "status": "Error Yahoo: `Import lxml` failed.  Use pip or conda to install the lxml package."
+      },
+      {
+        "empresa": "Nvidia",
+        "ticker": "NVDA",
+        "fecha": null,
+        "dias": null,
+        "momento": "No disponible",
+        "status": "Error Yahoo: `Import lxml` failed.  Use pip or conda to install the lxml package."
+      },
+      {
+        "empresa": "Amazon",
+        "ticker": "AMZN",
+        "fecha": null,
+        "dias": null,
+        "momento": "No disponible",
+        "status": "Error Yahoo: `Import lxml` failed.  Use pip or conda to install the lxml package."
+      },
+      {
+        "empresa": "Meta",
+        "ticker": "META",
+        "fecha": null,
+        "dias": null,
+        "momento": "No disponible",
+        "status": "Error Yahoo: `Import lxml` failed.  Use pip or conda to install the lxml package."
+      },
+      {
+        "empresa": "Alphabet",
+        "ticker": "GOOGL",
+        "fecha": null,
+        "dias": null,
+        "momento": "No disponible",
+        "status": "Error Yahoo: `Import lxml` failed.  Use pip or conda to install the lxml package."
+      },
+      {
+        "empresa": "Tesla",
+        "ticker": "TSLA",
+        "fecha": null,
+        "dias": null,
+        "momento": "No disponible",
+        "status": "Error Yahoo: `Import lxml` failed.  Use pip or conda to install the lxml package."
+      }
+    ]
   }
 }
