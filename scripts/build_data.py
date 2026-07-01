@@ -21,6 +21,28 @@ HISTORY_FILE = DATA_DIR / "history.json"
 
 NY_TZ = ZoneInfo("America/New_York")
 
+MAG7 = {
+    "AAPL": "Apple",
+    "MSFT": "Microsoft",
+    "NVDA": "Nvidia",
+    "AMZN": "Amazon",
+    "META": "Meta",
+    "GOOGL": "Alphabet",
+    "TSLA": "Tesla",
+}
+
+MACRO_EVENTS = [
+    {"evento": "ISM Manufacturero", "datetime_ny": "2026-07-01 10:00", "impacto": "alto"},
+    {"evento": "Nóminas no agrícolas (NFP)", "datetime_ny": "2026-07-03 08:30", "impacto": "alto"},
+    {"evento": "Tasa de desempleo", "datetime_ny": "2026-07-03 08:30", "impacto": "alto"},
+    {"evento": "IPC (CPI)", "datetime_ny": "2026-07-15 08:30", "impacto": "alto"},
+    {"evento": "IPP (PPI)", "datetime_ny": "2026-07-16 08:30", "impacto": "alto"},
+    {"evento": "Ventas minoristas", "datetime_ny": "2026-07-16 08:30", "impacto": "medio"},
+    {"evento": "PIB", "datetime_ny": "2026-07-30 08:30", "impacto": "alto"},
+    {"evento": "PCE subyacente", "datetime_ny": "2026-07-31 08:30", "impacto": "alto"},
+    {"evento": "Decisión FOMC / tipos", "datetime_ny": "2026-07-29 14:00", "impacto": "alto"},
+]
+
 
 def ensure_dirs():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -58,6 +80,43 @@ def safe_float(value, default=None):
         return default
 
 
+def normalize_date(value):
+    if value is None:
+        return None
+    try:
+        ts = pd.to_datetime(value)
+        if pd.isna(ts):
+            return None
+        try:
+            ts = ts.tz_localize(None)
+        except Exception:
+            pass
+        return ts.date()
+    except Exception:
+        return None
+
+
+def days_until(d):
+    if d is None:
+        return None
+    return (d - datetime.now(NY_TZ).date()).days
+
+
+def translate_earnings_moment(text):
+    if text is None:
+        return "Hora no especificada"
+    t = str(text).strip().lower()
+    if "before market open" in t or "before open" in t:
+        return "Antes de la apertura"
+    if "after market close" in t or "after close" in t:
+        return "Después del cierre"
+    if "during market" in t or "market hours" in t or t == "tas":
+        return "Durante la sesión"
+    if "time not supplied" in t:
+        return "Hora no especificada"
+    return str(text)
+
+
 def classify_session(now_ny):
     minutes = now_ny.hour * 60 + now_ny.minute
     open_m = 9 * 60 + 30
@@ -78,6 +137,17 @@ def classify_session(now_ny):
     if close_m < minutes <= 20 * 60:
         return "after_hours", "After hours"
     return "overnight", "Overnight"
+
+
+def classify_macro_moment(dt_ny):
+    mins = dt_ny.hour * 60 + dt_ny.minute
+    open_m = 9 * 60 + 30
+    close_m = 16 * 60
+    if mins < open_m:
+        return "Antes de la apertura"
+    if mins <= close_m:
+        return "Durante la sesión"
+    return "Después del cierre"
 
 
 def get_intraday_df():
@@ -276,9 +346,107 @@ def get_option_snapshot(price):
         }
 
 
-def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, session_code):
+def get_next_earnings_for_ticker(ticker_symbol):
+    try:
+        t = yf.Ticker(ticker_symbol)
+        df = t.get_earnings_dates(limit=8)
+        if df is None or df.empty:
+            return None
+
+        df = df.copy()
+        if not isinstance(df.index, pd.RangeIndex):
+            df = df.reset_index()
+
+        cols_lower = {str(c).lower(): c for c in df.columns}
+        date_col = None
+        time_col = None
+
+        for candidate in ["earnings date", "date", "index"]:
+            if candidate in cols_lower:
+                date_col = cols_lower[candidate]
+                break
+
+        for candidate in ["earnings call time", "earnings time", "time"]:
+            if candidate in cols_lower:
+                time_col = cols_lower[candidate]
+                break
+
+        if date_col is None:
+            date_col = df.columns[0]
+
+        df["_fecha"] = pd.to_datetime(df[date_col], errors="coerce")
+        df = df[df["_fecha"].notna()].copy()
+        try:
+            df["_fecha"] = df["_fecha"].dt.tz_localize(None)
+        except Exception:
+            pass
+
+        today = pd.Timestamp.now().normalize()
+        df = df[df["_fecha"] >= today].sort_values("_fecha")
+        if df.empty:
+            return None
+
+        row = df.iloc[0]
+        fecha = normalize_date(row["_fecha"])
+        momento_raw = row[time_col] if time_col in df.columns else None
+
+        return {
+            "ticker": ticker_symbol,
+            "fecha": fecha.isoformat() if fecha else None,
+            "dias": days_until(fecha),
+            "momento": translate_earnings_moment(momento_raw)
+        }
+    except Exception:
+        return None
+
+
+def get_mag7_earnings():
+    rows = []
+    for tk, nombre in MAG7.items():
+        item = get_next_earnings_for_ticker(tk)
+        if item:
+            rows.append({
+                "empresa": nombre,
+                "ticker": tk,
+                "fecha": item["fecha"],
+                "dias": item["dias"],
+                "momento": item["momento"]
+            })
+    rows.sort(key=lambda x: (9999 if x["dias"] is None else x["dias"]))
+    return rows
+
+
+def get_upcoming_macro():
+    now_ny = datetime.now(NY_TZ)
+    rows = []
+
+    for ev in MACRO_EVENTS:
+        try:
+            dt_ny = datetime.strptime(ev["datetime_ny"], "%Y-%m-%d %H:%M").replace(tzinfo=NY_TZ)
+            delta_h = (dt_ny - now_ny).total_seconds() / 3600
+            if delta_h < 0:
+                continue
+
+            rows.append({
+                "evento": ev["evento"],
+                "impacto": ev["impacto"],
+                "datetimeNY": dt_ny.strftime("%Y-%m-%d %H:%M ET"),
+                "dias": int(delta_h // 24),
+                "horas": int(delta_h % 24),
+                "totalHoras": round(delta_h, 2),
+                "momento": classify_macro_moment(dt_ny)
+            })
+        except Exception:
+            continue
+
+    rows.sort(key=lambda x: x["totalHoras"])
+    return rows
+
+
+def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, session_code, macro_rows, earnings_rows):
     score = 100
     reasons = []
+    alerts = []
 
     dist_to_short = trade_levels["distToShort"]
     if dist_to_short <= 0:
@@ -358,14 +526,47 @@ def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, se
         score -= 15
         reasons.append("Overnight: sin mercado regular")
 
+    for ev in macro_rows[:3]:
+        if ev["impacto"] != "alto":
+            continue
+        if ev["momento"] == "Durante la sesión" and ev["totalHoras"] <= 24:
+            score -= 25
+            reasons.append(f"Macro alta en <24h: {ev['evento']}")
+            alerts.append(f"{ev['evento']} en {ev['dias']}d {ev['horas']}h")
+        elif ev["momento"] == "Antes de la apertura" and ev["totalHoras"] <= 12:
+            score -= 12
+            reasons.append(f"Macro antes de apertura: {ev['evento']}")
+            alerts.append(f"{ev['evento']} antes de la apertura")
+        elif ev["totalHoras"] <= 48:
+            score -= 6
+            reasons.append(f"Macro próxima: {ev['evento']}")
+
+    for er in earnings_rows[:4]:
+        if er["dias"] is None:
+            continue
+        if er["dias"] == 0 and er["momento"] == "Durante la sesión":
+            score -= 30
+            reasons.append(f"Resultados hoy en sesión: {er['empresa']}")
+            alerts.append(f"Resultados hoy de {er['empresa']}")
+        elif er["dias"] == 1:
+            score -= 10
+            reasons.append(f"Resultados mañana: {er['empresa']}")
+            alerts.append(f"Resultados mañana de {er['empresa']}")
+        elif er["dias"] == 2:
+            score -= 5
+            reasons.append(f"Resultados en 2 días: {er['empresa']}")
+
     score = max(0, min(100, round(score, 2)))
-    return score, reasons[:6]
+    return score, reasons[:8], alerts[:6]
 
 
-def make_decision(score, trade_levels, session_code):
+def make_decision(score, trade_levels, session_code, alerts):
     dist_to_short = trade_levels["distToShort"]
 
     if dist_to_short <= 0:
+        return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
+
+    if any("Resultados hoy" in a for a in alerts):
         return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
 
     if session_code in ["after_hours", "overnight"]:
@@ -400,8 +601,14 @@ def build_state():
     levels = build_trade_levels(price)
     option_snapshot = get_option_snapshot(price)
     vwap_value, vwap_dist_pct, vwap_bias = compute_vwap(intraday_df)
-    score, reasons = calculate_score(change_pct, levels, vwap_dist_pct, option_snapshot, session_code)
-    decision, decision_tone, decision_label, risk_label = make_decision(score, levels, session_code)
+
+    macro_rows = get_upcoming_macro()
+    earnings_rows = get_mag7_earnings()
+
+    score, reasons, alerts = calculate_score(
+        change_pct, levels, vwap_dist_pct, option_snapshot, session_code, macro_rows, earnings_rows
+    )
+    decision, decision_tone, decision_label, risk_label = make_decision(score, levels, session_code, alerts)
 
     tone = "flat"
     if change is not None:
@@ -434,7 +641,16 @@ def build_state():
         "decisionTone": decision_tone,
         "decisionLabel": decision_label,
         "riskLabel": risk_label,
-        "reasons": reasons
+        "reasons": reasons,
+        "alerts": alerts,
+        "macro": {
+            "next": macro_rows[0] if macro_rows else None,
+            "items": macro_rows[:5]
+        },
+        "earnings": {
+            "next": earnings_rows[0] if earnings_rows else None,
+            "items": earnings_rows[:5]
+        }
     }
 
 
@@ -475,7 +691,8 @@ def main():
     print(
         f"OK | {state['ticker']} | price={state['price']} | "
         f"session={state['session']['label']} | score={state['score']} | "
-        f"decision={state['decision']} | history={len(history)}"
+        f"decision={state['decision']} | alerts={len(state['alerts'])} | "
+        f"history={len(history)}"
     )
 
 
