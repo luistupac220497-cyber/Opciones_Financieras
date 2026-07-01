@@ -1,48 +1,48 @@
 {
   "ticker": "QQQ",
-  "price": 729.3,
+  "price": 730.31,
   "prevClose": 736.4,
-  "change": -7.1,
-  "changePct": -0.96,
+  "change": -6.09,
+  "changePct": -0.83,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-01T13:53:58.689685+00:00",
-  "updatedAtText": "2026-07-01 13:53:58 UTC",
-  "updatedAtNY": "2026-07-01 09:53:58 ET",
+  "updatedAt": "2026-07-01T14:00:46.282154+00:00",
+  "updatedAtText": "2026-07-01 14:00:46 UTC",
+  "updatedAtNY": "2026-07-01 10:00:46 ET",
   "session": {
     "code": "apertura",
     "label": "Apertura"
   },
-  "summary": "macro ISM Manufacturero en 0d 0h · short strike dentro o cerca del expected move · quotes de opciones no fiables todavía · próximo earnings relevante: Tesla en 21d · tramo actual: apertura",
+  "summary": "macro Nóminas no agrícolas (NFP) en 1d 22h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 21d · tramo actual: apertura",
   "trade": {
     "bufferPct": 1.85,
-    "shortStrike": 743,
-    "longStrike": 744.0,
-    "breakeven": 743.1,
+    "shortStrike": 744,
+    "longStrike": 745.0,
+    "breakeven": 744.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 13.7
+    "distToShort": 13.69
   },
   "options": {
     "expiration": "2026-07-01",
-    "shortCallBid": 0.0,
-    "shortCallAsk": 0.0,
-    "longCallBid": 0.0,
-    "longCallAsk": 0.0,
+    "shortCallBid": 0.04,
+    "shortCallAsk": 0.08,
+    "longCallBid": 0.05,
+    "longCallAsk": 0.07,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 3816.0,
-    "longCallOI": 2793.0,
-    "shortCallVolume": 14589.0,
-    "longCallVolume": 9756.0,
-    "quotesUsable": false,
-    "notes": "Quotes no útiles en este momento"
+    "shortCallOI": 2793.0,
+    "longCallOI": 14439.0,
+    "shortCallVolume": 10.0,
+    "longCallVolume": 2.0,
+    "quotesUsable": true,
+    "notes": "OK"
   },
   "vwap": {
-    "value": 732.84,
-    "distPct": -0.48,
-    "zScore": -1.27,
-    "sigma": 2.79,
+    "value": 732.77,
+    "distPct": -0.34,
+    "zScore": -0.88,
+    "sigma": 2.8,
     "bias": "Por debajo"
   },
   "openingRange": {
@@ -71,11 +71,11 @@
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
-    "dailyVolPct": 2.09,
+    "dailyVolPct": 2.08,
     "move": 15.22,
-    "movePct": 2.09,
-    "upper": 744.52,
-    "lower": 714.08,
+    "movePct": 2.08,
+    "upper": 745.53,
+    "lower": 715.09,
     "status": "OK"
   },
   "freshness": {
@@ -84,57 +84,54 @@
     "isStale": false,
     "status": "OK"
   },
-  "score": 42,
-  "decision": "no entraría",
-  "decisionTone": "red",
-  "decisionLabel": "🔴 No entraría",
-  "riskLabel": "🔴 Riesgo alto",
+  "score": 68,
+  "decision": "esperar confirmación",
+  "decisionTone": "yellow",
+  "decisionLabel": "🟡 Esperar confirmación",
+  "riskLabel": "🟡 Riesgo medio",
   "reasons": [
     "Distancia razonable al short",
     "Sesgo bajista favorable",
     "Cerca del VWAP",
-    "VWAP algo estirado",
+    "VWAP dentro de rango razonable",
     "Opening range normal",
     "Short strike dentro o cerca del expected move",
-    "Sin liquidez útil en options",
+    "Bid/ask muy amplio",
     "Open interest sólido en strikes",
-    "Volumen decente en short call",
+    "Volumen bajo en short call",
     "Apertura: más volatilidad",
-    "Macro alta en <24h: ISM Manufacturero",
-    "Macro próxima: Nóminas no agrícolas (NFP)"
+    "Macro próxima: Nóminas no agrícolas (NFP)",
+    "Macro próxima: Tasa de desempleo"
   ],
-  "alerts": [
-    "ISM Manufacturero en 0d 0h"
-  ],
+  "alerts": [],
   "macro": {
-    "status": "OK | solo próximo",
+    "status": "OK | reciente + próximo",
     "next": {
+      "evento": "Nóminas no agrícolas (NFP)",
+      "impacto": "alto",
+      "datetimeNY": "2026-07-03 08:30 ET",
+      "dateNY": "2026-07-03",
+      "timeNY": "08:30",
+      "dias": 1,
+      "horas": 22,
+      "totalHoras": 46.49,
+      "momento": "Antes de la apertura",
+      "status": "upcoming"
+    },
+    "recent": {
       "evento": "ISM Manufacturero",
       "impacto": "alto",
       "datetimeNY": "2026-07-01 10:00 ET",
       "dateNY": "2026-07-01",
       "timeNY": "10:00",
-      "dias": 0,
+      "dias": -1,
       "horas": 0,
-      "totalHoras": 0.1,
+      "totalHoras": -0.01,
       "momento": "Durante la sesión",
-      "status": "upcoming"
+      "status": "past"
     },
-    "recent": null,
     "items": [
       {
-        "evento": "ISM Manufacturero",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-01 10:00 ET",
-        "dateNY": "2026-07-01",
-        "timeNY": "10:00",
-        "dias": 0,
-        "horas": 0,
-        "totalHoras": 0.1,
-        "momento": "Durante la sesión",
-        "status": "upcoming"
-      },
-      {
         "evento": "Nóminas no agrícolas (NFP)",
         "impacto": "alto",
         "datetimeNY": "2026-07-03 08:30 ET",
@@ -142,7 +139,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 22,
-        "totalHoras": 46.6,
+        "totalHoras": 46.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -154,7 +151,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 22,
-        "totalHoras": 46.6,
+        "totalHoras": 46.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -166,7 +163,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 22,
-        "totalHoras": 334.6,
+        "totalHoras": 334.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -178,69 +175,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 22,
-        "totalHoras": 358.6,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      }
-    ],
-    "all": [
-      {
-        "evento": "ISM Manufacturero",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-01 10:00 ET",
-        "dateNY": "2026-07-01",
-        "timeNY": "10:00",
-        "dias": 0,
-        "horas": 0,
-        "totalHoras": 0.1,
-        "momento": "Durante la sesión",
-        "status": "upcoming"
-      },
-      {
-        "evento": "Nóminas no agrícolas (NFP)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-03 08:30 ET",
-        "dateNY": "2026-07-03",
-        "timeNY": "08:30",
-        "dias": 1,
-        "horas": 22,
-        "totalHoras": 46.6,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "Tasa de desempleo",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-03 08:30 ET",
-        "dateNY": "2026-07-03",
-        "timeNY": "08:30",
-        "dias": 1,
-        "horas": 22,
-        "totalHoras": 46.6,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "IPC (CPI)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-15 08:30 ET",
-        "dateNY": "2026-07-15",
-        "timeNY": "08:30",
-        "dias": 13,
-        "horas": 22,
-        "totalHoras": 334.6,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "IPP (PPI)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-16 08:30 ET",
-        "dateNY": "2026-07-16",
-        "timeNY": "08:30",
-        "dias": 14,
-        "horas": 22,
-        "totalHoras": 358.6,
+        "totalHoras": 358.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -252,7 +187,81 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 22,
-        "totalHoras": 358.6,
+        "totalHoras": 358.49,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      }
+    ],
+    "all": [
+      {
+        "evento": "ISM Manufacturero",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-01 10:00 ET",
+        "dateNY": "2026-07-01",
+        "timeNY": "10:00",
+        "dias": -1,
+        "horas": 0,
+        "totalHoras": -0.01,
+        "momento": "Durante la sesión",
+        "status": "past"
+      },
+      {
+        "evento": "Nóminas no agrícolas (NFP)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-03 08:30 ET",
+        "dateNY": "2026-07-03",
+        "timeNY": "08:30",
+        "dias": 1,
+        "horas": 22,
+        "totalHoras": 46.49,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "Tasa de desempleo",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-03 08:30 ET",
+        "dateNY": "2026-07-03",
+        "timeNY": "08:30",
+        "dias": 1,
+        "horas": 22,
+        "totalHoras": 46.49,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "IPC (CPI)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-15 08:30 ET",
+        "dateNY": "2026-07-15",
+        "timeNY": "08:30",
+        "dias": 13,
+        "horas": 22,
+        "totalHoras": 334.49,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "IPP (PPI)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-16 08:30 ET",
+        "dateNY": "2026-07-16",
+        "timeNY": "08:30",
+        "dias": 14,
+        "horas": 22,
+        "totalHoras": 358.49,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
+      },
+      {
+        "evento": "Ventas minoristas",
+        "impacto": "medio",
+        "datetimeNY": "2026-07-16 08:30 ET",
+        "dateNY": "2026-07-16",
+        "timeNY": "08:30",
+        "dias": 14,
+        "horas": 22,
+        "totalHoras": 358.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -263,8 +272,8 @@
         "dateNY": "2026-07-29",
         "timeNY": "14:00",
         "dias": 28,
-        "horas": 4,
-        "totalHoras": 676.1,
+        "horas": 3,
+        "totalHoras": 675.99,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -276,7 +285,7 @@
         "timeNY": "08:30",
         "dias": 28,
         "horas": 22,
-        "totalHoras": 694.6,
+        "totalHoras": 694.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -288,7 +297,7 @@
         "timeNY": "08:30",
         "dias": 29,
         "horas": 22,
-        "totalHoras": 718.6,
+        "totalHoras": 718.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
