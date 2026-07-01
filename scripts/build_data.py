@@ -55,7 +55,7 @@ def safe_float(value, default=None):
         return default
 
 
-def get_price_snapshot():
+def get_intraday_df():
     df = yf.download(
         tickers=TICKER,
         period="2d",
@@ -66,25 +66,37 @@ def get_price_snapshot():
         threads=False,
     )
     df = flatten_columns(df)
+    if df is None or df.empty:
+        return None
+    return df
 
-    if df is not None and not df.empty and "Close" in df.columns:
-        closes = df["Close"].dropna()
+
+def get_daily_df():
+    df = yf.download(
+        tickers=TICKER,
+        period="5d",
+        interval="1d",
+        auto_adjust=True,
+        progress=False,
+        prepost=False,
+        threads=False,
+    )
+    df = flatten_columns(df)
+    if df is None or df.empty:
+        return None
+    return df
+
+
+def get_price_snapshot():
+    intraday = get_intraday_df()
+    if intraday is not None and "Close" in intraday.columns:
+        closes = intraday["Close"].dropna()
         if not closes.empty:
             last_price = float(closes.iloc[-1])
 
-            daily_df = yf.download(
-                tickers=TICKER,
-                period="5d",
-                interval="1d",
-                auto_adjust=True,
-                progress=False,
-                prepost=False,
-                threads=False,
-            )
-            daily_df = flatten_columns(daily_df)
-
+            daily_df = get_daily_df()
             prev_close = None
-            if daily_df is not None and not daily_df.empty and "Close" in daily_df.columns:
+            if daily_df is not None and "Close" in daily_df.columns:
                 daily_closes = daily_df["Close"].dropna()
                 if len(daily_closes) >= 2:
                     prev_close = float(daily_closes.iloc[-2])
@@ -94,21 +106,12 @@ def get_price_snapshot():
             return {
                 "price": last_price,
                 "prev_close": prev_close,
-                "source": "intraday_5m"
+                "source": "intraday_5m",
+                "intraday_df": intraday
             }
 
-    daily_df = yf.download(
-        tickers=TICKER,
-        period="5d",
-        interval="1d",
-        auto_adjust=True,
-        progress=False,
-        prepost=False,
-        threads=False,
-    )
-    daily_df = flatten_columns(daily_df)
-
-    if daily_df is not None and not daily_df.empty and "Close" in daily_df.columns:
+    daily_df = get_daily_df()
+    if daily_df is not None and "Close" in daily_df.columns:
         daily_closes = daily_df["Close"].dropna()
         if not daily_closes.empty:
             last_price = float(daily_closes.iloc[-1])
@@ -116,7 +119,8 @@ def get_price_snapshot():
             return {
                 "price": last_price,
                 "prev_close": prev_close,
-                "source": "daily_close"
+                "source": "daily_close",
+                "intraday_df": None
             }
 
     raise RuntimeError("No se pudo obtener el precio de QQQ.")
@@ -130,11 +134,54 @@ def compute_change(price, prev_close):
     return chg, chg_pct
 
 
+def compute_vwap(intraday_df):
+    if intraday_df is None or intraday_df.empty:
+        return None, None, "VWAP no disponible"
+
+    needed = {"High", "Low", "Close", "Volume"}
+    if not needed.issubset(set(intraday_df.columns)):
+        return None, None, "VWAP no disponible"
+
+    df = intraday_df.copy().dropna(subset=["High", "Low", "Close", "Volume"])
+    if df.empty:
+        return None, None, "VWAP no disponible"
+
+    vol = df["Volume"].astype(float)
+    if vol.sum() <= 0:
+        return None, None, "VWAP no disponible"
+
+    typical_price = (df["High"] + df["Low"] + df["Close"]) / 3.0
+    df["tpv"] = typical_price * vol
+    df["cum_tpv"] = df["tpv"].cumsum()
+    df["cum_vol"] = vol.cumsum()
+    df["vwap"] = df["cum_tpv"] / df["cum_vol"]
+
+    vwap_value = float(df["vwap"].iloc[-1])
+    current_price = float(df["Close"].iloc[-1])
+    dist_pct = ((current_price - vwap_value) / vwap_value) * 100 if vwap_value else None
+
+    if dist_pct is None:
+        bias = "VWAP no disponible"
+    elif dist_pct >= 0.75:
+        bias = "Muy por encima"
+    elif dist_pct >= 0.30:
+        bias = "Por encima"
+    elif dist_pct <= -0.75:
+        bias = "Muy por debajo"
+    elif dist_pct <= -0.30:
+        bias = "Por debajo"
+    else:
+        bias = "Cerca del VWAP"
+
+    return round(vwap_value, 2), round(dist_pct, 2) if dist_pct is not None else None, bias
+
+
 def build_trade_levels(price):
     projected_upside_price = price * (1 + MODEL_BUFFER_PCT)
     short_strike = math.ceil(projected_upside_price)
     long_strike = short_strike + SPREAD_WIDTH
     breakeven = short_strike + NET_CREDIT
+    dist_to_short = short_strike - price
 
     return {
         "bufferPct": round(MODEL_BUFFER_PCT * 100, 2),
@@ -142,7 +189,8 @@ def build_trade_levels(price):
         "longStrike": long_strike,
         "breakeven": round(breakeven, 2),
         "spreadWidth": SPREAD_WIDTH,
-        "netCredit": NET_CREDIT
+        "netCredit": NET_CREDIT,
+        "distToShort": round(dist_to_short, 2)
     }
 
 
@@ -203,19 +251,105 @@ def get_option_snapshot(price):
         }
 
 
+def calculate_score(price, change_pct, trade_levels, vwap_dist_pct, option_snapshot):
+    score = 100
+    reasons = []
+
+    dist_to_short = trade_levels["distToShort"]
+    if dist_to_short <= 0:
+        score -= 45
+        reasons.append("Precio en o sobre short strike")
+    elif dist_to_short <= 1:
+        score -= 30
+        reasons.append("Short strike muy cerca")
+    elif dist_to_short <= 2:
+        score -= 18
+        reasons.append("Short strike algo cerca")
+    elif dist_to_short <= 3:
+        score -= 8
+        reasons.append("Margen limitado al short")
+    else:
+        reasons.append("Distancia razonable al short")
+
+    if change_pct is not None:
+        if change_pct >= 1.5:
+            score -= 15
+            reasons.append("Sesgo alcista fuerte hoy")
+        elif change_pct >= 0.75:
+            score -= 8
+            reasons.append("Sesgo alcista moderado")
+        elif change_pct <= -0.75:
+            score += 4
+            reasons.append("Sesgo bajista favorable")
+        else:
+            reasons.append("Cambio diario contenido")
+
+    if vwap_dist_pct is not None:
+        if vwap_dist_pct >= 1.0:
+            score -= 12
+            reasons.append("Muy por encima del VWAP")
+        elif vwap_dist_pct >= 0.5:
+            score -= 7
+            reasons.append("Por encima del VWAP")
+        elif vwap_dist_pct <= -0.5:
+            score += 3
+            reasons.append("Por debajo del VWAP")
+        else:
+            reasons.append("Cerca del VWAP")
+
+    bid = option_snapshot.get("shortCallBid")
+    ask = option_snapshot.get("shortCallAsk")
+    if bid is None or ask is None:
+        score -= 6
+        reasons.append("Sin quote válida en short call")
+    else:
+        mid = (bid + ask) / 2 if (bid is not None and ask is not None) else None
+        spread_pct = ((ask - bid) / mid) * 100 if mid and mid > 0 else None
+        if spread_pct is not None and spread_pct > 20:
+            score -= 10
+            reasons.append("Bid/ask muy amplio")
+        elif spread_pct is not None and spread_pct > 12:
+            score -= 5
+            reasons.append("Bid/ask algo amplio")
+        else:
+            reasons.append("Bid/ask razonable")
+
+    score = max(0, min(100, round(score, 2)))
+    return score, reasons[:5]
+
+
+def make_decision(score, trade_levels):
+    dist_to_short = trade_levels["distToShort"]
+
+    if dist_to_short <= 0:
+        return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
+
+    if score >= 75:
+        return "entraría", "green", "🟢 Entraría", "🟢 Riesgo controlado"
+
+    if score >= 50:
+        return "esperar confirmación", "yellow", "🟡 Esperar confirmación", "🟡 Riesgo medio"
+
+    return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
+
+
 def build_state():
     snapshot = get_price_snapshot()
     price = snapshot["price"]
     prev_close = snapshot["prev_close"]
     source = snapshot["source"]
+    intraday_df = snapshot["intraday_df"]
 
     change, change_pct = compute_change(price, prev_close)
     levels = build_trade_levels(price)
     option_snapshot = get_option_snapshot(price)
+    vwap_value, vwap_dist_pct, vwap_bias = compute_vwap(intraday_df)
+    score, reasons = calculate_score(price, change_pct, levels, vwap_dist_pct, option_snapshot)
+    decision, decision_tone, decision_label, risk_label = make_decision(score, levels)
 
     now_utc = datetime.now(timezone.utc)
 
-    tone = "neutral"
+    tone = "flat"
     if change is not None:
         tone = "up" if change > 0 else "down" if change < 0 else "flat"
 
@@ -230,7 +364,18 @@ def build_state():
         "updatedAt": now_utc.isoformat(),
         "updatedAtText": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
         "trade": levels,
-        "options": option_snapshot
+        "options": option_snapshot,
+        "vwap": {
+            "value": vwap_value,
+            "distPct": vwap_dist_pct,
+            "bias": vwap_bias
+        },
+        "score": score,
+        "decision": decision,
+        "decisionTone": decision_tone,
+        "decisionLabel": decision_label,
+        "riskLabel": risk_label,
+        "reasons": reasons
     }
 
 
@@ -245,7 +390,9 @@ def update_history(state):
         "change": state["change"],
         "changePct": state["changePct"],
         "tone": state["tone"],
-        "source": state["source"]
+        "source": state["source"],
+        "score": state["score"],
+        "decisionLabel": state["decisionLabel"]
     }
 
     if history and history[-1].get("updatedAt") == row["updatedAt"]:
@@ -266,9 +413,8 @@ def main():
 
     print(
         f"OK | {state['ticker']} | price={state['price']} | "
-        f"changePct={state['changePct']} | "
-        f"short={state['trade']['shortStrike']} long={state['trade']['longStrike']} | "
-        f"history={len(history)}"
+        f"score={state['score']} | decision={state['decision']} | "
+        f"short={state['trade']['shortStrike']} | history={len(history)}"
     )
 
 
