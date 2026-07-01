@@ -1,18 +1,18 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-07-01 04:50:36",
+  "updatedAt": "2026-07-01 09:30:39",
   "decision": "no entraría",
   "decisionLabel": "🔴 No entraría",
   "decisionTone": "red",
-  "score": 52.0,
+  "score": 62.0,
   "semaforo": "🟡 Riesgo medio",
-  "horaNy": "2026-07-01 04:50:36",
-  "horaCanarias": "2026-07-01 09:50:37",
-  "precio": 731.94,
-  "precioFuente": "Antes de la apertura",
-  "shortStrike": 741,
-  "longStrike": 742.0,
-  "breakeven": 741.1,
+  "horaCanarias": "2026-07-01 09:30:39",
+  "horaNy": "2026-07-01 05:30:38",
+  "precio": 731.96,
+  "precioFuente": "Intradía",
+  "shortStrike": 746,
+  "longStrike": 747.0,
+  "breakeven": 746.1,
   "vwap": 733.95,
   "vwapBias": "Cerca del VWAP",
   "tp": 0.04,
@@ -35,9 +35,14 @@
       "text": "Premarket: falta validación de apertura (-3)"
     },
     {
-      "tone": "warn",
-      "title": "Liquidez insuficiente",
-      "text": "Liquidez insuficiente (-10)"
+      "tone": "ok",
+      "title": "Rango favorable para premium",
+      "text": "Rango favorable para premium (+3)"
+    },
+    {
+      "tone": "danger",
+      "title": "ISM Manufacturero durante sesión en <6h",
+      "text": "ISM Manufacturero durante sesión en <6h (-35)"
     },
     {
       "tone": "warn",
@@ -48,28 +53,8 @@
   "alerts": [
     {
       "tone": "warn",
-      "title": "Bid-ask amplio en la short call.",
-      "text": "Bid-ask amplio en la short call."
-    },
-    {
-      "tone": "warn",
-      "title": "Bid-ask amplio en la long call.",
-      "text": "Bid-ask amplio en la long call."
-    },
-    {
-      "tone": "warn",
-      "title": "Open interest bajo en la short call.",
-      "text": "Open interest bajo en la short call."
-    },
-    {
-      "tone": "warn",
-      "title": "Open interest bajo en la long call.",
-      "text": "Open interest bajo en la long call."
-    },
-    {
-      "tone": "warn",
-      "title": "ISM Manufacturero en 0d 5h",
-      "text": "ISM Manufacturero en 0d 5h"
+      "title": "ISM Manufacturero en 0d 4h",
+      "text": "ISM Manufacturero en 0d 4h"
     }
   ],
   "context": [
@@ -88,12 +73,10 @@
     [
       "Premarket low",
       "$730.91"
-    ]
-  ],
-  "strikeLogic": [
+    ],
     [
       "Buffer modelo",
-      "1.12%"
+      "1.85%"
     ],
     [
       "P75 20d",
@@ -105,62 +88,35 @@
     ],
     [
       "Distancia al short",
-      "$9.06"
+      "$14.04"
     ]
   ],
-  "macroList": [
-    {
-      "tone": "danger",
-      "label": "Macro",
-      "evento": "ISM Manufacturero",
-      "countdown": "0d 5h",
-      "impacto": "Alto",
-      "ny": "2026-07-01 10:00",
-      "canarias": "2026-07-01 15:00"
-    },
-    {
-      "tone": "danger",
-      "label": "Macro",
-      "evento": "Nóminas no agrícolas (NFP)",
-      "countdown": "1d 3h",
-      "impacto": "Alto",
-      "ny": "2026-07-02 08:30",
-      "canarias": "2026-07-02 13:30"
-    },
-    {
-      "tone": "danger",
-      "label": "Macro",
-      "evento": "Tasa de desempleo",
-      "countdown": "1d 3h",
-      "impacto": "Alto",
-      "ny": "2026-07-02 08:30",
-      "canarias": "2026-07-02 13:30"
-    },
-    {
-      "tone": "danger",
-      "label": "Macro",
-      "evento": "IPC (CPI)",
-      "countdown": "14d 3h",
-      "impacto": "Alto",
-      "ny": "2026-07-15 08:30",
-      "canarias": "2026-07-15 13:30"
-    }
+  "events": [
+    [
+      "Próximo macro",
+      "ISM Manufacturero"
+    ],
+    [
+      "Impacto",
+      "Alto"
+    ],
+    [
+      "Canarias",
+      "2026-07-01 09:30:39"
+    ],
+    [
+      "NY",
+      "2026-07-01 05:30:38"
+    ]
   ],
-  "earningsList": [],
-  "topSummary": {
-    "score": 52.0,
-    "semaforo": "🟡 Riesgo medio",
-    "precio": 731.94,
-    "precioFuente": "Antes de la apertura",
-    "strikes": "741 / 742.0",
-    "breakEven": 741.1,
-    "nextMacro": "ISM Manufacturero",
-    "nextMacroCountdown": "0d 5h"
-  },
   "contextMap": {
     "Tramo": "Premarket",
     "Régimen": "Rango",
     "Premarket high": "$736.40",
-    "Premarket low": "$730.91"
+    "Premarket low": "$730.91",
+    "Buffer modelo": "1.85%",
+    "P75 20d": "1.12%",
+    "P80 20d": "1.23%",
+    "Distancia al short": "$14.04"
   }
 }
