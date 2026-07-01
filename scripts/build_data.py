@@ -476,6 +476,8 @@ def get_upcoming_macro():
                 "evento": ev["evento"],
                 "impacto": ev["impacto"],
                 "datetimeNY": dt_ny.strftime("%Y-%m-%d %H:%M ET"),
+                "dateNY": dt_ny.strftime("%Y-%m-%d"),
+                "timeNY": dt_ny.strftime("%H:%M"),
                 "dias": int(delta_h // 24) if delta_h >= 0 else int(delta_h // 24),
                 "horas": int(abs(delta_h) % 24),
                 "totalHoras": round(delta_h, 2),
@@ -488,13 +490,32 @@ def get_upcoming_macro():
     rows.sort(key=lambda x: x["totalHoras"])
 
     upcoming = [r for r in rows if r["totalHoras"] >= 0]
+    past = [r for r in rows if r["totalHoras"] < 0]
+
+    recent = None
+    recent_today = [r for r in past if r["dateNY"] == now_ny.strftime("%Y-%m-%d")]
+    if recent_today:
+        recent = sorted(recent_today, key=lambda x: x["totalHoras"], reverse=True)[0]
+    elif past:
+        recent = sorted(past, key=lambda x: x["totalHoras"], reverse=True)[0]
+
     next_item = upcoming[0] if upcoming else None
 
+    if next_item and recent:
+        status = "OK | reciente + próximo"
+    elif next_item:
+        status = "OK | solo próximo"
+    elif recent:
+        status = "OK | solo reciente"
+    else:
+        status = "Sin macro en la lista manual"
+
     return {
-        "status": "OK" if upcoming else "Sin macro futura en la lista manual",
+        "status": status,
         "next": next_item,
+        "recent": recent,
         "items": upcoming[:5],
-        "all": rows[:10]
+        "all": rows[:12]
     }
 
 
