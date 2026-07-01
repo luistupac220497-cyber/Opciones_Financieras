@@ -104,7 +104,9 @@ def dias_restantes(fecha_obj):
 
 def get_now_ny():
     return datetime.now(NY_TZ)
-    def get_now_local():
+
+
+def get_now_local():
     return datetime.now(LOCAL_TZ)
 
 
@@ -901,7 +903,9 @@ def construir_state():
     )
     decision_final, decision_notes = ajustar_decision_final(trade_setup, intraday_ctx, score_data, price_source)
     tone, decision_label = tone_from_decision(decision_final)
+
     now_ny = intraday_ctx["now_ny"]
+    now_local = now_ny.astimezone(LOCAL_TZ)
 
     reasons = []
     for txt in score_data["motivos_score"][:4]:
@@ -917,7 +921,11 @@ def construir_state():
         reasons.append({"tone": "warn", "title": "Decisión", "text": note})
 
     if not reasons:
-        reasons.append({"tone": "ok", "title": "Sin penalizaciones críticas", "text": "No se detectaron bloqueos relevantes."})
+        reasons.append({
+            "tone": "ok",
+            "title": "Sin penalizaciones críticas",
+            "text": "No se detectaron bloqueos relevantes."
+        })
 
     alerts = []
     for a in score_data["alertas"][:5]:
@@ -928,7 +936,11 @@ def construir_state():
         alerts.append({"tone": tone_a, "title": a, "text": a})
 
     if not alerts:
-        alerts.append({"tone": "ok", "title": "Sin alertas cercanas", "text": "No hay alertas inmediatas por macro o resultados."})
+        alerts.append({
+            "tone": "ok",
+            "title": "Sin alertas cercanas",
+            "text": "No hay alertas inmediatas por macro o resultados."
+        })
 
     prox_macro = macro_events[0] if macro_events else None
     prox_earn = earnings_list[0] if earnings_list else None
@@ -949,13 +961,14 @@ def construir_state():
 
     return {
         "ticker": TICKER,
-        "updatedAt": now_ny.strftime("%Y-%m-%d %H:%M:%S"),
+        "updatedAt": now_local.strftime("%Y-%m-%d %H:%M:%S"),
+        "horaLocal": now_local.strftime("%Y-%m-%d %H:%M:%S"),
+        "horaNy": now_ny.strftime("%Y-%m-%d %H:%M:%S"),
         "decision": decision_final,
         "decisionLabel": decision_label,
         "decisionTone": tone,
         "score": score_data["score"],
         "semaforo": score_data["semaforo"],
-        "horaNy": now_ny.strftime("%Y-%m-%d %H:%M:%S"),
         "precio": round(current_price, 2),
         "precioFuente": traducir_fuente_precio(price_source),
         "shortStrike": trade_setup["short_strike"],
@@ -1037,7 +1050,9 @@ def html_template():
     .summary-list,.alerts-list{display:grid;gap:.7rem}
     .summary-item,.alerts-item{display:flex;gap:.75rem;align-items:flex-start;padding:.85rem .95rem;border-radius:var(--radius-md);background:var(--color-surface-2);border:1px solid rgba(0,0,0,.06)}
     .dot{width:.65rem;height:.65rem;border-radius:999px;flex:0 0 auto;margin-top:.4rem;background:var(--color-primary)}
-    .dot.warn{background:var(--color-warning)} .dot.danger{background:var(--color-error)} .dot.ok{background:var(--color-success)}
+    .dot.warn{background:var(--color-warning)}
+    .dot.danger{background:var(--color-error)}
+    .dot.ok{background:var(--color-success)}
     .summary-item strong,.alerts-item strong{display:block;font-size:var(--text-sm)}
     .summary-item span,.alerts-item span{color:var(--color-text-muted);font-size:var(--text-sm)}
     .mini-table{display:grid;gap:.65rem}
@@ -1090,6 +1105,7 @@ def html_template():
           </div>
           <div class="status-line">
             <div><strong>Actualizado:</strong> <span id="updated-at">-</span></div>
+            <div><strong>Canarias:</strong> <span id="hora-local">-</span></div>
             <div><strong>NY:</strong> <span id="hora-ny">-</span></div>
           </div>
         </div>
@@ -1258,6 +1274,7 @@ def html_template():
       document.getElementById('decision-pill').textContent = decisionLabel;
       document.getElementById('resumen-title').textContent = `${decisionLabel} antes de vender el bear call spread.`;
       document.getElementById('updated-at').textContent = safe(state.updatedAt);
+      document.getElementById('hora-local').textContent = safe(state.horaLocal);
       document.getElementById('hora-ny').textContent = safe(state.horaNy);
       document.getElementById('score').textContent = `${safe(state.score)} / 100`;
       document.getElementById('semaforo').textContent = safe(state.semaforo);
