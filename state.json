@@ -1,32 +1,37 @@
 {
   "ticker": "QQQ",
-  "updatedAt": "2026-06-30 13:50:36 UTC",
+  "updatedAt": "2026-07-01 03:30:44",
   "decision": "no entraría",
   "decisionLabel": "🔴 No entraría",
   "decisionTone": "red",
-  "score": 75.0,
-  "semaforo": "🟢 Riesgo controlado",
-  "horaNy": "2026-06-30 09:50",
-  "precio": 728.11,
-  "precioFuente": "Durante la sesión",
-  "shortStrike": 737,
-  "longStrike": 738.0,
-  "breakeven": 737.1,
-  "vwap": 727.14,
-  "vwapBias": "Cerca del VWAP",
+  "score": 44.0,
+  "semaforo": "🔴 Riesgo alto",
+  "horaNy": "2026-07-01 03:30:44",
+  "precio": 736.29,
+  "precioFuente": "Después del cierre",
+  "shortStrike": 745,
+  "longStrike": 746.0,
+  "breakeven": 745.1,
+  "vwap": 733.95,
+  "vwapBias": "Por encima",
   "tp": 0.04,
   "stop": 0.2,
   "riesgoMax": 90.0,
   "reasons": [
     {
+      "tone": "warn",
+      "title": "Precio fuera de horario regular",
+      "text": "Precio fuera de horario regular (-3)"
+    },
+    {
       "tone": "ok",
-      "title": "Cerca del VWAP",
-      "text": "Cerca del VWAP"
+      "title": "Precio ligeramente por encima del VWAP",
+      "text": "Precio ligeramente por encima del VWAP"
     },
     {
       "tone": "warn",
-      "title": "Apertura: volatilidad inicial alta",
-      "text": "Apertura: volatilidad inicial alta (-6)"
+      "title": "Premarket: falta validación de apertura",
+      "text": "Premarket: falta validación de apertura (-3)"
     },
     {
       "tone": "warn",
@@ -34,14 +39,9 @@
       "text": "Liquidez insuficiente (-10)"
     },
     {
-      "tone": "ok",
-      "title": "Rango favorable para premium",
-      "text": "Rango favorable para premium (+3)"
-    },
-    {
       "tone": "warn",
       "title": "Decisión",
-      "text": "Liquidez insuficiente"
+      "text": "Bloqueo operativo activado"
     }
   ],
   "alerts": [
@@ -54,16 +54,31 @@
       "tone": "warn",
       "title": "Bid-ask amplio en la long call.",
       "text": "Bid-ask amplio en la long call."
+    },
+    {
+      "tone": "warn",
+      "title": "Open interest bajo en la short call.",
+      "text": "Open interest bajo en la short call."
+    },
+    {
+      "tone": "warn",
+      "title": "Open interest bajo en la long call.",
+      "text": "Open interest bajo en la long call."
+    },
+    {
+      "tone": "warn",
+      "title": "Setup en contra de posible trend day alcista",
+      "text": "Setup en contra de posible trend day alcista"
     }
   ],
   "context": [
     [
       "Tramo",
-      "Apertura"
+      "Premarket"
     ],
     [
       "Régimen",
-      "Rango"
+      "Trend Alcista"
     ],
     [
       "Premarket high",
@@ -93,8 +108,8 @@
     ]
   ],
   "contextMap": {
-    "Tramo": "Apertura",
-    "Régimen": "Rango",
+    "Tramo": "Premarket",
+    "Régimen": "Trend Alcista",
     "Premarket high": "$728.30",
     "Premarket low": "$714.67"
   }
