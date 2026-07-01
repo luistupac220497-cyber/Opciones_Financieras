@@ -14,11 +14,6 @@ import yfinance as yf
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 
-# =========================
-# QQQ BEAR CALL SPREAD - V2
-# Compatible con GitHub Actions
-# =========================
-
 RUNNING_IN_GITHUB = os.getenv("GITHUB_ACTIONS") == "true"
 
 TICKER = "QQQ"
@@ -35,7 +30,6 @@ WAIT_MINUTES_AFTER_OPEN = 5
 OPENING_RANGE_MINUTES = 15
 POWER_HOUR_STRICT = True
 
-AUTO_REFRESH_SECONDS = 60
 MAX_HISTORY_ITEMS = 200
 SERVE_LOCAL = False if RUNNING_IN_GITHUB else True
 PORT = 8000
@@ -67,6 +61,7 @@ MACRO_EVENTS = [
 
 BASE_DIR = Path.cwd()
 HTML_FILE = BASE_DIR / "qqq-spread-dashboard.html"
+INDEX_FILE = BASE_DIR / "index.html"
 STATE_FILE = BASE_DIR / "state.json"
 HISTORY_FILE = BASE_DIR / "history.json"
 
@@ -823,7 +818,6 @@ def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx,
 
 def ajustar_decision_final(trade_setup, intraday_ctx, score_data, price_source):
     decision = trade_setup["decision_base"]
-    motivos = []
 
     tramo = intraday_ctx["tramo_horario"]
     liq = intraday_ctx.get("liquidity")
@@ -856,7 +850,7 @@ def ajustar_decision_final(trade_setup, intraday_ctx, score_data, price_source):
     if 50 <= score_data["score"] < 75 and decision == "entraría":
         return "esperar confirmación", ["Score medio"]
 
-    return decision, motivos
+    return decision, []
 
 
 def append_history(state):
@@ -904,6 +898,7 @@ def construir_state():
     )
     decision_final, decision_notes = ajustar_decision_final(trade_setup, intraday_ctx, score_data, price_source)
     tone, decision_label = tone_from_decision(decision_final)
+    now_ny = intraday_ctx["now_ny"]
 
     reasons = []
     for txt in score_data["motivos_score"][:4]:
@@ -934,7 +929,6 @@ def construir_state():
 
     prox_macro = macro_events[0] if macro_events else None
     prox_earn = earnings_list[0] if earnings_list else None
-    now_ny = intraday_ctx["now_ny"]
 
     context_rows = [
         ["Tramo", intraday_ctx["tramo_horario"].replace("_", " ").title()],
@@ -950,7 +944,7 @@ def construir_state():
         ["Días", str(prox_earn["dias"]) if prox_earn and prox_earn["dias"] is not None else "N/D"],
     ]
 
-    state = {
+    return {
         "ticker": TICKER,
         "updatedAt": now_ny.strftime("%Y-%m-%d %H:%M:%S"),
         "decision": decision_final,
@@ -975,8 +969,6 @@ def construir_state():
         "events": events_rows,
         "contextMap": {k: v for k, v in context_rows}
     }
-
-    return state
 
 
 def html_template():
@@ -1370,8 +1362,7 @@ def get_local_ip():
 
 
 def start_server():
-    os_cwd = Path.cwd()
-    if os_cwd != BASE_DIR:
+    if Path.cwd() != BASE_DIR:
         os.chdir(BASE_DIR)
 
     httpd = ThreadingHTTPServer(("0.0.0.0", PORT), SilentHandler)
@@ -1383,7 +1374,9 @@ def start_server():
 def write_dashboard_assets(state):
     save_json_file(STATE_FILE, state)
     history = append_history(state)
-    HTML_FILE.write_text(html_template(), encoding="utf-8")
+    html = html_template()
+    HTML_FILE.write_text(html, encoding="utf-8")
+    INDEX_FILE.write_text(html, encoding="utf-8")
     return history
 
 
@@ -1421,6 +1414,7 @@ def main():
             f"Histórico {len(history)}"
         )
         print(f"HTML: {HTML_FILE}")
+        print(f"INDEX: {INDEX_FILE}")
         print(f"STATE: {STATE_FILE}")
         print(f"HISTORY: {HISTORY_FILE}")
     except Exception as e:
