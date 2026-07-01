@@ -5,5 +5,12 @@
     "ticker": "QQQ",
     "price": 733.0,
     "source": "intraday_5m"
+  },
+  {
+    "updatedAt": "2026-07-01T10:58:08.953959+00:00",
+    "updatedAtText": "2026-07-01 10:58:08 UTC",
+    "ticker": "QQQ",
+    "price": 733.41,
+    "source": "intraday_5m"
   }
 ]
