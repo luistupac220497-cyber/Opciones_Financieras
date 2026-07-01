@@ -72,6 +72,17 @@
       font-weight: 600;
     }
 
+    .substatus {
+      display: inline-block;
+      margin: 0 0 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--card-2);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
     .decision-pill {
       display: inline-block;
       margin-top: 12px;
@@ -303,11 +314,13 @@
 
       <article class="card half">
         <h2>Próximo macro</h2>
+        <div class="substatus" id="macroStatus">Macro status: --</div>
         <div class="kv" id="macroNextBox"></div>
       </article>
 
       <article class="card half">
         <h2>Próximo earnings</h2>
+        <div class="substatus" id="earningsStatus">Earnings status: --</div>
         <div class="kv" id="earningsNextBox"></div>
       </article>
 
@@ -423,18 +436,19 @@
       `;
 
       const reasons = Array.isArray(state.reasons) ? state.reasons : [];
-      const reasonsBox = document.getElementById('reasonsBox');
-      reasonsBox.innerHTML = reasons.length
+      document.getElementById('reasonsBox').innerHTML = reasons.length
         ? reasons.map(r => `<div class="reason">${txt(r)}</div>`).join('')
         : `<div class="reason">Sin motivos disponibles.</div>`;
 
       const alerts = Array.isArray(state.alerts) ? state.alerts : [];
-      const alertsBox = document.getElementById('alertsBox');
-      alertsBox.innerHTML = alerts.length
+      document.getElementById('alertsBox').innerHTML = alerts.length
         ? alerts.map(a => `<div class="alert">${txt(a)}</div>`).join('')
         : `<div class="alert">Sin alertas inmediatas.</div>`;
 
-      const macroNext = state.macro?.next;
+      const macro = state.macro ?? {};
+      document.getElementById('macroStatus').textContent = `Macro status: ${txt(macro.status)}`;
+
+      const macroNext = macro.next;
       document.getElementById('macroNextBox').innerHTML = macroNext ? `
         <div class="kv-row"><span>Evento</span><span>${txt(macroNext.evento)}</span></div>
         <div class="kv-row"><span>Impacto</span><span>${txt(macroNext.impacto)}</span></div>
@@ -445,18 +459,22 @@
         <div class="kv-row"><span>Próximo macro</span><span>No disponible</span></div>
       `;
 
-      const earningsNext = state.earnings?.next;
+      const earnings = state.earnings ?? {};
+      document.getElementById('earningsStatus').textContent = `Earnings status: ${txt(earnings.status)}`;
+
+      const earningsNext = earnings.next;
       document.getElementById('earningsNextBox').innerHTML = earningsNext ? `
         <div class="kv-row"><span>Empresa</span><span>${txt(earningsNext.empresa)}</span></div>
         <div class="kv-row"><span>Ticker</span><span>${txt(earningsNext.ticker)}</span></div>
         <div class="kv-row"><span>Fecha</span><span>${txt(earningsNext.fecha)}</span></div>
         <div class="kv-row"><span>Días</span><span>${txt(earningsNext.dias)}</span></div>
         <div class="kv-row"><span>Momento</span><span>${txt(earningsNext.momento)}</span></div>
+        <div class="kv-row"><span>Status</span><span>${txt(earningsNext.status)}</span></div>
       ` : `
         <div class="kv-row"><span>Próximo earnings</span><span>No disponible</span></div>
       `;
 
-      const macroItems = Array.isArray(state.macro?.items) ? state.macro.items : [];
+      const macroItems = Array.isArray(macro.items) ? macro.items : [];
       document.getElementById('macroListBox').innerHTML = macroItems.length
         ? macroItems.map(item => `
             <div class="list-item">
@@ -466,12 +484,12 @@
           `).join('')
         : `<div class="list-item">Sin eventos macro cargados.</div>`;
 
-      const earningsItems = Array.isArray(state.earnings?.items) ? state.earnings.items : [];
+      const earningsItems = Array.isArray(earnings.items) ? earnings.items : [];
       document.getElementById('earningsListBox').innerHTML = earningsItems.length
         ? earningsItems.map(item => `
             <div class="list-item">
               <div class="item-title">${txt(item.empresa)} (${txt(item.ticker)})</div>
-              <div class="item-sub">${txt(item.fecha)} · ${txt(item.momento)} · ${txt(item.dias)} días</div>
+              <div class="item-sub">${txt(item.fecha)} · ${txt(item.momento)} · ${txt(item.dias)} días · ${txt(item.status)}</div>
             </div>
           `).join('')
         : `<div class="list-item">Sin earnings próximas.</div>`;
