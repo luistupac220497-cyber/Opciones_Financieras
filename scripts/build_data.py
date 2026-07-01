@@ -96,10 +96,11 @@ def normalize_date(value):
         return None
 
 
-def days_until(d):
+def days_until(d, base_date=None):
     if d is None:
         return None
-    return (d - datetime.now(NY_TZ).date()).days
+    base = base_date or datetime.now(NY_TZ).date()
+    return (d - base).days
 
 
 def translate_earnings_moment(text):
@@ -350,8 +351,15 @@ def get_next_earnings_for_ticker(ticker_symbol):
     try:
         t = yf.Ticker(ticker_symbol)
         df = t.get_earnings_dates(limit=8)
+
         if df is None or df.empty:
-            return None
+            return {
+                "ticker": ticker_symbol,
+                "fecha": None,
+                "dias": None,
+                "momento": "No disponible",
+                "status": "Vacío en Yahoo"
+            }
 
         df = df.copy()
         if not isinstance(df.index, pd.RangeIndex):
@@ -372,19 +380,34 @@ def get_next_earnings_for_ticker(ticker_symbol):
                 break
 
         if date_col is None:
-            date_col = df.columns[0]
+            return {
+                "ticker": ticker_symbol,
+                "fecha": None,
+                "dias": None,
+                "momento": "No disponible",
+                "status": "Columna de fecha no encontrada"
+            }
 
         df["_fecha"] = pd.to_datetime(df[date_col], errors="coerce")
         df = df[df["_fecha"].notna()].copy()
+
         try:
             df["_fecha"] = df["_fecha"].dt.tz_localize(None)
         except Exception:
             pass
 
-        today = pd.Timestamp.now().normalize()
-        df = df[df["_fecha"] >= today].sort_values("_fecha")
+        today = datetime.now(NY_TZ).date()
+        df["_fecha_date"] = df["_fecha"].dt.date
+        df = df[df["_fecha_date"] >= today].sort_values("_fecha")
+
         if df.empty:
-            return None
+            return {
+                "ticker": ticker_symbol,
+                "fecha": None,
+                "dias": None,
+                "momento": "No disponible",
+                "status": "Sin fechas futuras"
+            }
 
         row = df.iloc[0]
         fecha = normalize_date(row["_fecha"])
@@ -393,27 +416,51 @@ def get_next_earnings_for_ticker(ticker_symbol):
         return {
             "ticker": ticker_symbol,
             "fecha": fecha.isoformat() if fecha else None,
-            "dias": days_until(fecha),
-            "momento": translate_earnings_moment(momento_raw)
+            "dias": days_until(fecha, today),
+            "momento": translate_earnings_moment(momento_raw),
+            "status": "OK"
         }
-    except Exception:
-        return None
+    except Exception as e:
+        return {
+            "ticker": ticker_symbol,
+            "fecha": None,
+            "dias": None,
+            "momento": "No disponible",
+            "status": f"Error Yahoo: {str(e)}"
+        }
 
 
 def get_mag7_earnings():
     rows = []
+    ok_count = 0
+
     for tk, nombre in MAG7.items():
         item = get_next_earnings_for_ticker(tk)
-        if item:
-            rows.append({
-                "empresa": nombre,
-                "ticker": tk,
-                "fecha": item["fecha"],
-                "dias": item["dias"],
-                "momento": item["momento"]
-            })
-    rows.sort(key=lambda x: (9999 if x["dias"] is None else x["dias"]))
-    return rows
+        row = {
+            "empresa": nombre,
+            "ticker": tk,
+            "fecha": item.get("fecha"),
+            "dias": item.get("dias"),
+            "momento": item.get("momento"),
+            "status": item.get("status", "No disponible")
+        }
+        if row["status"] == "OK":
+            ok_count += 1
+        rows.append(row)
+
+    rows.sort(key=lambda x: (
+        0 if x["dias"] is not None else 1,
+        9999 if x["dias"] is None else x["dias"]
+    ))
+
+    next_item = next((r for r in rows if r["status"] == "OK"), None)
+
+    status = "OK" if ok_count > 0 else "Yahoo no devolvió earnings"
+    return {
+        "status": status,
+        "next": next_item,
+        "items": rows[:7]
+    }
 
 
 def get_upcoming_macro():
@@ -424,26 +471,34 @@ def get_upcoming_macro():
         try:
             dt_ny = datetime.strptime(ev["datetime_ny"], "%Y-%m-%d %H:%M").replace(tzinfo=NY_TZ)
             delta_h = (dt_ny - now_ny).total_seconds() / 3600
-            if delta_h < 0:
-                continue
 
             rows.append({
                 "evento": ev["evento"],
                 "impacto": ev["impacto"],
                 "datetimeNY": dt_ny.strftime("%Y-%m-%d %H:%M ET"),
-                "dias": int(delta_h // 24),
-                "horas": int(delta_h % 24),
+                "dias": int(delta_h // 24) if delta_h >= 0 else int(delta_h // 24),
+                "horas": int(abs(delta_h) % 24),
                 "totalHoras": round(delta_h, 2),
-                "momento": classify_macro_moment(dt_ny)
+                "momento": classify_macro_moment(dt_ny),
+                "status": "upcoming" if delta_h >= 0 else "past"
             })
         except Exception:
             continue
 
     rows.sort(key=lambda x: x["totalHoras"])
-    return rows
+
+    upcoming = [r for r in rows if r["totalHoras"] >= 0]
+    next_item = upcoming[0] if upcoming else None
+
+    return {
+        "status": "OK" if upcoming else "Sin macro futura en la lista manual",
+        "next": next_item,
+        "items": upcoming[:5],
+        "all": rows[:10]
+    }
 
 
-def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, session_code, macro_rows, earnings_rows):
+def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, session_code, macro_block, earnings_block):
     score = 100
     reasons = []
     alerts = []
@@ -526,7 +581,7 @@ def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, se
         score -= 15
         reasons.append("Overnight: sin mercado regular")
 
-    for ev in macro_rows[:3]:
+    for ev in macro_block.get("items", [])[:3]:
         if ev["impacto"] != "alto":
             continue
         if ev["momento"] == "Durante la sesión" and ev["totalHoras"] <= 24:
@@ -541,7 +596,9 @@ def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, se
             score -= 6
             reasons.append(f"Macro próxima: {ev['evento']}")
 
-    for er in earnings_rows[:4]:
+    ok_earnings = [e for e in earnings_block.get("items", []) if e.get("status") == "OK"]
+
+    for er in ok_earnings[:4]:
         if er["dias"] is None:
             continue
         if er["dias"] == 0 and er["momento"] == "Durante la sesión":
@@ -602,11 +659,11 @@ def build_state():
     option_snapshot = get_option_snapshot(price)
     vwap_value, vwap_dist_pct, vwap_bias = compute_vwap(intraday_df)
 
-    macro_rows = get_upcoming_macro()
-    earnings_rows = get_mag7_earnings()
+    macro_block = get_upcoming_macro()
+    earnings_block = get_mag7_earnings()
 
     score, reasons, alerts = calculate_score(
-        change_pct, levels, vwap_dist_pct, option_snapshot, session_code, macro_rows, earnings_rows
+        change_pct, levels, vwap_dist_pct, option_snapshot, session_code, macro_block, earnings_block
     )
     decision, decision_tone, decision_label, risk_label = make_decision(score, levels, session_code, alerts)
 
@@ -643,14 +700,8 @@ def build_state():
         "riskLabel": risk_label,
         "reasons": reasons,
         "alerts": alerts,
-        "macro": {
-            "next": macro_rows[0] if macro_rows else None,
-            "items": macro_rows[:5]
-        },
-        "earnings": {
-            "next": earnings_rows[0] if earnings_rows else None,
-            "items": earnings_rows[:5]
-        }
+        "macro": macro_block,
+        "earnings": earnings_block
     }
 
 
@@ -690,9 +741,9 @@ def main():
 
     print(
         f"OK | {state['ticker']} | price={state['price']} | "
-        f"session={state['session']['label']} | score={state['score']} | "
-        f"decision={state['decision']} | alerts={len(state['alerts'])} | "
-        f"history={len(history)}"
+        f"macro_status={state['macro']['status']} | "
+        f"earnings_status={state['earnings']['status']} | "
+        f"score={state['score']} | history={len(history)}"
     )
 
 
