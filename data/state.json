@@ -1,19 +1,19 @@
 {
   "ticker": "QQQ",
-  "price": 725.17,
+  "price": 725.25,
   "prevClose": 736.4,
-  "change": -11.23,
-  "changePct": -1.52,
+  "change": -11.15,
+  "changePct": -1.51,
   "tone": "down",
-  "source": "daily_close",
-  "updatedAt": "2026-07-01T21:10:32.805480+00:00",
-  "updatedAtText": "2026-07-01 21:10:32 UTC",
-  "updatedAtNY": "2026-07-01 17:10:32 ET",
+  "source": "intraday_5m",
+  "updatedAt": "2026-07-01T21:20:30.931398+00:00",
+  "updatedAtText": "2026-07-01 21:20:30 UTC",
+  "updatedAtNY": "2026-07-01 17:20:30 ET",
   "session": {
     "code": "after_hours",
     "label": "After hours"
   },
-  "summary": "macro Nóminas no agrícolas (NFP) en 1d 15h · short strike dentro o cerca del expected move · quotes de opciones no fiables todavía · tramo actual: after hours",
+  "summary": "macro Nóminas no agrícolas (NFP) en 1d 15h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 21d · tramo actual: after hours",
   "trade": {
     "bufferPct": 1.85,
     "shortStrike": 739,
@@ -21,47 +21,61 @@
     "breakeven": 739.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 13.83
+    "distToShort": 13.75
   },
   "options": {
-    "expiration": null,
-    "shortCallBid": null,
-    "shortCallAsk": null,
-    "longCallBid": null,
-    "longCallAsk": null,
+    "expiration": "2026-07-01",
+    "shortCallBid": 0.0,
+    "shortCallAsk": 0.01,
+    "longCallBid": 0.0,
+    "longCallAsk": 0.01,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": null,
-    "longCallOI": null,
-    "shortCallVolume": null,
-    "longCallVolume": null,
-    "quotesUsable": false,
-    "notes": "Options no disponibles: Too Many Requests. Rate limited. Try after a while."
+    "shortCallOI": 2918.0,
+    "longCallOI": 12890.0,
+    "shortCallVolume": 14883.0,
+    "longCallVolume": 37231.0,
+    "quotesUsable": true,
+    "notes": "OK"
   },
   "vwap": {
-    "value": null,
-    "distPct": null,
-    "zScore": null,
-    "sigma": null,
-    "bias": "VWAP no disponible"
+    "value": 730.98,
+    "distPct": -0.78,
+    "zScore": -1.68,
+    "sigma": 3.41,
+    "bias": "Muy por debajo"
   },
   "openingRange": {
-    "available": false,
-    "status": "Sin datos intradía",
-    "message": "No hay datos para calcular Opening Range"
+    "available": true,
+    "status": "OK",
+    "message": "Opening Range calculado",
+    "minutes": 5,
+    "open": 729.16,
+    "high": 729.7,
+    "low": 725.98,
+    "close": 726.23,
+    "mid": 727.84,
+    "size": 3.72,
+    "sizePct": 0.51,
+    "state": "normal"
   },
   "premarketRange": {
-    "available": false,
-    "status": "Sin datos intradía",
-    "message": "No hay datos para Premarket Range"
+    "available": true,
+    "status": "OK",
+    "message": "Premarket Range calculado",
+    "high": 736.95,
+    "low": 728.67,
+    "close": 729.18,
+    "size": 8.28,
+    "sizePct": 1.14
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 2.1,
     "move": 15.25,
     "movePct": 2.1,
-    "upper": 740.42,
-    "lower": 709.92,
+    "upper": 740.5,
+    "lower": 710.0,
     "status": "OK"
   },
   "freshness": {
@@ -70,7 +84,7 @@
     "isStale": false,
     "status": "OK"
   },
-  "score": 62,
+  "score": 64,
   "decision": "no entraría",
   "decisionTone": "red",
   "decisionLabel": "🔴 No entraría",
@@ -78,8 +92,13 @@
   "reasons": [
     "Distancia razonable al short",
     "Sesgo bajista favorable",
+    "Por debajo del VWAP",
+    "VWAP algo estirado",
+    "Opening range normal",
     "Short strike dentro o cerca del expected move",
-    "Sin liquidez útil en options",
+    "Bid/ask muy amplio",
+    "Open interest sólido en strikes",
+    "Volumen decente en short call",
     "After hours: spreads peores",
     "Macro próxima: Nóminas no agrícolas (NFP)",
     "Macro próxima: Tasa de desempleo"
@@ -95,7 +114,7 @@
       "timeNY": "08:30",
       "dias": 1,
       "horas": 15,
-      "totalHoras": 39.32,
+      "totalHoras": 39.16,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -107,7 +126,7 @@
       "timeNY": "10:00",
       "dias": -1,
       "horas": 7,
-      "totalHoras": -7.18,
+      "totalHoras": -7.34,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -120,7 +139,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 15,
-        "totalHoras": 39.32,
+        "totalHoras": 39.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -132,7 +151,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 15,
-        "totalHoras": 39.32,
+        "totalHoras": 39.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -144,7 +163,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 15,
-        "totalHoras": 327.32,
+        "totalHoras": 327.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -156,7 +175,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 15,
-        "totalHoras": 351.32,
+        "totalHoras": 351.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -168,7 +187,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 15,
-        "totalHoras": 351.32,
+        "totalHoras": 351.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -182,7 +201,7 @@
         "timeNY": "10:00",
         "dias": -1,
         "horas": 7,
-        "totalHoras": -7.18,
+        "totalHoras": -7.34,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -194,7 +213,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 15,
-        "totalHoras": 39.32,
+        "totalHoras": 39.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -206,7 +225,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 15,
-        "totalHoras": 39.32,
+        "totalHoras": 39.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -218,7 +237,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 15,
-        "totalHoras": 327.32,
+        "totalHoras": 327.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -230,7 +249,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 15,
-        "totalHoras": 351.32,
+        "totalHoras": 351.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -242,7 +261,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 15,
-        "totalHoras": 351.32,
+        "totalHoras": 351.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -254,7 +273,7 @@
         "timeNY": "14:00",
         "dias": 27,
         "horas": 20,
-        "totalHoras": 668.82,
+        "totalHoras": 668.66,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -266,7 +285,7 @@
         "timeNY": "08:30",
         "dias": 28,
         "horas": 15,
-        "totalHoras": 687.32,
+        "totalHoras": 687.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -278,71 +297,78 @@
         "timeNY": "08:30",
         "dias": 29,
         "horas": 15,
-        "totalHoras": 711.32,
+        "totalHoras": 711.16,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
     ]
   },
   "earnings": {
-    "status": "Yahoo no devolvió earnings",
-    "next": null,
+    "status": "OK",
+    "next": {
+      "empresa": "Tesla",
+      "ticker": "TSLA",
+      "fecha": "2026-07-22",
+      "dias": 21,
+      "momento": "Hora no especificada",
+      "status": "OK"
+    },
     "items": [
       {
-        "empresa": "Apple",
-        "ticker": "AAPL",
-        "fecha": null,
-        "dias": null,
-        "momento": "No disponible",
-        "status": "Error Yahoo: ['Earnings Date']"
-      },
-      {
-        "empresa": "Microsoft",
-        "ticker": "MSFT",
-        "fecha": null,
-        "dias": null,
-        "momento": "No disponible",
-        "status": "Error Yahoo: ['Earnings Date']"
-      },
-      {
-        "empresa": "Nvidia",
-        "ticker": "NVDA",
-        "fecha": null,
-        "dias": null,
-        "momento": "No disponible",
-        "status": "Error Yahoo: ['Earnings Date']"
-      },
-      {
-        "empresa": "Amazon",
-        "ticker": "AMZN",
-        "fecha": null,
-        "dias": null,
-        "momento": "No disponible",
-        "status": "Error Yahoo: ['Earnings Date']"
-      },
-      {
-        "empresa": "Meta",
-        "ticker": "META",
-        "fecha": null,
-        "dias": null,
-        "momento": "No disponible",
-        "status": "Error Yahoo: ['Earnings Date']"
+        "empresa": "Tesla",
+        "ticker": "TSLA",
+        "fecha": "2026-07-22",
+        "dias": 21,
+        "momento": "Hora no especificada",
+        "status": "OK"
       },
       {
         "empresa": "Alphabet",
         "ticker": "GOOGL",
-        "fecha": null,
-        "dias": null,
-        "momento": "No disponible",
-        "status": "Error Yahoo: ['Earnings Date']"
+        "fecha": "2026-07-23",
+        "dias": 22,
+        "momento": "Hora no especificada",
+        "status": "OK"
       },
       {
-        "empresa": "Tesla",
-        "ticker": "TSLA",
-        "fecha": null,
-        "dias": null,
-        "momento": "No disponible",
-        "status": "Error Yahoo: ['Earnings Date']"
+        "empresa": "Microsoft",
+        "ticker": "MSFT",
+        "fecha": "2026-07-29",
+        "dias": 28,
+        "momento": "Hora no especificada",
+        "status": "OK"
+      },
+      {
+        "empresa": "Meta",
+        "ticker": "META",
+        "fecha": "2026-07-29",
+        "dias": 28,
+        "momento": "Hora no especificada",
+        "status": "OK"
+      },
+      {
+        "empresa": "Apple",
+        "ticker": "AAPL",
+        "fecha": "2026-07-30",
+        "dias": 29,
+        "momento": "Hora no especificada",
+        "status": "OK"
+      },
+      {
+        "empresa": "Amazon",
+        "ticker": "AMZN",
+        "fecha": "2026-07-30",
+        "dias": 29,
+        "momento": "Hora no especificada",
+        "status": "OK"
+      },
+      {
+        "empresa": "Nvidia",
+        "ticker": "NVDA",
+        "fecha": "2026-08-26",
+        "dias": 56,
+        "momento": "Hora no especificada",
+        "status": "OK"
       }
     ]
   }
