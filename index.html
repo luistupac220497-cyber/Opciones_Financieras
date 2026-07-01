@@ -16,6 +16,7 @@
       --good: #35c759;
       --bad: #ff6b6b;
       --flat: #f7c948;
+      --warn: #f5a524;
     }
 
     * { box-sizing: border-box; }
@@ -29,7 +30,7 @@
     }
 
     .wrap {
-      max-width: 1100px;
+      max-width: 1180px;
       margin: 0 auto;
       padding: 24px;
     }
@@ -52,16 +53,51 @@
       padding: 24px;
     }
 
-    .top-row {
+    .hero-top {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      gap: 18px;
       align-items: flex-start;
+      gap: 20px;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--card-2);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .decision-pill {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .decision-pill.green {
+      background: rgba(53, 199, 89, .15);
+      color: var(--good);
+    }
+
+    .decision-pill.yellow {
+      background: rgba(245, 165, 36, .16);
+      color: var(--warn);
+    }
+
+    .decision-pill.red {
+      background: rgba(255, 107, 107, .16);
+      color: var(--bad);
     }
 
     .price {
-      font-size: 54px;
+      font-size: 56px;
       font-weight: 800;
       margin: 12px 0 4px;
     }
@@ -80,21 +116,10 @@
     .change.down { color: var(--bad); }
     .change.flat { color: var(--flat); }
 
-    .status {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: var(--card-2);
-      color: var(--accent);
-      font-size: 13px;
-      font-weight: 600;
-    }
-
     .meta {
       display: grid;
       gap: 10px;
-      margin-top: 18px;
+      margin-top: 8px;
       color: var(--muted);
       font-size: 15px;
     }
@@ -116,6 +141,10 @@
 
     .card.half {
       grid-column: span 6;
+    }
+
+    .card.third {
+      grid-column: span 4;
     }
 
     .card h2 {
@@ -150,6 +179,20 @@
       text-align: right;
     }
 
+    .reasons {
+      display: grid;
+      gap: 10px;
+    }
+
+    .reason {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--card-2);
+      color: var(--text);
+      font-size: 14px;
+      border: 1px solid var(--border);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -173,13 +216,16 @@
       white-space: pre-wrap;
     }
 
-    @media (max-width: 900px) {
-      .card.half { grid-column: span 12; }
+    @media (max-width: 960px) {
+      .card.half,
+      .card.third {
+        grid-column: span 12;
+      }
     }
 
     @media (max-width: 640px) {
       .wrap { padding: 16px; }
-      .price { font-size: 40px; }
+      .price { font-size: 42px; }
       h1 { font-size: 26px; }
       th, td { font-size: 13px; padding: 10px 8px; }
     }
@@ -189,47 +235,61 @@
   <div class="wrap">
     <header>
       <h1>QQQ Dashboard</h1>
-      <p>Precio, cambio diario y snapshot inicial del bear call spread.</p>
+      <p>Señal base para bear call spread con score, VWAP y snapshot de opciones.</p>
     </header>
 
     <section class="hero">
-      <div class="top-row">
+      <div class="hero-top">
         <div>
           <div class="status" id="status">Cargando datos...</div>
+          <div class="decision-pill" id="decisionPill">--</div>
           <div class="price" id="price">--</div>
           <div class="change" id="change">--</div>
         </div>
+
         <div class="meta">
           <div><strong>Ticker:</strong> <span id="ticker">--</span></div>
           <div><strong>Hora actualización:</strong> <span id="updatedAt">--</span></div>
           <div><strong>Fuente:</strong> <span id="source">--</span></div>
           <div><strong>Cierre previo:</strong> <span id="prevClose">--</span></div>
+          <div><strong>Score:</strong> <span id="score">--</span></div>
+          <div><strong>Riesgo:</strong> <span id="riskLabel">--</span></div>
         </div>
       </div>
       <div class="error" id="error"></div>
     </section>
 
     <section class="grid">
-      <article class="card half">
+      <article class="card third">
         <h2>Trade setup</h2>
         <div class="kv" id="tradeBox"></div>
       </article>
 
-      <article class="card half">
+      <article class="card third">
+        <h2>VWAP</h2>
+        <div class="kv" id="vwapBox"></div>
+      </article>
+
+      <article class="card third">
         <h2>Options snapshot</h2>
         <div class="kv" id="optionsBox"></div>
       </article>
 
-      <article class="card">
+      <article class="card half">
+        <h2>Motivos del score</h2>
+        <div class="reasons" id="reasonsBox"></div>
+      </article>
+
+      <article class="card half">
         <h2>Últimas actualizaciones</h2>
         <table>
           <thead>
             <tr>
               <th>Hora</th>
-              <th>Ticker</th>
               <th>Precio</th>
               <th>Cambio %</th>
-              <th>Fuente</th>
+              <th>Score</th>
+              <th>Señal</th>
             </tr>
           </thead>
           <tbody id="historyTable">
@@ -272,6 +332,8 @@
       document.getElementById('updatedAt').textContent = state.updatedAtText ?? state.updatedAt ?? '--';
       document.getElementById('source').textContent = state.source ?? '--';
       document.getElementById('prevClose').textContent = money(state.prevClose);
+      document.getElementById('score').textContent = state.score != null ? `${state.score}/100` : '--';
+      document.getElementById('riskLabel').textContent = state.riskLabel ?? '--';
 
       const priceEl = document.getElementById('price');
       priceEl.textContent = money(state.price);
@@ -284,22 +346,41 @@
       changeEl.textContent = changeText;
       changeEl.className = `change ${state.tone ?? 'flat'}`;
 
+      const pill = document.getElementById('decisionPill');
+      pill.textContent = state.decisionLabel ?? '--';
+      pill.className = `decision-pill ${state.decisionTone ?? 'yellow'}`;
+
       const trade = state.trade ?? {};
       document.getElementById('tradeBox').innerHTML = `
         <div class="kv-row"><span>Buffer modelo</span><span>${pct(trade.bufferPct)}</span></div>
         <div class="kv-row"><span>Short strike</span><span>${trade.shortStrike ?? '--'}</span></div>
         <div class="kv-row"><span>Long strike</span><span>${trade.longStrike ?? '--'}</span></div>
         <div class="kv-row"><span>Break-even</span><span>${money(trade.breakeven)}</span></div>
-        <div class="kv-row"><span>Credit objetivo</span><span>${money(trade.netCredit)}</span></div>
+        <div class="kv-row"><span>Distancia al short</span><span>${money(trade.distToShort)}</span></div>
+      `;
+
+      const vwap = state.vwap ?? {};
+      document.getElementById('vwapBox').innerHTML = `
+        <div class="kv-row"><span>VWAP</span><span>${money(vwap.value)}</span></div>
+        <div class="kv-row"><span>Distancia %</span><span>${pct(vwap.distPct)}</span></div>
+        <div class="kv-row"><span>Bias</span><span>${vwap.bias ?? '--'}</span></div>
       `;
 
       const options = state.options ?? {};
       document.getElementById('optionsBox').innerHTML = `
         <div class="kv-row"><span>Expiración</span><span>${options.expiration ?? '--'}</span></div>
-        <div class="kv-row"><span>Short call bid/ask</span><span>${money(options.shortCallBid)} / ${money(options.shortCallAsk)}</span></div>
-        <div class="kv-row"><span>Long call bid/ask</span><span>${money(options.longCallBid)} / ${money(options.longCallAsk)}</span></div>
+        <div class="kv-row"><span>Short bid/ask</span><span>${money(options.shortCallBid)} / ${money(options.shortCallAsk)}</span></div>
+        <div class="kv-row"><span>Long bid/ask</span><span>${money(options.longCallBid)} / ${money(options.longCallAsk)}</span></div>
         <div class="kv-row"><span>Estado</span><span>${options.notes ?? '--'}</span></div>
       `;
+
+      const reasons = Array.isArray(state.reasons) ? state.reasons : [];
+      const reasonsBox = document.getElementById('reasonsBox');
+      if (!reasons.length) {
+        reasonsBox.innerHTML = `<div class="reason">Sin motivos disponibles.</div>`;
+      } else {
+        reasonsBox.innerHTML = reasons.map(r => `<div class="reason">${r}</div>`).join('');
+      }
     }
 
     function renderHistory(history) {
@@ -314,10 +395,10 @@
       tbody.innerHTML = rows.map(row => `
         <tr>
           <td>${row.updatedAtText ?? row.updatedAt ?? '--'}</td>
-          <td>${row.ticker ?? '--'}</td>
           <td>${money(row.price)}</td>
           <td>${pct(row.changePct)}</td>
-          <td>${row.source ?? '--'}</td>
+          <td>${row.score != null ? row.score : '--'}</td>
+          <td>${row.decisionLabel ?? '--'}</td>
         </tr>
       `).join('');
     }
