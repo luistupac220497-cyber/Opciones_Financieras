@@ -4,23 +4,26 @@ import time
 import socket
 import threading
 import webbrowser
+import os
 from pathlib import Path
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 
 # =========================
 # QQQ BEAR CALL SPREAD - V2
-# + HTML local responsive
-# + Auto refresh
-# + Histórico JSON
-# + Últimas señales
-# + Servidor local opcional
+# Corregido y estable
+# - Buffer fijo 1.85%
+# - Dashboard HTML responsive
+# - Histórico JSON
+# - Auto refresh
+# - Servidor local opcional
+# - Modo seguro para ejecución local o automatizada
 # =========================
 
 # -------- CONFIG --------
@@ -28,7 +31,7 @@ TICKER = "QQQ"
 LOOKBACK_DAYS = 20
 SPREAD_WIDTH = 1.0
 NET_CREDIT = 0.10
-MODEL_BUFFER_PCT = 0.0185  # 1.85% fijo del modelo
+MODEL_BUFFER_PCT = 0.0185  # 1.85% fijo
 
 TARGET_CREDIT_MIN = 0.08
 TARGET_CREDIT_MAX = 0.12
@@ -41,9 +44,13 @@ POWER_HOUR_STRICT = True
 
 AUTO_REFRESH_SECONDS = 60
 MAX_HISTORY_ITEMS = 200
+
 SERVE_LOCAL = True
 PORT = 8000
 OPEN_BROWSER = True
+
+RUN_FOREVER = True
+WRITE_HTML_EVERY_TIME = False
 
 MAG7 = {
     "AAPL": "Apple",
@@ -210,10 +217,13 @@ def save_json_file(path, data):
 # -------- DATOS --------
 def get_price_and_source(ticker_symbol):
     t = yf.Ticker(ticker_symbol)
-    info = t.info
-
     current_price = None
     price_source = None
+
+    try:
+        info = t.info or {}
+    except Exception:
+        info = {}
 
     if es_valor_numerico_real(info.get("postMarketPrice")):
         current_price = info.get("postMarketPrice")
@@ -227,12 +237,23 @@ def get_price_and_source(ticker_symbol):
 
     if not es_valor_numerico_real(current_price):
         try:
-            lp = t.fast_info["lastPrice"]
-            if es_valor_numerico_real(lp):
-                current_price = lp
-                price_source = "fast_info.lastPrice"
+            fast = t.fast_info
+            if fast:
+                lp = fast.get("lastPrice") if isinstance(fast, dict) else fast["lastPrice"]
+                if es_valor_numerico_real(lp):
+                    current_price = lp
+                    price_source = "fast_info.lastPrice"
         except Exception:
             current_price = None
+
+    if not es_valor_numerico_real(current_price):
+        hist = yf.download(ticker_symbol, period="2d", interval="1d", auto_adjust=True, progress=False)
+        if hist is not None and not hist.empty:
+            if isinstance(hist.columns, pd.MultiIndex):
+                hist.columns = hist.columns.get_level_values(0)
+            if "Close" in hist.columns and not hist["Close"].dropna().empty:
+                current_price = float(hist["Close"].dropna().iloc[-1])
+                price_source = "daily_close_fallback"
 
     if not es_valor_numerico_real(current_price):
         raise ValueError(f"No se pudo obtener el precio actual de {ticker_symbol}.")
@@ -275,7 +296,10 @@ def descargar_intradia_1m(ticker_symbol):
             return None
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
-        df = df[["Open", "High", "Low", "Close", "Volume"]].dropna().copy()
+        cols_needed = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c in df.columns]
+        if len(cols_needed) < 5:
+            return None
+        df = df[cols_needed].dropna().copy()
         if df.empty:
             return None
         if df.index.tz is None:
@@ -307,6 +331,7 @@ def obtener_proximo_earnings(ticker_symbol):
             if candidate in cols_lower:
                 date_col = cols_lower[candidate]
                 break
+
         for candidate in ["earnings call time", "earnings time", "time"]:
             if candidate in cols_lower:
                 time_col = cols_lower[candidate]
@@ -406,7 +431,11 @@ def calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=True):
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
 
-        df = df[["High", "Low", "Close", "Volume"]].dropna().copy()
+        cols_needed = [c for c in ["High", "Low", "Close", "Volume"] if c in df.columns]
+        if len(cols_needed) < 4:
+            return None
+
+        df = df[cols_needed].dropna().copy()
         if df.empty:
             return None
 
@@ -609,7 +638,7 @@ def construir_contexto_intradia(ticker_symbol, ticker_obj, short_strike, long_st
     liquidity = None
     if expiration is not None:
         chain_snapshot = obtener_option_chain_snapshot(ticker_symbol, expiration)
-        if chain_snapshot is not None:
+        if chain_snapshot is not None and "calls" in chain_snapshot:
             liquidity = evaluar_liquidez_call_spread(chain_snapshot["calls"], short_strike, long_strike)
 
     intraday_1m = descargar_intradia_1m(ticker_symbol)
@@ -908,21 +937,6 @@ def append_history(state):
     return history
 
 
-def build_recent_signals(history, limit=8):
-    recent = history[-limit:]
-    recent = list(reversed(recent))
-    rows = []
-    for item in recent:
-        rows.append([
-            item.get("timestamp", ""),
-            item.get("decisionLabel", item.get("decision", "")),
-            str(item.get("score", "")),
-            fmt_price(item.get("precio")),
-            item.get("tramo", "N/D"),
-        ])
-    return rows
-
-
 # -------- STATE --------
 def construir_state():
     current_price, price_source, ticker_obj = get_price_and_source(TICKER)
@@ -945,7 +959,7 @@ def construir_state():
     tone, decision_label = tone_from_decision(decision_final)
 
     reasons = []
-    base_reasons = score_data["motivos_score"][:4]
+    base_reasons = score_data["motivos_score"][:6]
     for txt in base_reasons:
         rtone = "ok"
         low = txt.lower()
@@ -959,7 +973,11 @@ def construir_state():
         reasons.append({"tone": "warn", "title": "Decisión", "text": note})
 
     if not reasons:
-        reasons.append({"tone": "ok", "title": "Sin penalizaciones críticas", "text": "No se detectaron bloqueos relevantes."})
+        reasons.append({
+            "tone": "ok",
+            "title": "Sin penalizaciones críticas",
+            "text": "No se detectaron bloqueos relevantes."
+        })
 
     alerts = []
     for a in score_data["alertas"][:5]:
@@ -970,7 +988,11 @@ def construir_state():
         alerts.append({"tone": tone_a, "title": a, "text": a})
 
     if not alerts:
-        alerts.append({"tone": "ok", "title": "Sin alertas cercanas", "text": "No hay alertas inmediatas por macro o resultados."})
+        alerts.append({
+            "tone": "ok",
+            "title": "Sin alertas cercanas",
+            "text": "No hay alertas inmediatas por macro o resultados."
+        })
 
     prox_macro = macro_events[0] if macro_events else None
     prox_earn = earnings_list[0] if earnings_list else None
@@ -993,9 +1015,11 @@ def construir_state():
         ["Días", str(prox_earn["dias"]) if prox_earn and prox_earn["dias"] is not None else "N/D"],
     ]
 
+    now_local = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     state = {
         "ticker": TICKER,
-        "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "updatedAt": now_local,
         "decision": decision_final,
         "decisionLabel": decision_label,
         "decisionTone": tone,
@@ -1057,7 +1081,7 @@ def html_template():
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);line-height:1.5;color:var(--color-text);background:var(--color-bg)}
-    button{font:inherit;color:inherit}
+    button{font:inherit;color:inherit;cursor:pointer}
     .shell{max-width:1120px;margin:0 auto;padding:var(--space-4)}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-4) 0 var(--space-6)}
     .brand{display:flex;align-items:center;gap:.85rem}
@@ -1280,7 +1304,9 @@ def html_template():
       document.getElementById('break-even').textContent = state.breakeven !== null && state.breakeven !== undefined ? `Break-even ${Number(state.breakeven).toFixed(2)}` : 'Break-even N/D';
       document.getElementById('vwap').textContent = state.vwap !== null && state.vwap !== undefined ? Number(state.vwap).toFixed(2) : 'N/D';
       document.getElementById('vwap-bias').textContent = safe(state.vwapBias);
-      const salidaTxt = `${Number(state.tp).toFixed(2)} / ${Number(state.stop).toFixed(2)}`;
+      const tp = state.tp !== null && state.tp !== undefined ? Number(state.tp).toFixed(2) : 'N/D';
+      const stop = state.stop !== null && state.stop !== undefined ? Number(state.stop).toFixed(2) : 'N/D';
+      const salidaTxt = `${tp} / ${stop}`;
       document.getElementById('salida').textContent = salidaTxt;
       document.getElementById('salida-riesgo').textContent = salidaTxt;
       document.getElementById('riesgo-max').textContent = state.riesgoMax !== null && state.riesgoMax !== undefined ? `$${Number(state.riesgoMax).toFixed(2)}` : 'N/D';
@@ -1361,9 +1387,7 @@ def get_local_ip():
 
 
 def start_server():
-    os_cwd = Path.cwd()
-    if os_cwd != BASE_DIR:
-        import os
+    if Path.cwd() != BASE_DIR:
         os.chdir(BASE_DIR)
 
     httpd = ThreadingHTTPServer(("0.0.0.0", PORT), SilentHandler)
@@ -1377,8 +1401,10 @@ def write_dashboard_assets(state):
     save_json_file(STATE_FILE, state)
     history = append_history(state)
     save_json_file(HISTORY_FILE, history)
-    if not HTML_FILE.exists():
+
+    if WRITE_HTML_EVERY_TIME or not HTML_FILE.exists():
         HTML_FILE.write_text(html_template(), encoding="utf-8")
+
     return history
 
 
@@ -1393,18 +1419,31 @@ def main():
         HTML_FILE.write_text(html_template(), encoding="utf-8")
 
     server = None
+
     if SERVE_LOCAL:
-        server = start_server()
-        local_ip = get_local_ip()
-        local_url = f"http://127.0.0.1:{PORT}/qqq-spread-dashboard.html"
-        lan_url = f"http://{local_ip}:{PORT}/qqq-spread-dashboard.html"
-        print(f"Dashboard local: {local_url}")
-        print(f"Dashboard móvil/tablet: {lan_url}")
-        if OPEN_BROWSER:
-            try:
-                webbrowser.open(local_url)
-            except Exception:
-                pass
+        try:
+            server = start_server()
+            local_ip = get_local_ip()
+            local_url = f"http://127.0.0.1:{PORT}/qqq-spread-dashboard.html"
+            lan_url = f"http://{local_ip}:{PORT}/qqq-spread-dashboard.html"
+            print(f"Dashboard local: {local_url}")
+            print(f"Dashboard móvil/tablet: {lan_url}")
+            if OPEN_BROWSER:
+                try:
+                    webbrowser.open(local_url)
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"No se pudo iniciar el servidor local: {e}")
+
+    if not RUN_FOREVER:
+        state, history = run_once()
+        print(
+            f"[{state['updatedAt']}] {state['decisionLabel']} | "
+            f"Score {state['score']} | Precio {state['precio']} | "
+            f"Histórico {len(history)}"
+        )
+        return
 
     print("Iniciando bucle de actualización...")
     print(f"Frecuencia: cada {AUTO_REFRESH_SECONDS} segundos")
