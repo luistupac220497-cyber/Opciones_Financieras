@@ -1,14 +1,14 @@
 {
   "ticker": "QQQ",
-  "price": 728.77,
+  "price": 727.01,
   "prevClose": 736.4,
-  "change": -7.64,
-  "changePct": -1.04,
+  "change": -9.39,
+  "changePct": -1.28,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-01T19:30:43.957205+00:00",
-  "updatedAtText": "2026-07-01 19:30:43 UTC",
-  "updatedAtNY": "2026-07-01 15:30:43 ET",
+  "updatedAt": "2026-07-01T19:40:29.376131+00:00",
+  "updatedAtText": "2026-07-01 19:40:29 UTC",
+  "updatedAtNY": "2026-07-01 15:40:29 ET",
   "session": {
     "code": "power_hour",
     "label": "Power hour"
@@ -16,12 +16,12 @@
   "summary": "macro Nóminas no agrícolas (NFP) en 1d 16h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 21d · tramo actual: power hour",
   "trade": {
     "bufferPct": 1.85,
-    "shortStrike": 743,
-    "longStrike": 744.0,
-    "breakeven": 743.1,
+    "shortStrike": 741,
+    "longStrike": 742.0,
+    "breakeven": 741.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 14.23
+    "distToShort": 13.99
   },
   "options": {
     "expiration": "2026-07-01",
@@ -31,18 +31,18 @@
     "longCallAsk": 0.01,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 3816.0,
-    "longCallOI": 2793.0,
-    "shortCallVolume": 7019.0,
-    "longCallVolume": 9139.0,
+    "shortCallOI": 3644.0,
+    "longCallOI": 2880.0,
+    "shortCallVolume": 19201.0,
+    "longCallVolume": 13199.0,
     "quotesUsable": true,
     "notes": "OK"
   },
   "vwap": {
-    "value": 731.47,
-    "distPct": -0.37,
-    "zScore": -0.86,
-    "sigma": 3.14,
+    "value": 731.43,
+    "distPct": -0.6,
+    "zScore": -1.4,
+    "sigma": 3.15,
     "bias": "Por debajo"
   },
   "openingRange": {
@@ -72,10 +72,10 @@
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 2.09,
-    "move": 15.22,
+    "move": 15.23,
     "movePct": 2.09,
-    "upper": 743.99,
-    "lower": 713.54,
+    "upper": 742.24,
+    "lower": 711.78,
     "status": "OK"
   },
   "freshness": {
@@ -84,7 +84,7 @@
     "isStale": false,
     "status": "OK"
   },
-  "score": 70,
+  "score": 68,
   "decision": "esperar confirmación",
   "decisionTone": "yellow",
   "decisionLabel": "🟡 Esperar confirmación",
@@ -92,8 +92,8 @@
   "reasons": [
     "Distancia razonable al short",
     "Sesgo bajista favorable",
-    "Cerca del VWAP",
-    "VWAP dentro de rango razonable",
+    "Por debajo del VWAP",
+    "VWAP algo estirado",
     "Opening range normal",
     "Short strike dentro o cerca del expected move",
     "Bid/ask muy amplio",
@@ -114,7 +114,7 @@
       "timeNY": "08:30",
       "dias": 1,
       "horas": 16,
-      "totalHoras": 40.99,
+      "totalHoras": 40.82,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -126,7 +126,7 @@
       "timeNY": "10:00",
       "dias": -1,
       "horas": 5,
-      "totalHoras": -5.51,
+      "totalHoras": -5.68,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -139,7 +139,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.99,
+        "totalHoras": 40.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -151,7 +151,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.99,
+        "totalHoras": 40.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -163,7 +163,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 16,
-        "totalHoras": 328.99,
+        "totalHoras": 328.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -175,7 +175,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.99,
+        "totalHoras": 352.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -187,7 +187,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.99,
+        "totalHoras": 352.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -201,7 +201,7 @@
         "timeNY": "10:00",
         "dias": -1,
         "horas": 5,
-        "totalHoras": -5.51,
+        "totalHoras": -5.68,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -213,7 +213,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.99,
+        "totalHoras": 40.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -225,7 +225,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 16,
-        "totalHoras": 40.99,
+        "totalHoras": 40.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -237,7 +237,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 16,
-        "totalHoras": 328.99,
+        "totalHoras": 328.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -249,7 +249,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.99,
+        "totalHoras": 352.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -261,7 +261,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 16,
-        "totalHoras": 352.99,
+        "totalHoras": 352.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -273,7 +273,7 @@
         "timeNY": "14:00",
         "dias": 27,
         "horas": 22,
-        "totalHoras": 670.49,
+        "totalHoras": 670.32,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -285,7 +285,7 @@
         "timeNY": "08:30",
         "dias": 28,
         "horas": 16,
-        "totalHoras": 688.99,
+        "totalHoras": 688.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -297,7 +297,7 @@
         "timeNY": "08:30",
         "dias": 29,
         "horas": 16,
-        "totalHoras": 712.99,
+        "totalHoras": 712.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
