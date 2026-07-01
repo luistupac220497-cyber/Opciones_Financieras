@@ -104,6 +104,8 @@ def dias_restantes(fecha_obj):
 
 def get_now_ny():
     return datetime.now(NY_TZ)
+    def get_now_local():
+    return datetime.now(LOCAL_TZ)
 
 
 def traducir_momento(texto):
