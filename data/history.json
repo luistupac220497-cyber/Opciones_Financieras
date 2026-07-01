@@ -528,5 +528,19 @@
     "score": 80,
     "decisionLabel": "🟢 Entraría",
     "sessionLabel": "Media sesión"
+  },
+  {
+    "updatedAt": "2026-07-01T16:40:31.358598+00:00",
+    "updatedAtText": "2026-07-01 16:40:31 UTC",
+    "updatedAtNY": "2026-07-01 12:40:31 ET",
+    "ticker": "QQQ",
+    "price": 728.81,
+    "change": -7.59,
+    "changePct": -1.03,
+    "tone": "down",
+    "source": "intraday_5m",
+    "score": 75,
+    "decisionLabel": "🟡 Esperar confirmación",
+    "sessionLabel": "Media sesión"
   }
 ]
