@@ -46,6 +46,7 @@ MAG7 = {
 }
 
 NY_TZ = ZoneInfo("America/New_York")
+LOCAL_TZ = ZoneInfo("Atlantic/Canary")
 
 MACRO_EVENTS = [
     {"evento": "ISM Manufacturero", "datetime_ny": "2026-07-01 10:00", "impacto": "alto"},
