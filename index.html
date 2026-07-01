@@ -30,7 +30,7 @@
     }
 
     .wrap {
-      max-width: 1180px;
+      max-width: 1240px;
       margin: 0 auto;
       padding: 24px;
     }
@@ -139,13 +139,8 @@
       grid-column: span 12;
     }
 
-    .card.half {
-      grid-column: span 6;
-    }
-
-    .card.third {
-      grid-column: span 4;
-    }
+    .card.half { grid-column: span 6; }
+    .card.third { grid-column: span 4; }
 
     .card h2 {
       margin: 0 0 14px;
@@ -179,18 +174,36 @@
       text-align: right;
     }
 
-    .reasons {
+    .reasons,
+    .alerts,
+    .list-stack {
       display: grid;
       gap: 10px;
     }
 
-    .reason {
+    .reason,
+    .alert,
+    .list-item {
       padding: 12px 14px;
       border-radius: 14px;
       background: var(--card-2);
       color: var(--text);
       font-size: 14px;
       border: 1px solid var(--border);
+    }
+
+    .alert {
+      border-color: rgba(245, 165, 36, .35);
+    }
+
+    .item-title {
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .item-sub {
+      color: var(--muted);
+      font-size: 13px;
     }
 
     table {
@@ -203,6 +216,7 @@
       padding: 12px 10px;
       border-bottom: 1px solid var(--border);
       font-size: 14px;
+      vertical-align: top;
     }
 
     th {
@@ -235,7 +249,7 @@
   <div class="wrap">
     <header>
       <h1>QQQ Dashboard</h1>
-      <p>Señal base para bear call spread con score, VWAP, horario y snapshot de opciones.</p>
+      <p>Señal base para bear call spread con score, VWAP, horario, macro y earnings.</p>
     </header>
 
     <section class="hero">
@@ -283,6 +297,31 @@
       </article>
 
       <article class="card half">
+        <h2>Alertas</h2>
+        <div class="alerts" id="alertsBox"></div>
+      </article>
+
+      <article class="card half">
+        <h2>Próximo macro</h2>
+        <div class="kv" id="macroNextBox"></div>
+      </article>
+
+      <article class="card half">
+        <h2>Próximo earnings</h2>
+        <div class="kv" id="earningsNextBox"></div>
+      </article>
+
+      <article class="card half">
+        <h2>Macro cercana</h2>
+        <div class="list-stack" id="macroListBox"></div>
+      </article>
+
+      <article class="card half">
+        <h2>Earnings Mag 7</h2>
+        <div class="list-stack" id="earningsListBox"></div>
+      </article>
+
+      <article class="card">
         <h2>Últimas actualizaciones</h2>
         <table>
           <thead>
@@ -317,6 +356,10 @@
       return v == null ? '--' : `${Number(v).toFixed(2)}%`;
     }
 
+    function txt(v) {
+      return v == null || v === '' ? '--' : String(v);
+    }
+
     async function loadState() {
       const res = await fetch(`${BASE_PATH}/data/state.json?t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error(`state.json HTTP ${res.status}`);
@@ -331,14 +374,14 @@
 
     function renderState(state) {
       document.getElementById('status').textContent = 'Datos cargados correctamente';
-      document.getElementById('ticker').textContent = state.ticker ?? '--';
-      document.getElementById('updatedAt').textContent = state.updatedAtText ?? state.updatedAt ?? '--';
-      document.getElementById('updatedAtNY').textContent = state.updatedAtNY ?? '--';
-      document.getElementById('sessionLabel').textContent = state.session?.label ?? '--';
-      document.getElementById('source').textContent = state.source ?? '--';
+      document.getElementById('ticker').textContent = txt(state.ticker);
+      document.getElementById('updatedAt').textContent = txt(state.updatedAtText ?? state.updatedAt);
+      document.getElementById('updatedAtNY').textContent = txt(state.updatedAtNY);
+      document.getElementById('sessionLabel').textContent = txt(state.session?.label);
+      document.getElementById('source').textContent = txt(state.source);
       document.getElementById('prevClose').textContent = money(state.prevClose);
       document.getElementById('score').textContent = state.score != null ? `${state.score}/100` : '--';
-      document.getElementById('riskLabel').textContent = state.riskLabel ?? '--';
+      document.getElementById('riskLabel').textContent = txt(state.riskLabel);
 
       const priceEl = document.getElementById('price');
       priceEl.textContent = money(state.price);
@@ -352,14 +395,14 @@
       changeEl.className = `change ${state.tone ?? 'flat'}`;
 
       const pill = document.getElementById('decisionPill');
-      pill.textContent = state.decisionLabel ?? '--';
+      pill.textContent = txt(state.decisionLabel);
       pill.className = `decision-pill ${state.decisionTone ?? 'yellow'}`;
 
       const trade = state.trade ?? {};
       document.getElementById('tradeBox').innerHTML = `
         <div class="kv-row"><span>Buffer modelo</span><span>${pct(trade.bufferPct)}</span></div>
-        <div class="kv-row"><span>Short strike</span><span>${trade.shortStrike ?? '--'}</span></div>
-        <div class="kv-row"><span>Long strike</span><span>${trade.longStrike ?? '--'}</span></div>
+        <div class="kv-row"><span>Short strike</span><span>${txt(trade.shortStrike)}</span></div>
+        <div class="kv-row"><span>Long strike</span><span>${txt(trade.longStrike)}</span></div>
         <div class="kv-row"><span>Break-even</span><span>${money(trade.breakeven)}</span></div>
         <div class="kv-row"><span>Distancia al short</span><span>${money(trade.distToShort)}</span></div>
       `;
@@ -368,24 +411,70 @@
       document.getElementById('vwapBox').innerHTML = `
         <div class="kv-row"><span>VWAP</span><span>${money(vwap.value)}</span></div>
         <div class="kv-row"><span>Distancia %</span><span>${pct(vwap.distPct)}</span></div>
-        <div class="kv-row"><span>Bias</span><span>${vwap.bias ?? '--'}</span></div>
+        <div class="kv-row"><span>Bias</span><span>${txt(vwap.bias)}</span></div>
       `;
 
       const options = state.options ?? {};
       document.getElementById('optionsBox').innerHTML = `
-        <div class="kv-row"><span>Expiración</span><span>${options.expiration ?? '--'}</span></div>
+        <div class="kv-row"><span>Expiración</span><span>${txt(options.expiration)}</span></div>
         <div class="kv-row"><span>Short bid/ask</span><span>${money(options.shortCallBid)} / ${money(options.shortCallAsk)}</span></div>
         <div class="kv-row"><span>Long bid/ask</span><span>${money(options.longCallBid)} / ${money(options.longCallAsk)}</span></div>
-        <div class="kv-row"><span>Estado</span><span>${options.notes ?? '--'}</span></div>
+        <div class="kv-row"><span>Estado</span><span>${txt(options.notes)}</span></div>
       `;
 
       const reasons = Array.isArray(state.reasons) ? state.reasons : [];
       const reasonsBox = document.getElementById('reasonsBox');
-      if (!reasons.length) {
-        reasonsBox.innerHTML = `<div class="reason">Sin motivos disponibles.</div>`;
-      } else {
-        reasonsBox.innerHTML = reasons.map(r => `<div class="reason">${r}</div>`).join('');
-      }
+      reasonsBox.innerHTML = reasons.length
+        ? reasons.map(r => `<div class="reason">${txt(r)}</div>`).join('')
+        : `<div class="reason">Sin motivos disponibles.</div>`;
+
+      const alerts = Array.isArray(state.alerts) ? state.alerts : [];
+      const alertsBox = document.getElementById('alertsBox');
+      alertsBox.innerHTML = alerts.length
+        ? alerts.map(a => `<div class="alert">${txt(a)}</div>`).join('')
+        : `<div class="alert">Sin alertas inmediatas.</div>`;
+
+      const macroNext = state.macro?.next;
+      document.getElementById('macroNextBox').innerHTML = macroNext ? `
+        <div class="kv-row"><span>Evento</span><span>${txt(macroNext.evento)}</span></div>
+        <div class="kv-row"><span>Impacto</span><span>${txt(macroNext.impacto)}</span></div>
+        <div class="kv-row"><span>Hora NY</span><span>${txt(macroNext.datetimeNY)}</span></div>
+        <div class="kv-row"><span>Cuenta atrás</span><span>${txt(macroNext.dias)}d ${txt(macroNext.horas)}h</span></div>
+        <div class="kv-row"><span>Momento</span><span>${txt(macroNext.momento)}</span></div>
+      ` : `
+        <div class="kv-row"><span>Próximo macro</span><span>No disponible</span></div>
+      `;
+
+      const earningsNext = state.earnings?.next;
+      document.getElementById('earningsNextBox').innerHTML = earningsNext ? `
+        <div class="kv-row"><span>Empresa</span><span>${txt(earningsNext.empresa)}</span></div>
+        <div class="kv-row"><span>Ticker</span><span>${txt(earningsNext.ticker)}</span></div>
+        <div class="kv-row"><span>Fecha</span><span>${txt(earningsNext.fecha)}</span></div>
+        <div class="kv-row"><span>Días</span><span>${txt(earningsNext.dias)}</span></div>
+        <div class="kv-row"><span>Momento</span><span>${txt(earningsNext.momento)}</span></div>
+      ` : `
+        <div class="kv-row"><span>Próximo earnings</span><span>No disponible</span></div>
+      `;
+
+      const macroItems = Array.isArray(state.macro?.items) ? state.macro.items : [];
+      document.getElementById('macroListBox').innerHTML = macroItems.length
+        ? macroItems.map(item => `
+            <div class="list-item">
+              <div class="item-title">${txt(item.evento)}</div>
+              <div class="item-sub">${txt(item.datetimeNY)} · ${txt(item.impacto)} · ${txt(item.momento)} · ${txt(item.dias)}d ${txt(item.horas)}h</div>
+            </div>
+          `).join('')
+        : `<div class="list-item">Sin eventos macro cargados.</div>`;
+
+      const earningsItems = Array.isArray(state.earnings?.items) ? state.earnings.items : [];
+      document.getElementById('earningsListBox').innerHTML = earningsItems.length
+        ? earningsItems.map(item => `
+            <div class="list-item">
+              <div class="item-title">${txt(item.empresa)} (${txt(item.ticker)})</div>
+              <div class="item-sub">${txt(item.fecha)} · ${txt(item.momento)} · ${txt(item.dias)} días</div>
+            </div>
+          `).join('')
+        : `<div class="list-item">Sin earnings próximas.</div>`;
     }
 
     function renderHistory(history) {
@@ -399,12 +488,12 @@
 
       tbody.innerHTML = rows.map(row => `
         <tr>
-          <td>${row.updatedAtNY ?? row.updatedAtText ?? row.updatedAt ?? '--'}</td>
+          <td>${txt(row.updatedAtNY ?? row.updatedAtText ?? row.updatedAt)}</td>
           <td>${money(row.price)}</td>
           <td>${pct(row.changePct)}</td>
           <td>${row.score != null ? row.score : '--'}</td>
-          <td>${row.decisionLabel ?? '--'}</td>
-          <td>${row.sessionLabel ?? '--'}</td>
+          <td>${txt(row.decisionLabel)}</td>
+          <td>${txt(row.sessionLabel)}</td>
         </tr>
       `).join('');
     }
