@@ -312,8 +312,9 @@
       </article>
 
       <article class="card third">
-        <h2>VWAP y OR</h2>
+        <h2>VWAP y rangos</h2>
         <div class="kv" id="vwapBox"></div>
+        <div class="kv" id="pmBox" style="margin-top:14px;"></div>
         <div class="kv" id="orBox" style="margin-top:14px;"></div>
       </article>
 
@@ -485,15 +486,25 @@
         <div class="kv-row"><span>Bias</span><span>${txt(vwap.bias)}</span></div>
       `;
 
+      const pm = state.premarketRange ?? {};
+      document.getElementById('pmBox').innerHTML = pm.available ? `
+        <div class="kv-row"><span>Premarket high</span><span>${money(pm.high)}</span></div>
+        <div class="kv-row"><span>Premarket low</span><span>${money(pm.low)}</span></div>
+        <div class="kv-row"><span>Premarket size</span><span>${money(pm.size)}</span></div>
+        <div class="kv-row"><span>Premarket %</span><span>${pct(pm.sizePct)}</span></div>
+      ` : `
+        <div class="kv-row"><span>Premarket range</span><span>${txt(pm.message)}</span></div>
+      `;
+
       const or = state.openingRange ?? {};
-      document.getElementById('orBox').innerHTML = or && or.high != null ? `
+      document.getElementById('orBox').innerHTML = or.available ? `
         <div class="kv-row"><span>OR 5m high</span><span>${money(or.high)}</span></div>
         <div class="kv-row"><span>OR 5m low</span><span>${money(or.low)}</span></div>
         <div class="kv-row"><span>OR size</span><span>${money(or.size)}</span></div>
         <div class="kv-row"><span>OR %</span><span>${pct(or.sizePct)}</span></div>
         <div class="kv-row"><span>Estado</span><span>${txt(or.state)}</span></div>
       ` : `
-        <div class="kv-row"><span>Opening Range</span><span>No disponible</span></div>
+        <div class="kv-row"><span>Opening range</span><span>${txt(or.message)}</span></div>
       `;
 
       const em = state.expectedMove ?? {};
@@ -514,6 +525,7 @@
         <div class="kv-row"><span>Delta short/long</span><span>${num(options.shortCallDelta)} / ${num(options.longCallDelta)}</span></div>
         <div class="kv-row"><span>OI short/long</span><span>${txt(options.shortCallOI)} / ${txt(options.longCallOI)}</span></div>
         <div class="kv-row"><span>Vol short/long</span><span>${txt(options.shortCallVolume)} / ${txt(options.longCallVolume)}</span></div>
+        <div class="kv-row"><span>Quotes utilizables</span><span>${options.quotesUsable ? 'Sí' : 'No'}</span></div>
         <div class="kv-row"><span>Estado</span><span>${txt(options.notes)}</span></div>
       `;
 
