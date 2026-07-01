@@ -598,5 +598,19 @@
     "vwap": 733.95,
     "regimen": "Rango",
     "tramo": "Premarket"
+  },
+  {
+    "timestamp": "2026-07-01 10:30:42",
+    "ticker": "QQQ",
+    "decision": "no entraría",
+    "decisionLabel": "🔴 No entraría",
+    "score": 62.0,
+    "semaforo": "🟡 Riesgo medio",
+    "precio": 732.95,
+    "shortStrike": 747,
+    "longStrike": 748.0,
+    "vwap": 733.95,
+    "regimen": "Rango",
+    "tramo": "Premarket"
   }
 ]
