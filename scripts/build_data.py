@@ -2,6 +2,7 @@ import json
 import math
 from pathlib import Path
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import yfinance as yf
@@ -17,6 +18,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 STATE_FILE = DATA_DIR / "state.json"
 HISTORY_FILE = DATA_DIR / "history.json"
+
+NY_TZ = ZoneInfo("America/New_York")
 
 
 def ensure_dirs():
@@ -53,6 +56,28 @@ def safe_float(value, default=None):
         return float(value)
     except Exception:
         return default
+
+
+def classify_session(now_ny):
+    minutes = now_ny.hour * 60 + now_ny.minute
+    open_m = 9 * 60 + 30
+    noon_m = 12 * 60
+    power_m = 15 * 60
+    close_m = 16 * 60
+
+    if minutes < 4 * 60:
+        return "overnight", "Overnight"
+    if 4 * 60 <= minutes < open_m:
+        return "premarket", "Premarket"
+    if open_m <= minutes < noon_m:
+        return "apertura", "Apertura"
+    if noon_m <= minutes < power_m:
+        return "media_sesion", "Media sesión"
+    if power_m <= minutes <= close_m:
+        return "power_hour", "Power hour"
+    if close_m < minutes <= 20 * 60:
+        return "after_hours", "After hours"
+    return "overnight", "Overnight"
 
 
 def get_intraday_df():
@@ -251,7 +276,7 @@ def get_option_snapshot(price):
         }
 
 
-def calculate_score(price, change_pct, trade_levels, vwap_dist_pct, option_snapshot):
+def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, session_code):
     score = 100
     reasons = []
 
@@ -303,7 +328,7 @@ def calculate_score(price, change_pct, trade_levels, vwap_dist_pct, option_snaps
         score -= 6
         reasons.append("Sin quote válida en short call")
     else:
-        mid = (bid + ask) / 2 if (bid is not None and ask is not None) else None
+        mid = (bid + ask) / 2 if bid is not None and ask is not None else None
         spread_pct = ((ask - bid) / mid) * 100 if mid and mid > 0 else None
         if spread_pct is not None and spread_pct > 20:
             score -= 10
@@ -314,15 +339,42 @@ def calculate_score(price, change_pct, trade_levels, vwap_dist_pct, option_snaps
         else:
             reasons.append("Bid/ask razonable")
 
+    if session_code == "premarket":
+        score -= 8
+        reasons.append("Premarket: menor liquidez")
+    elif session_code == "apertura":
+        score -= 6
+        reasons.append("Apertura: más volatilidad")
+    elif session_code == "media_sesion":
+        score += 2
+        reasons.append("Media sesión más estable")
+    elif session_code == "power_hour":
+        score -= 8
+        reasons.append("Power hour: más agresiva")
+    elif session_code == "after_hours":
+        score -= 12
+        reasons.append("After hours: spreads peores")
+    elif session_code == "overnight":
+        score -= 15
+        reasons.append("Overnight: sin mercado regular")
+
     score = max(0, min(100, round(score, 2)))
-    return score, reasons[:5]
+    return score, reasons[:6]
 
 
-def make_decision(score, trade_levels):
+def make_decision(score, trade_levels, session_code):
     dist_to_short = trade_levels["distToShort"]
 
     if dist_to_short <= 0:
         return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
+
+    if session_code in ["after_hours", "overnight"]:
+        if score >= 75:
+            return "esperar confirmación", "yellow", "🟡 Esperar confirmación", "🟡 Riesgo medio"
+        return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
+
+    if session_code == "premarket" and score >= 75:
+        return "esperar confirmación", "yellow", "🟡 Esperar confirmación", "🟡 Riesgo medio"
 
     if score >= 75:
         return "entraría", "green", "🟢 Entraría", "🟢 Riesgo controlado"
@@ -334,6 +386,10 @@ def make_decision(score, trade_levels):
 
 
 def build_state():
+    now_utc = datetime.now(timezone.utc)
+    now_ny = now_utc.astimezone(NY_TZ)
+    session_code, session_label = classify_session(now_ny)
+
     snapshot = get_price_snapshot()
     price = snapshot["price"]
     prev_close = snapshot["prev_close"]
@@ -344,10 +400,8 @@ def build_state():
     levels = build_trade_levels(price)
     option_snapshot = get_option_snapshot(price)
     vwap_value, vwap_dist_pct, vwap_bias = compute_vwap(intraday_df)
-    score, reasons = calculate_score(price, change_pct, levels, vwap_dist_pct, option_snapshot)
-    decision, decision_tone, decision_label, risk_label = make_decision(score, levels)
-
-    now_utc = datetime.now(timezone.utc)
+    score, reasons = calculate_score(change_pct, levels, vwap_dist_pct, option_snapshot, session_code)
+    decision, decision_tone, decision_label, risk_label = make_decision(score, levels, session_code)
 
     tone = "flat"
     if change is not None:
@@ -363,6 +417,11 @@ def build_state():
         "source": source,
         "updatedAt": now_utc.isoformat(),
         "updatedAtText": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "updatedAtNY": now_ny.strftime("%Y-%m-%d %H:%M:%S ET"),
+        "session": {
+            "code": session_code,
+            "label": session_label
+        },
         "trade": levels,
         "options": option_snapshot,
         "vwap": {
@@ -385,6 +444,7 @@ def update_history(state):
     row = {
         "updatedAt": state["updatedAt"],
         "updatedAtText": state["updatedAtText"],
+        "updatedAtNY": state["updatedAtNY"],
         "ticker": state["ticker"],
         "price": state["price"],
         "change": state["change"],
@@ -392,7 +452,8 @@ def update_history(state):
         "tone": state["tone"],
         "source": state["source"],
         "score": state["score"],
-        "decisionLabel": state["decisionLabel"]
+        "decisionLabel": state["decisionLabel"],
+        "sessionLabel": state["session"]["label"]
     }
 
     if history and history[-1].get("updatedAt") == row["updatedAt"]:
@@ -413,8 +474,8 @@ def main():
 
     print(
         f"OK | {state['ticker']} | price={state['price']} | "
-        f"score={state['score']} | decision={state['decision']} | "
-        f"short={state['trade']['shortStrike']} | history={len(history)}"
+        f"session={state['session']['label']} | score={state['score']} | "
+        f"decision={state['decision']} | history={len(history)}"
     )
 
 
