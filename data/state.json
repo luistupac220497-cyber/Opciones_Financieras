@@ -1,19 +1,19 @@
 {
   "ticker": "QQQ",
-  "price": 725.25,
+  "price": 725.02,
   "prevClose": 736.4,
-  "change": -11.15,
-  "changePct": -1.51,
+  "change": -11.38,
+  "changePct": -1.55,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-01T21:20:30.931398+00:00",
-  "updatedAtText": "2026-07-01 21:20:30 UTC",
-  "updatedAtNY": "2026-07-01 17:20:30 ET",
+  "updatedAt": "2026-07-01T21:30:40.718409+00:00",
+  "updatedAtText": "2026-07-01 21:30:40 UTC",
+  "updatedAtNY": "2026-07-01 17:30:40 ET",
   "session": {
     "code": "after_hours",
     "label": "After hours"
   },
-  "summary": "macro Nóminas no agrícolas (NFP) en 1d 15h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 21d · tramo actual: after hours",
+  "summary": "macro Nóminas no agrícolas (NFP) en 1d 14h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 21d · tramo actual: after hours",
   "trade": {
     "bufferPct": 1.85,
     "shortStrike": 739,
@@ -21,7 +21,7 @@
     "breakeven": 739.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 13.75
+    "distToShort": 13.98
   },
   "options": {
     "expiration": "2026-07-01",
@@ -40,9 +40,9 @@
   },
   "vwap": {
     "value": 730.98,
-    "distPct": -0.78,
-    "zScore": -1.68,
-    "sigma": 3.41,
+    "distPct": -0.81,
+    "zScore": -1.73,
+    "sigma": 3.43,
     "bias": "Muy por debajo"
   },
   "openingRange": {
@@ -72,10 +72,10 @@
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 2.1,
-    "move": 15.25,
+    "move": 15.24,
     "movePct": 2.1,
-    "upper": 740.5,
-    "lower": 710.0,
+    "upper": 740.26,
+    "lower": 709.78,
     "status": "OK"
   },
   "freshness": {
@@ -113,8 +113,8 @@
       "dateNY": "2026-07-03",
       "timeNY": "08:30",
       "dias": 1,
-      "horas": 15,
-      "totalHoras": 39.16,
+      "horas": 14,
+      "totalHoras": 38.99,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -126,7 +126,7 @@
       "timeNY": "10:00",
       "dias": -1,
       "horas": 7,
-      "totalHoras": -7.34,
+      "totalHoras": -7.51,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -138,8 +138,8 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 1,
-        "horas": 15,
-        "totalHoras": 39.16,
+        "horas": 14,
+        "totalHoras": 38.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -150,8 +150,8 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 1,
-        "horas": 15,
-        "totalHoras": 39.16,
+        "horas": 14,
+        "totalHoras": 38.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -162,8 +162,8 @@
         "dateNY": "2026-07-15",
         "timeNY": "08:30",
         "dias": 13,
-        "horas": 15,
-        "totalHoras": 327.16,
+        "horas": 14,
+        "totalHoras": 326.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -174,8 +174,8 @@
         "dateNY": "2026-07-16",
         "timeNY": "08:30",
         "dias": 14,
-        "horas": 15,
-        "totalHoras": 351.16,
+        "horas": 14,
+        "totalHoras": 350.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -186,8 +186,8 @@
         "dateNY": "2026-07-16",
         "timeNY": "08:30",
         "dias": 14,
-        "horas": 15,
-        "totalHoras": 351.16,
+        "horas": 14,
+        "totalHoras": 350.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -201,7 +201,7 @@
         "timeNY": "10:00",
         "dias": -1,
         "horas": 7,
-        "totalHoras": -7.34,
+        "totalHoras": -7.51,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -212,8 +212,8 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 1,
-        "horas": 15,
-        "totalHoras": 39.16,
+        "horas": 14,
+        "totalHoras": 38.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -224,8 +224,8 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 1,
-        "horas": 15,
-        "totalHoras": 39.16,
+        "horas": 14,
+        "totalHoras": 38.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -236,8 +236,8 @@
         "dateNY": "2026-07-15",
         "timeNY": "08:30",
         "dias": 13,
-        "horas": 15,
-        "totalHoras": 327.16,
+        "horas": 14,
+        "totalHoras": 326.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -248,8 +248,8 @@
         "dateNY": "2026-07-16",
         "timeNY": "08:30",
         "dias": 14,
-        "horas": 15,
-        "totalHoras": 351.16,
+        "horas": 14,
+        "totalHoras": 350.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -260,8 +260,8 @@
         "dateNY": "2026-07-16",
         "timeNY": "08:30",
         "dias": 14,
-        "horas": 15,
-        "totalHoras": 351.16,
+        "horas": 14,
+        "totalHoras": 350.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -273,7 +273,7 @@
         "timeNY": "14:00",
         "dias": 27,
         "horas": 20,
-        "totalHoras": 668.66,
+        "totalHoras": 668.49,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -284,8 +284,8 @@
         "dateNY": "2026-07-30",
         "timeNY": "08:30",
         "dias": 28,
-        "horas": 15,
-        "totalHoras": 687.16,
+        "horas": 14,
+        "totalHoras": 686.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -296,8 +296,8 @@
         "dateNY": "2026-07-31",
         "timeNY": "08:30",
         "dias": 29,
-        "horas": 15,
-        "totalHoras": 711.16,
+        "horas": 14,
+        "totalHoras": 710.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
