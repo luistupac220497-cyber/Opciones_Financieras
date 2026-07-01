@@ -12,5 +12,17 @@
     "ticker": "QQQ",
     "price": 733.41,
     "source": "intraday_5m"
+  },
+  {
+    "updatedAt": "2026-07-01T11:10:29.591382+00:00",
+    "updatedAtText": "2026-07-01 11:10:29 UTC",
+    "ticker": "QQQ",
+    "price": 733.57,
+    "change": 9.49,
+    "changePct": 1.31,
+    "tone": "up",
+    "source": "intraday_5m",
+    "score": 92,
+    "decisionLabel": "🟢 Entraría"
   }
 ]

@@ -1,7 +1,44 @@
 {
   "ticker": "QQQ",
-  "price": 733.41,
+  "price": 733.57,
+  "prevClose": 724.08,
+  "change": 9.49,
+  "changePct": 1.31,
+  "tone": "up",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-01T10:58:08.953959+00:00",
-  "updatedAtText": "2026-07-01 10:58:08 UTC"
+  "updatedAt": "2026-07-01T11:10:29.591382+00:00",
+  "updatedAtText": "2026-07-01 11:10:29 UTC",
+  "trade": {
+    "bufferPct": 1.85,
+    "shortStrike": 748,
+    "longStrike": 749.0,
+    "breakeven": 748.1,
+    "spreadWidth": 1.0,
+    "netCredit": 0.1,
+    "distToShort": 14.43
+  },
+  "options": {
+    "expiration": "2026-07-01",
+    "shortCallBid": 0.0,
+    "shortCallAsk": 0.0,
+    "longCallBid": 0.0,
+    "longCallAsk": 0.0,
+    "notes": "OK"
+  },
+  "vwap": {
+    "value": 733.95,
+    "distPct": -0.05,
+    "bias": "Cerca del VWAP"
+  },
+  "score": 92,
+  "decision": "entraría",
+  "decisionTone": "green",
+  "decisionLabel": "🟢 Entraría",
+  "riskLabel": "🟢 Riesgo controlado",
+  "reasons": [
+    "Distancia razonable al short",
+    "Sesgo alcista moderado",
+    "Cerca del VWAP",
+    "Bid/ask razonable"
+  ]
 }
