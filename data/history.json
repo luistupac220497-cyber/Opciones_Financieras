@@ -444,5 +444,19 @@
     "score": 72,
     "decisionLabel": "🟡 Esperar confirmación",
     "sessionLabel": "Apertura"
+  },
+  {
+    "updatedAt": "2026-07-01T15:50:29.399050+00:00",
+    "updatedAtText": "2026-07-01 15:50:29 UTC",
+    "updatedAtNY": "2026-07-01 11:50:29 ET",
+    "ticker": "QQQ",
+    "price": 729.58,
+    "change": -6.83,
+    "changePct": -0.93,
+    "tone": "down",
+    "source": "intraday_5m",
+    "score": 72,
+    "decisionLabel": "🟡 Esperar confirmación",
+    "sessionLabel": "Apertura"
   }
 ]
