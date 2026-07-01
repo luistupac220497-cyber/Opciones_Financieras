@@ -17,6 +17,7 @@
       --bad: #ff6b6b;
       --flat: #f7c948;
       --warn: #f5a524;
+      --stale: #ffb020;
     }
 
     * { box-sizing: border-box; }
@@ -30,7 +31,7 @@
     }
 
     .wrap {
-      max-width: 1240px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 24px;
     }
@@ -72,6 +73,10 @@
       font-weight: 600;
     }
 
+    .status.stale {
+      color: var(--stale);
+    }
+
     .substatus {
       display: inline-block;
       margin: 0 0 12px;
@@ -81,6 +86,18 @@
       color: var(--muted);
       font-size: 12px;
       font-weight: 700;
+    }
+
+    .summary {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--card-2);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      border: 1px solid var(--border);
+      max-width: 760px;
     }
 
     .decision-pill {
@@ -260,7 +277,7 @@
   <div class="wrap">
     <header>
       <h1>QQQ Dashboard</h1>
-      <p>Señal base para bear call spread con score, VWAP, OR, horario, macro y earnings.</p>
+      <p>Señal base para bear call spread con score, VWAP, OR, expected move, frescura, macro y earnings.</p>
     </header>
 
     <section class="hero">
@@ -270,6 +287,7 @@
           <div class="decision-pill" id="decisionPill">--</div>
           <div class="price" id="price">--</div>
           <div class="change" id="change">--</div>
+          <div class="summary" id="summaryBox">--</div>
         </div>
 
         <div class="meta">
@@ -281,6 +299,7 @@
           <div><strong>Cierre previo:</strong> <span id="prevClose">--</span></div>
           <div><strong>Score:</strong> <span id="score">--</span></div>
           <div><strong>Riesgo:</strong> <span id="riskLabel">--</span></div>
+          <div><strong>Edad dato:</strong> <span id="freshnessAge">--</span></div>
         </div>
       </div>
       <div class="error" id="error"></div>
@@ -299,6 +318,11 @@
       </article>
 
       <article class="card third">
+        <h2>Expected move</h2>
+        <div class="kv" id="emBox"></div>
+      </article>
+
+      <article class="card half">
         <h2>Options snapshot</h2>
         <div class="kv" id="optionsBox"></div>
       </article>
@@ -364,6 +388,7 @@
       : '';
 
     const REFRESH_MS = 30000;
+    const STALE_MINUTES = 3;
     let refreshTimer = null;
     let isRefreshing = false;
 
@@ -375,8 +400,19 @@
       return v == null ? '--' : `${Number(v).toFixed(2)}%`;
     }
 
+    function num(v, d = 2) {
+      return v == null ? '--' : Number(v).toFixed(d);
+    }
+
     function txt(v) {
       return v == null || v === '' ? '--' : String(v);
+    }
+
+    function ageMinutesFromIso(iso) {
+      if (!iso) return null;
+      const t = new Date(iso).getTime();
+      if (Number.isNaN(t)) return null;
+      return (Date.now() - t) / 60000;
     }
 
     async function loadState() {
@@ -396,7 +432,15 @@
     }
 
     function renderState(state) {
-      document.getElementById('status').textContent = 'Datos cargados correctamente';
+      const ageMin = ageMinutesFromIso(state.updatedAt);
+      const isStale = ageMin != null && ageMin > STALE_MINUTES;
+
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = isStale
+        ? `Datos antiguos (${Math.floor(ageMin)} min)`
+        : 'Datos cargados correctamente';
+      statusEl.className = `status ${isStale ? 'stale' : ''}`;
+
       document.getElementById('ticker').textContent = txt(state.ticker);
       document.getElementById('updatedAt').textContent = txt(state.updatedAtText ?? state.updatedAt);
       document.getElementById('updatedAtNY').textContent = txt(state.updatedAtNY);
@@ -405,6 +449,8 @@
       document.getElementById('prevClose').textContent = money(state.prevClose);
       document.getElementById('score').textContent = state.score != null ? `${state.score}/100` : '--';
       document.getElementById('riskLabel').textContent = txt(state.riskLabel);
+      document.getElementById('freshnessAge').textContent = ageMin != null ? `${Math.floor(ageMin)} min` : '--';
+      document.getElementById('summaryBox').textContent = txt(state.summary);
 
       const priceEl = document.getElementById('price');
       priceEl.textContent = money(state.price);
@@ -434,8 +480,8 @@
       document.getElementById('vwapBox').innerHTML = `
         <div class="kv-row"><span>VWAP</span><span>${money(vwap.value)}</span></div>
         <div class="kv-row"><span>Distancia %</span><span>${pct(vwap.distPct)}</span></div>
-        <div class="kv-row"><span>Z-score</span><span>${vwap.zScore != null ? vwap.zScore : '--'}</span></div>
-        <div class="kv-row"><span>Sigma</span><span>${vwap.sigma != null ? vwap.sigma : '--'}</span></div>
+        <div class="kv-row"><span>Z-score</span><span>${num(vwap.zScore)}</span></div>
+        <div class="kv-row"><span>Sigma</span><span>${num(vwap.sigma)}</span></div>
         <div class="kv-row"><span>Bias</span><span>${txt(vwap.bias)}</span></div>
       `;
 
@@ -450,11 +496,23 @@
         <div class="kv-row"><span>Opening Range</span><span>No disponible</span></div>
       `;
 
+      const em = state.expectedMove ?? {};
+      document.getElementById('emBox').innerHTML = `
+        <div class="kv-row"><span>Método</span><span>${txt(em.method)}</span></div>
+        <div class="kv-row"><span>Vol diaria</span><span>${pct(em.dailyVolPct)}</span></div>
+        <div class="kv-row"><span>Expected move</span><span>${money(em.move)}</span></div>
+        <div class="kv-row"><span>Upper</span><span>${money(em.upper)}</span></div>
+        <div class="kv-row"><span>Lower</span><span>${money(em.lower)}</span></div>
+      `;
+
       const options = state.options ?? {};
       document.getElementById('optionsBox').innerHTML = `
         <div class="kv-row"><span>Expiración</span><span>${txt(options.expiration)}</span></div>
         <div class="kv-row"><span>Short bid/ask</span><span>${money(options.shortCallBid)} / ${money(options.shortCallAsk)}</span></div>
         <div class="kv-row"><span>Long bid/ask</span><span>${money(options.longCallBid)} / ${money(options.longCallAsk)}</span></div>
+        <div class="kv-row"><span>Delta short/long</span><span>${num(options.shortCallDelta)} / ${num(options.longCallDelta)}</span></div>
+        <div class="kv-row"><span>OI short/long</span><span>${txt(options.shortCallOI)} / ${txt(options.longCallOI)}</span></div>
+        <div class="kv-row"><span>Vol short/long</span><span>${txt(options.shortCallVolume)} / ${txt(options.longCallVolume)}</span></div>
         <div class="kv-row"><span>Estado</span><span>${txt(options.notes)}</span></div>
       `;
 
