@@ -1,6 +1,5 @@
 import math
 import json
-import time
 import socket
 import threading
 import webbrowser
@@ -17,17 +16,11 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 # =========================
 # QQQ BEAR CALL SPREAD - V2
-# + HTML local responsive
-# + Histórico JSON
-# + Últimas señales
-# + Servidor local opcional
-# + Compatible con GitHub Actions
+# Compatible con GitHub Actions
 # =========================
 
-# -------- ENTORNO --------
 RUNNING_IN_GITHUB = os.getenv("GITHUB_ACTIONS") == "true"
 
-# -------- CONFIG --------
 TICKER = "QQQ"
 LOOKBACK_DAYS = 20
 SPREAD_WIDTH = 1.0
@@ -72,15 +65,12 @@ MACRO_EVENTS = [
     {"evento": "Decisión FOMC / tipos de interés", "datetime_ny": "2026-07-29 14:00", "impacto": "alto"},
 ]
 
-BASE_DIR = Path.cwd() / "qqq_dashboard_v2"
-BASE_DIR.mkdir(exist_ok=True)
-
+BASE_DIR = Path.cwd()
 HTML_FILE = BASE_DIR / "qqq-spread-dashboard.html"
 STATE_FILE = BASE_DIR / "state.json"
 HISTORY_FILE = BASE_DIR / "history.json"
 
 
-# -------- HELPERS --------
 def es_valor_numerico_real(x):
     try:
         return x is not None and not pd.isna(x) and np.isfinite(float(x))
@@ -91,12 +81,6 @@ def es_valor_numerico_real(x):
 def fmt_price(x, default="N/D"):
     if es_valor_numerico_real(x):
         return f"${float(x):.2f}"
-    return default
-
-
-def fmt_pct(x, default="N/D"):
-    if es_valor_numerico_real(x):
-        return f"{float(x):.2f}%"
     return default
 
 
@@ -210,7 +194,6 @@ def save_json_file(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-# -------- DATOS --------
 def get_price_and_source(ticker_symbol):
     t = yf.Ticker(ticker_symbol)
     info = t.info
@@ -290,7 +273,6 @@ def descargar_intradia_1m(ticker_symbol):
         return None
 
 
-# -------- EARNINGS --------
 def obtener_proximo_earnings(ticker_symbol):
     try:
         t = yf.Ticker(ticker_symbol)
@@ -361,7 +343,6 @@ def obtener_earnings_mag7(mag7_map):
     return sorted(earnings_list, key=lambda x: (9999 if x["dias"] is None else x["dias"]))
 
 
-# -------- MACRO --------
 def preparar_eventos_macro(eventos):
     ahora_ny = get_now_ny()
     salida = []
@@ -392,7 +373,6 @@ def preparar_eventos_macro(eventos):
     return sorted(salida, key=lambda x: x["datetime_ny"])
 
 
-# -------- VWAP --------
 def calcular_vwap_intradia(ticker_symbol, interval="5m", include_prepost=True):
     try:
         df = yf.download(
@@ -496,7 +476,6 @@ def construir_contexto_vwap(ticker_symbol, current_price):
     return ctx
 
 
-# -------- OPCIONES --------
 def obtener_expiracion_cercana(ticker_obj):
     try:
         expirations = ticker_obj.options
@@ -592,7 +571,6 @@ def evaluar_liquidez_call_spread(calls_df, short_strike, long_strike):
     return resultado
 
 
-# -------- NIVELES / RÉGIMEN --------
 def clasificar_regimen_dia(current_price, premarket_high, premarket_low, opening_range_high, opening_range_low):
     if es_valor_numerico_real(opening_range_high) and current_price > opening_range_high:
         return "trend_alcista"
@@ -657,7 +635,6 @@ def construir_contexto_intradia(ticker_symbol, ticker_obj, short_strike, long_st
     }
 
 
-# -------- SETUP --------
 def construir_setup_trade(current_price, buffer_pct):
     projected_upside_price = current_price * (1 + buffer_pct)
     short_strike = math.ceil(projected_upside_price)
@@ -675,19 +652,18 @@ def construir_setup_trade(current_price, buffer_pct):
         decision = "no entraría"
 
     return {
-        "short_strike": short_strike,
-        "long_strike": long_strike,
-        "breakeven": breakeven,
-        "dist_to_short": dist_to_short,
+        "short_strike": round(short_strike, 2),
+        "long_strike": round(long_strike, 2),
+        "breakeven": round(breakeven, 2),
+        "dist_to_short": float(dist_to_short),
         "credit_ok": credit_ok,
         "decision_base": decision,
-        "take_profit_price": max(0.01, NET_CREDIT * (1 - TAKE_PROFIT_PCT)),
-        "stop_price": NET_CREDIT * STOP_MULTIPLIER,
-        "max_loss_per_spread": max(0, (SPREAD_WIDTH - NET_CREDIT) * 100),
+        "take_profit_price": round(max(0.01, NET_CREDIT * (1 - TAKE_PROFIT_PCT)), 2),
+        "stop_price": round(NET_CREDIT * STOP_MULTIPLIER, 2),
+        "max_loss_per_spread": round(max(0, (SPREAD_WIDTH - NET_CREDIT) * 100), 2),
     }
 
 
-# -------- SCORE --------
 def calcular_score_operativo(price_source, current_price, trade_setup, vwap_ctx, earnings_list, macro_events, intraday_ctx):
     score = 100.0
     motivos = []
@@ -883,7 +859,6 @@ def ajustar_decision_final(trade_setup, intraday_ctx, score_data, price_source):
     return decision, motivos
 
 
-# -------- HISTÓRICO --------
 def append_history(state):
     history = load_json_file(HISTORY_FILE, [])
     row = {
@@ -911,22 +886,6 @@ def append_history(state):
     return history
 
 
-def build_recent_signals(history, limit=8):
-    recent = history[-limit:]
-    recent = list(reversed(recent))
-    rows = []
-    for item in recent:
-        rows.append([
-            item.get("timestamp", ""),
-            item.get("decisionLabel", item.get("decision", "")),
-            str(item.get("score", "")),
-            fmt_price(item.get("precio")),
-            item.get("tramo", "N/D"),
-        ])
-    return rows
-
-
-# -------- STATE --------
 def construir_state():
     current_price, price_source, ticker_obj = get_price_and_source(TICKER)
     hist = descargar_historico_base(TICKER)
@@ -947,8 +906,7 @@ def construir_state():
     tone, decision_label = tone_from_decision(decision_final)
 
     reasons = []
-    base_reasons = score_data["motivos_score"][:4]
-    for txt in base_reasons:
+    for txt in score_data["motivos_score"][:4]:
         rtone = "ok"
         low = txt.lower()
         if "-" in txt or "riesgo" in low or "bloqueo" in low or "insuficiente" in low:
@@ -976,6 +934,7 @@ def construir_state():
 
     prox_macro = macro_events[0] if macro_events else None
     prox_earn = earnings_list[0] if earnings_list else None
+    now_ny = intraday_ctx["now_ny"]
 
     context_rows = [
         ["Tramo", intraday_ctx["tramo_horario"].replace("_", " ").title()],
@@ -993,23 +952,23 @@ def construir_state():
 
     state = {
         "ticker": TICKER,
-        "updatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "updatedAt": now_ny.strftime("%Y-%m-%d %H:%M:%S"),
         "decision": decision_final,
         "decisionLabel": decision_label,
         "decisionTone": tone,
         "score": score_data["score"],
         "semaforo": score_data["semaforo"],
-        "horaNy": intraday_ctx["now_ny"].strftime("%Y-%m-%d %H:%M"),
+        "horaNy": now_ny.strftime("%Y-%m-%d %H:%M:%S"),
         "precio": round(current_price, 2),
         "precioFuente": traducir_fuente_precio(price_source),
         "shortStrike": trade_setup["short_strike"],
         "longStrike": trade_setup["long_strike"],
-        "breakeven": round(trade_setup["breakeven"], 2),
+        "breakeven": trade_setup["breakeven"],
         "vwap": round(vwap_ctx["vwap_rth"], 2) if es_valor_numerico_real(vwap_ctx["vwap_rth"]) else None,
         "vwapBias": vwap_ctx["vwap_rth_bias"],
-        "tp": round(trade_setup["take_profit_price"], 2),
-        "stop": round(trade_setup["stop_price"], 2),
-        "riesgoMax": round(trade_setup["max_loss_per_spread"], 2),
+        "tp": trade_setup["take_profit_price"],
+        "stop": trade_setup["stop_price"],
+        "riesgoMax": trade_setup["max_loss_per_spread"],
         "reasons": reasons,
         "alerts": alerts,
         "context": context_rows,
@@ -1020,14 +979,13 @@ def construir_state():
     return state
 
 
-# -------- HTML --------
 def html_template():
     return """<!doctype html>
 <html lang="es" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>qqq-spread-dashboard-v2</title>
+  <title>QQQ Spread Dashboard</title>
   <style>
     :root, [data-theme="light"] {
       --font-body: Inter, system-ui, sans-serif;
@@ -1055,7 +1013,7 @@ def html_template():
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);line-height:1.5;color:var(--color-text);background:var(--color-bg)}
-    button{font:inherit;color:inherit}
+    button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     .shell{max-width:1120px;margin:0 auto;padding:var(--space-4)}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-4) 0 var(--space-6)}
     .brand{display:flex;align-items:center;gap:.85rem}
@@ -1116,8 +1074,8 @@ def html_template():
           </svg>
         </div>
         <div>
-          <h1>QQQ Spread Dashboard V2</h1>
-          <p>Resumen móvil con histórico y autoactualización</p>
+          <h1>QQQ Spread Dashboard</h1>
+          <p>Actualización automática desde GitHub Actions</p>
         </div>
       </div>
       <button class="theme-toggle" data-theme-toggle aria-label="Cambiar tema"></button>
@@ -1128,7 +1086,7 @@ def html_template():
         <div class="eyebrow">Modelo operativo resumido</div>
         <div class="hero-main">
           <h2 id="resumen-title">Cargando...</h2>
-          <p>Vista compacta para revisar la decisión, niveles clave y alertas desde cualquier dispositivo de tu red local.</p>
+          <p>Vista compacta para revisar la decisión, niveles clave y alertas.</p>
         </div>
 
         <div class="decision-row">
@@ -1218,20 +1176,47 @@ def html_template():
         </article>
       </section>
 
-      <p class="footer-note">La página se refresca sola leyendo state.json e history.json. Para verla en móvil, usa la URL local que imprime el script.</p>
+      <p class="footer-note">Página generada automáticamente por GitHub Actions.</p>
     </main>
   </div>
 
   <script>
-    function safe(v, fallback='N/D') {
+    function safe(v, fallback = 'N/D') {
       return v === null || v === undefined || v === '' ? fallback : v;
+    }
+
+    function numOrNull(v) {
+      return (v === null || v === undefined || Number.isNaN(Number(v))) ? null : Number(v);
+    }
+
+    function fmtMoney(v, fallback = 'N/D') {
+      const n = numOrNull(v);
+      return n === null ? fallback : `$${n.toFixed(2)}`;
+    }
+
+    function fmtPlain(v, fallback = 'N/D') {
+      const n = numOrNull(v);
+      return n === null ? fallback : n.toFixed(2);
     }
 
     function renderList(targetId, items) {
       const target = document.getElementById(targetId);
+      if (!items || !items.length) {
+        target.innerHTML = `
+          <div class="${targetId === 'alerts-list' ? 'alerts-item' : 'summary-item'}">
+            <div class="dot ok"></div>
+            <div>
+              <strong>Sin datos</strong>
+              <span>No hay elementos para mostrar.</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       target.innerHTML = items.map(item => `
         <div class="${targetId === 'alerts-list' ? 'alerts-item' : 'summary-item'}">
-          <div class="dot ${item.tone}"></div>
+          <div class="dot ${safe(item.tone, 'ok')}"></div>
           <div>
             <strong>${safe(item.title)}</strong>
             <span>${safe(item.text)}</span>
@@ -1242,6 +1227,11 @@ def html_template():
 
     function renderTable(targetId, rows) {
       const target = document.getElementById(targetId);
+      if (!rows || !rows.length) {
+        target.innerHTML = `<div class="mini-row"><dt>Sin datos</dt><dd>N/D</dd></div>`;
+        return;
+      }
+
       target.innerHTML = rows.map(([k, v]) => `
         <div class="mini-row"><dt>${safe(k)}</dt><dd>${safe(v)}</dd></div>
       `).join('');
@@ -1253,62 +1243,78 @@ def html_template():
         body.innerHTML = '<tr><td colspan="5">Sin histórico todavía.</td></tr>';
         return;
       }
+
       body.innerHTML = history.map(item => `
         <tr>
-          <td>${safe(item[0])}</td>
-          <td>${safe(item[1])}</td>
-          <td>${safe(item[2])}</td>
-          <td>${safe(item[3])}</td>
-          <td>${safe(item[4])}</td>
+          <td>${safe(item.timestamp)}</td>
+          <td>${safe(item.decisionLabel || item.decision)}</td>
+          <td>${safe(item.score)}</td>
+          <td>${item.precio != null ? ('$' + Number(item.precio).toFixed(2)) : 'N/D'}</td>
+          <td>${safe(item.tramo)}</td>
         </tr>
       `).join('');
     }
 
     function renderState(state) {
-      document.getElementById('decision-pill').className = `decision-pill ${state.decisionTone}`;
-      document.getElementById('decision-pill').textContent = state.decisionLabel;
-      document.getElementById('resumen-title').textContent = `${state.decisionLabel.replace(/^.[ ]*/, '')} antes de vender el bear call spread.`;
+      const decisionLabel = safe(state.decisionLabel, 'Sin decisión');
+      const decisionTone = safe(state.decisionTone, 'yellow');
+
+      document.getElementById('decision-pill').className = `decision-pill ${decisionTone}`;
+      document.getElementById('decision-pill').textContent = decisionLabel;
+      document.getElementById('resumen-title').textContent = `${decisionLabel} antes de vender el bear call spread.`;
       document.getElementById('updated-at').textContent = safe(state.updatedAt);
       document.getElementById('hora-ny').textContent = safe(state.horaNy);
       document.getElementById('score').textContent = `${safe(state.score)} / 100`;
       document.getElementById('semaforo').textContent = safe(state.semaforo);
-      document.getElementById('precio').textContent = state.precio !== null && state.precio !== undefined ? `$${Number(state.precio).toFixed(2)}` : 'N/D';
+      document.getElementById('precio').textContent = fmtMoney(state.precio);
       document.getElementById('precio-fuente').textContent = safe(state.precioFuente);
       document.getElementById('strikes').textContent = `${safe(state.shortStrike)} / ${safe(state.longStrike)}`;
-      document.getElementById('break-even').textContent = state.breakeven !== null && state.breakeven !== undefined ? `Break-even ${Number(state.breakeven).toFixed(2)}` : 'Break-even N/D';
-      document.getElementById('vwap').textContent = state.vwap !== null && state.vwap !== undefined ? Number(state.vwap).toFixed(2) : 'N/D';
+      document.getElementById('break-even').textContent = `Break-even ${fmtPlain(state.breakeven)}`;
+      document.getElementById('vwap').textContent = fmtPlain(state.vwap);
       document.getElementById('vwap-bias').textContent = safe(state.vwapBias);
-      const salidaTxt = `${Number(state.tp).toFixed(2)} / ${Number(state.stop).toFixed(2)}`;
+
+      const tp = fmtPlain(state.tp);
+      const stop = fmtPlain(state.stop);
+      const salidaTxt = `${tp} / ${stop}`;
+
       document.getElementById('salida').textContent = salidaTxt;
       document.getElementById('salida-riesgo').textContent = salidaTxt;
-      document.getElementById('riesgo-max').textContent = state.riesgoMax !== null && state.riesgoMax !== undefined ? `$${Number(state.riesgoMax).toFixed(2)}` : 'N/D';
-      document.getElementById('ticker-name').textContent = safe(state.ticker);
+      document.getElementById('riesgo-max').textContent = fmtMoney(state.riesgoMax);
+      document.getElementById('ticker-name').textContent = safe(state.ticker, 'QQQ');
+
       renderList('reasons-list', state.reasons || []);
       renderList('alerts-list', state.alerts || []);
       renderTable('context-table', state.context || []);
       renderTable('events-table', state.events || []);
     }
 
+    async function fetchJsonNoCache(url) {
+      const res = await fetch(`${url}?_=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} en ${url}`);
+      }
+
+      return res.json();
+    }
+
     async function loadAll() {
       try {
-        const stateRes = await fetch('./state.json?_=' + Date.now(), { cache: 'no-store' });
-        const state = await stateRes.json();
+        const state = await fetchJsonNoCache('./state.json');
         renderState(state);
       } catch (e) {
         console.error('Error cargando state.json', e);
       }
 
       try {
-        const histRes = await fetch('./history.json?_=' + Date.now(), { cache: 'no-store' });
-        const historyRaw = await histRes.json();
-        const recent = historyRaw.slice(-8).reverse().map(item => [
-          item.timestamp || '',
-          item.decisionLabel || item.decision || '',
-          String(item.score ?? ''),
-          item.precio != null ? `$${Number(item.precio).toFixed(2)}` : 'N/D',
-          item.tramo || 'N/D'
-        ]);
-        renderHistory(recent);
+        const historyRaw = await fetchJsonNoCache('./history.json');
+        renderHistory((historyRaw || []).slice(-8).reverse());
       } catch (e) {
         console.error('Error cargando history.json', e);
       }
@@ -1319,12 +1325,15 @@ def html_template():
       const toggle = document.querySelector('[data-theme-toggle]');
       let theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       root.setAttribute('data-theme', theme);
+
       function paint() {
         toggle.innerHTML = theme === 'dark'
           ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>'
           : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
       }
+
       paint();
+
       toggle.addEventListener('click', () => {
         theme = theme === 'dark' ? 'light' : 'dark';
         root.setAttribute('data-theme', theme);
@@ -1334,13 +1343,15 @@ def html_template():
 
     loadAll();
     setInterval(loadAll, 15000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) loadAll();
+    });
   </script>
 </body>
 </html>
 """
 
 
-# -------- SERVER --------
 class SilentHandler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
@@ -1369,13 +1380,10 @@ def start_server():
     return httpd
 
 
-# -------- OUTPUT --------
 def write_dashboard_assets(state):
     save_json_file(STATE_FILE, state)
     history = append_history(state)
-    save_json_file(HISTORY_FILE, history)
-    if not HTML_FILE.exists():
-        HTML_FILE.write_text(html_template(), encoding="utf-8")
+    HTML_FILE.write_text(html_template(), encoding="utf-8")
     return history
 
 
@@ -1386,9 +1394,6 @@ def run_once():
 
 
 def main():
-    if not HTML_FILE.exists():
-        HTML_FILE.write_text(html_template(), encoding="utf-8")
-
     server = None
 
     if not RUNNING_IN_GITHUB and SERVE_LOCAL:
