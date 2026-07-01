@@ -920,5 +920,19 @@
     "score": 64,
     "decisionLabel": "🔴 No entraría",
     "sessionLabel": "After hours"
+  },
+  {
+    "updatedAt": "2026-07-01T21:00:52.596837+00:00",
+    "updatedAtText": "2026-07-01 21:00:52 UTC",
+    "updatedAtNY": "2026-07-01 17:00:52 ET",
+    "ticker": "QQQ",
+    "price": 724.71,
+    "change": -11.69,
+    "changePct": -1.59,
+    "tone": "down",
+    "source": "intraday_5m",
+    "score": 64,
+    "decisionLabel": "🔴 No entraría",
+    "sessionLabel": "After hours"
   }
 ]
