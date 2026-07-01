@@ -192,5 +192,19 @@
     "score": 33,
     "decisionLabel": "🔴 No entraría",
     "sessionLabel": "Premarket"
+  },
+  {
+    "updatedAt": "2026-07-01T13:00:46.686651+00:00",
+    "updatedAtText": "2026-07-01 13:00:46 UTC",
+    "updatedAtNY": "2026-07-01 09:00:46 ET",
+    "ticker": "QQQ",
+    "price": 730.14,
+    "change": 6.06,
+    "changePct": 0.84,
+    "tone": "up",
+    "source": "intraday_5m",
+    "score": 33,
+    "decisionLabel": "🔴 No entraría",
+    "sessionLabel": "Premarket"
   }
 ]
