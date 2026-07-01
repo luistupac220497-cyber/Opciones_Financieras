@@ -351,53 +351,59 @@ def compute_opening_range(intraday_df, minutes=5):
     }
 
 
-def compute_expected_move(price):
-    daily_df = get_daily_df(period="3mo")
-    if daily_df is None or daily_df.empty or "Close" not in daily_df.columns:
+def compute_expected_move(price, intraday_df=None):
+    def build_result_from_returns(returns, label):
+        returns = returns.dropna()
+        if len(returns) < 10:
+            return None
+
+        vol_daily = float(returns.tail(20).std(ddof=0))
+        if vol_daily <= 0:
+            return None
+
+        move = price * vol_daily
         return {
-            "method": "historical_vol_20d",
-            "dailyVolPct": None,
-            "move": None,
-            "movePct": None,
-            "upper": None,
-            "lower": None,
-            "status": "No disponible"
+            "method": label,
+            "dailyVolPct": round(vol_daily * 100, 2),
+            "move": round(move, 2),
+            "movePct": round(vol_daily * 100, 2),
+            "upper": round(price + move, 2),
+            "lower": round(price - move, 2),
+            "status": "OK"
         }
 
-    closes = daily_df["Close"].dropna()
-    if len(closes) < 21:
-        return {
-            "method": "historical_vol_20d",
-            "dailyVolPct": None,
-            "move": None,
-            "movePct": None,
-            "upper": None,
-            "lower": None,
-            "status": "Insuficientes datos"
-        }
+    for period in ["3mo", "1mo"]:
+        try:
+            daily_df = get_daily_df(period=period)
+            if daily_df is not None and not daily_df.empty and "Close" in daily_df.columns:
+                closes = daily_df["Close"].dropna()
+                if len(closes) >= 10:
+                    returns = closes.pct_change()
+                    result = build_result_from_returns(returns, f"historical_vol_{period}")
+                    if result:
+                        return result
+        except Exception:
+            pass
 
-    returns = closes.pct_change().dropna()
-    hv20_daily = float(returns.tail(20).std(ddof=0))
-    if hv20_daily <= 0:
-        return {
-            "method": "historical_vol_20d",
-            "dailyVolPct": None,
-            "move": None,
-            "movePct": None,
-            "upper": None,
-            "lower": None,
-            "status": "Volatilidad no válida"
-        }
+    try:
+        if intraday_df is not None and not intraday_df.empty and "Close" in intraday_df.columns:
+            closes = intraday_df["Close"].dropna()
+            if len(closes) >= 10:
+                returns = closes.pct_change()
+                result = build_result_from_returns(returns, "intraday_fallback")
+                if result:
+                    return result
+    except Exception:
+        pass
 
-    move = price * hv20_daily
     return {
-        "method": "historical_vol_20d",
-        "dailyVolPct": round(hv20_daily * 100, 2),
-        "move": round(move, 2),
-        "movePct": round(hv20_daily * 100, 2),
-        "upper": round(price + move, 2),
-        "lower": round(price - move, 2),
-        "status": "OK"
+        "method": "fallback_failed",
+        "dailyVolPct": None,
+        "move": None,
+        "movePct": None,
+        "upper": None,
+        "lower": None,
+        "status": "No disponible"
     }
 
 
@@ -972,7 +978,7 @@ def build_state():
 
     vwap_value, vwap_dist_pct, vwap_zscore, vwap_sigma, vwap_bias = compute_vwap(intraday_df)
     opening_range = compute_opening_range(intraday_df, minutes=5)
-    expected_move = compute_expected_move(price)
+    expected_move = compute_expected_move(price, intraday_df)
 
     macro_block = get_upcoming_macro()
     earnings_block = get_mag7_earnings()
@@ -1087,6 +1093,7 @@ def main():
         f"OK | {state['ticker']} | price={state['price']} | "
         f"macro_status={state['macro']['status']} | "
         f"earnings_status={state['earnings']['status']} | "
+        f"em_status={state['expectedMove']['status']} | "
         f"score={state['score']} | history={len(history)}"
     )
 
