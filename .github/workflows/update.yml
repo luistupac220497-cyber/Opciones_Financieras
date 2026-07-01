@@ -27,7 +27,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run dashboard script
-        run: python main.py
+        run: python update_dashboard.py
 
       - name: Ensure files exist
         run: |
