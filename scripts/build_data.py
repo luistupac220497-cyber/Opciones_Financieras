@@ -232,19 +232,19 @@ def compute_change(price, prev_close):
 
 def compute_vwap(intraday_df):
     if intraday_df is None or intraday_df.empty:
-        return None, None, "VWAP no disponible"
+        return None, None, None, None, "VWAP no disponible"
 
     needed = {"High", "Low", "Close", "Volume"}
     if not needed.issubset(set(intraday_df.columns)):
-        return None, None, "VWAP no disponible"
+        return None, None, None, None, "VWAP no disponible"
 
     df = intraday_df.copy().dropna(subset=["High", "Low", "Close", "Volume"])
     if df.empty:
-        return None, None, "VWAP no disponible"
+        return None, None, None, None, "VWAP no disponible"
 
     vol = df["Volume"].astype(float)
     if vol.sum() <= 0:
-        return None, None, "VWAP no disponible"
+        return None, None, None, None, "VWAP no disponible"
 
     typical_price = (df["High"] + df["Low"] + df["Close"]) / 3.0
     df["tpv"] = typical_price * vol
@@ -255,6 +255,10 @@ def compute_vwap(intraday_df):
     vwap_value = float(df["vwap"].iloc[-1])
     current_price = float(df["Close"].iloc[-1])
     dist_pct = ((current_price - vwap_value) / vwap_value) * 100 if vwap_value else None
+
+    residuals = df["Close"] - df["vwap"]
+    sigma = float(residuals.std(ddof=0)) if len(residuals) > 1 else None
+    zscore = ((current_price - vwap_value) / sigma) if sigma and sigma > 0 else None
 
     if dist_pct is None:
         bias = "VWAP no disponible"
@@ -269,7 +273,81 @@ def compute_vwap(intraday_df):
     else:
         bias = "Cerca del VWAP"
 
-    return round(vwap_value, 2), round(dist_pct, 2) if dist_pct is not None else None, bias
+    return (
+        round(vwap_value, 2),
+        round(dist_pct, 2) if dist_pct is not None else None,
+        round(zscore, 2) if zscore is not None else None,
+        round(sigma, 2) if sigma is not None else None,
+        bias
+    )
+
+
+def compute_opening_range(intraday_df, minutes=5):
+    if intraday_df is None or intraday_df.empty:
+        return None
+
+    needed = {"Open", "High", "Low", "Close", "Volume"}
+    if not needed.issubset(set(intraday_df.columns)):
+        return None
+
+    df = intraday_df.copy().dropna(subset=["Open", "High", "Low", "Close"])
+    if df.empty:
+        return None
+
+    try:
+        if getattr(df.index, "tz", None) is not None:
+            df = df.tz_convert(NY_TZ)
+    except Exception:
+        pass
+
+    today_ny = datetime.now(NY_TZ).date()
+    try:
+        df = df[df.index.date == today_ny]
+    except Exception:
+        return None
+
+    if df.empty:
+        return None
+
+    session_open = pd.Timestamp(
+        datetime.combine(today_ny, datetime.strptime("09:30", "%H:%M").time()),
+        tz=NY_TZ
+    )
+    session_end = session_open + pd.Timedelta(minutes=minutes)
+
+    mask = (df.index >= session_open) & (df.index < session_end)
+    or_df = df.loc[mask]
+    if or_df.empty:
+        return None
+
+    or_high = float(or_df["High"].max())
+    or_low = float(or_df["Low"].min())
+    or_open = float(or_df["Open"].iloc[0])
+    or_close = float(or_df["Close"].iloc[-1])
+    or_size = or_high - or_low
+    or_mid = (or_high + or_low) / 2
+
+    ratio = (or_size / or_open) if or_open else None
+    if ratio is None:
+        state = "No disponible"
+    elif ratio <= 0.003:
+        state = "tight"
+    elif ratio <= 0.006:
+        state = "normal"
+    else:
+        state = "wide"
+
+    return {
+        "minutes": minutes,
+        "open": round(or_open, 2),
+        "high": round(or_high, 2),
+        "low": round(or_low, 2),
+        "close": round(or_close, 2),
+        "mid": round(or_mid, 2),
+        "size": round(or_size, 2),
+        "sizePct": round(ratio * 100, 2) if ratio is not None else None,
+        "state": state
+    }
 
 
 def build_trade_levels(price):
@@ -328,13 +406,25 @@ def get_option_snapshot(price):
         short_row = calls.sort_values("strike_diff_short").iloc[0]
         long_row = calls.sort_values("strike_diff_long").iloc[0]
 
+        short_bid = safe_float(short_row.get("bid"))
+        short_ask = safe_float(short_row.get("ask"))
+        long_bid = safe_float(long_row.get("bid"))
+        long_ask = safe_float(long_row.get("ask"))
+
+        notes = "OK"
+        if (
+            (short_bid in [0, 0.0, None] and short_ask in [0, 0.0, None]) or
+            (long_bid in [0, 0.0, None] and long_ask in [0, 0.0, None])
+        ):
+            notes = "Quotes no útiles en este momento"
+
         return {
             "expiration": expiry,
-            "shortCallBid": safe_float(short_row.get("bid")),
-            "shortCallAsk": safe_float(short_row.get("ask")),
-            "longCallBid": safe_float(long_row.get("bid")),
-            "longCallAsk": safe_float(long_row.get("ask")),
-            "notes": "OK"
+            "shortCallBid": short_bid,
+            "shortCallAsk": short_ask,
+            "longCallBid": long_bid,
+            "longCallAsk": long_ask,
+            "notes": notes
         }
     except Exception as e:
         return {
@@ -519,7 +609,7 @@ def get_upcoming_macro():
     }
 
 
-def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, session_code, macro_block, earnings_block):
+def calculate_score(change_pct, trade_levels, vwap_dist_pct, vwap_zscore, opening_range, option_snapshot, session_code, macro_block, earnings_block):
     score = 100
     reasons = []
     alerts = []
@@ -566,9 +656,36 @@ def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, se
         else:
             reasons.append("Cerca del VWAP")
 
+    if vwap_zscore is not None:
+        if abs(vwap_zscore) >= 2.0:
+            score -= 10
+            reasons.append("VWAP estirado a más de 2 sigma")
+        elif abs(vwap_zscore) >= 1.0:
+            score -= 5
+            reasons.append("VWAP algo estirado")
+        else:
+            reasons.append("VWAP dentro de rango razonable")
+
+    if opening_range:
+        or_pct = opening_range.get("sizePct")
+        if or_pct is not None:
+            if or_pct >= 0.60:
+                score -= 8
+                reasons.append("Opening range amplio")
+            elif or_pct <= 0.25:
+                score += 3
+                reasons.append("Opening range estrecho")
+            else:
+                reasons.append("Opening range normal")
+
     bid = option_snapshot.get("shortCallBid")
     ask = option_snapshot.get("shortCallAsk")
-    if bid is None or ask is None:
+    notes = option_snapshot.get("notes", "")
+
+    if notes == "Quotes no útiles en este momento":
+        score -= 10
+        reasons.append("Sin liquidez útil en options")
+    elif bid is None or ask is None:
         score -= 6
         reasons.append("Sin quote válida en short call")
     else:
@@ -635,7 +752,7 @@ def calculate_score(change_pct, trade_levels, vwap_dist_pct, option_snapshot, se
             reasons.append(f"Resultados en 2 días: {er['empresa']}")
 
     score = max(0, min(100, round(score, 2)))
-    return score, reasons[:8], alerts[:6]
+    return score, reasons[:10], alerts[:6]
 
 
 def make_decision(score, trade_levels, session_code, alerts):
@@ -678,13 +795,23 @@ def build_state():
     change, change_pct = compute_change(price, prev_close)
     levels = build_trade_levels(price)
     option_snapshot = get_option_snapshot(price)
-    vwap_value, vwap_dist_pct, vwap_bias = compute_vwap(intraday_df)
+
+    vwap_value, vwap_dist_pct, vwap_zscore, vwap_sigma, vwap_bias = compute_vwap(intraday_df)
+    opening_range = compute_opening_range(intraday_df, minutes=5)
 
     macro_block = get_upcoming_macro()
     earnings_block = get_mag7_earnings()
 
     score, reasons, alerts = calculate_score(
-        change_pct, levels, vwap_dist_pct, option_snapshot, session_code, macro_block, earnings_block
+        change_pct,
+        levels,
+        vwap_dist_pct,
+        vwap_zscore,
+        opening_range,
+        option_snapshot,
+        session_code,
+        macro_block,
+        earnings_block
     )
     decision, decision_tone, decision_label, risk_label = make_decision(score, levels, session_code, alerts)
 
@@ -712,8 +839,11 @@ def build_state():
         "vwap": {
             "value": vwap_value,
             "distPct": vwap_dist_pct,
+            "zScore": vwap_zscore,
+            "sigma": vwap_sigma,
             "bias": vwap_bias
         },
+        "openingRange": opening_range,
         "score": score,
         "decision": decision,
         "decisionTone": decision_tone,
