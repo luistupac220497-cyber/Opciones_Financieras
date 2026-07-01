@@ -283,17 +283,46 @@ def compute_vwap(intraday_df):
     )
 
 
-def compute_opening_range(intraday_df, minutes=5):
+def compute_opening_range(intraday_df, now_ny, minutes=5):
     if intraday_df is None or intraday_df.empty:
-        return None
+        return {
+            "available": False,
+            "status": "Sin datos intradía",
+            "message": "No hay datos para calcular Opening Range"
+        }
+
+    session_open_dt = datetime.combine(now_ny.date(), datetime.strptime("09:30", "%H:%M").time()).replace(tzinfo=NY_TZ)
+    session_end_dt = session_open_dt + pd.Timedelta(minutes=minutes)
+
+    if now_ny < session_open_dt:
+        return {
+            "available": False,
+            "status": "Pendiente",
+            "message": f"Opening Range disponible a partir de {session_open_dt.strftime('%H:%M ET')}"
+        }
+
+    if now_ny < session_end_dt:
+        return {
+            "available": False,
+            "status": "En formación",
+            "message": f"Opening Range en formación hasta {session_end_dt.strftime('%H:%M ET')}"
+        }
 
     needed = {"Open", "High", "Low", "Close", "Volume"}
     if not needed.issubset(set(intraday_df.columns)):
-        return None
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "Columnas insuficientes para OR"
+        }
 
     df = intraday_df.copy().dropna(subset=["Open", "High", "Low", "Close"])
     if df.empty:
-        return None
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "Sin velas válidas para OR"
+        }
 
     try:
         if getattr(df.index, "tz", None) is not None:
@@ -301,25 +330,30 @@ def compute_opening_range(intraday_df, minutes=5):
     except Exception:
         pass
 
-    today_ny = datetime.now(NY_TZ).date()
     try:
-        df = df[df.index.date == today_ny]
+        df = df[df.index.date == now_ny.date()]
     except Exception:
-        return None
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "No se pudo filtrar OR del día"
+        }
 
     if df.empty:
-        return None
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "No hay velas del día para OR"
+        }
 
-    session_open = pd.Timestamp(
-        datetime.combine(today_ny, datetime.strptime("09:30", "%H:%M").time()),
-        tz=NY_TZ
-    )
-    session_end = session_open + pd.Timedelta(minutes=minutes)
-
-    mask = (df.index >= session_open) & (df.index < session_end)
+    mask = (df.index >= pd.Timestamp(session_open_dt)) & (df.index < pd.Timestamp(session_end_dt))
     or_df = df.loc[mask]
     if or_df.empty:
-        return None
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "No hay velas de 09:30 para OR"
+        }
 
     or_high = float(or_df["High"].max())
     or_low = float(or_df["Low"].min())
@@ -339,6 +373,9 @@ def compute_opening_range(intraday_df, minutes=5):
         state = "wide"
 
     return {
+        "available": True,
+        "status": "OK",
+        "message": "Opening Range calculado",
         "minutes": minutes,
         "open": round(or_open, 2),
         "high": round(or_high, 2),
@@ -348,6 +385,90 @@ def compute_opening_range(intraday_df, minutes=5):
         "size": round(or_size, 2),
         "sizePct": round(ratio * 100, 2) if ratio is not None else None,
         "state": state
+    }
+
+
+def compute_premarket_range(intraday_df, now_ny):
+    if intraday_df is None or intraday_df.empty:
+        return {
+            "available": False,
+            "status": "Sin datos intradía",
+            "message": "No hay datos para Premarket Range"
+        }
+
+    needed = {"High", "Low", "Close"}
+    if not needed.issubset(set(intraday_df.columns)):
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "Columnas insuficientes para Premarket Range"
+        }
+
+    df = intraday_df.copy().dropna(subset=["High", "Low", "Close"])
+    if df.empty:
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "Sin velas válidas para Premarket Range"
+        }
+
+    try:
+        if getattr(df.index, "tz", None) is not None:
+            df = df.tz_convert(NY_TZ)
+    except Exception:
+        pass
+
+    try:
+        df = df[df.index.date == now_ny.date()]
+    except Exception:
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "No se pudo filtrar Premarket Range"
+        }
+
+    if df.empty:
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "Sin velas del día"
+        }
+
+    start_dt = datetime.combine(now_ny.date(), datetime.strptime("04:00", "%H:%M").time()).replace(tzinfo=NY_TZ)
+    end_dt = datetime.combine(now_ny.date(), datetime.strptime("09:30", "%H:%M").time()).replace(tzinfo=NY_TZ)
+
+    pm_end = min(now_ny, end_dt)
+    if pm_end <= start_dt:
+        return {
+            "available": False,
+            "status": "Pendiente",
+            "message": "Premarket Range disponible desde 04:00 ET"
+        }
+
+    mask = (df.index >= pd.Timestamp(start_dt)) & (df.index < pd.Timestamp(pm_end))
+    pm_df = df.loc[mask]
+    if pm_df.empty:
+        return {
+            "available": False,
+            "status": "No disponible",
+            "message": "Sin velas suficientes en premarket"
+        }
+
+    high = float(pm_df["High"].max())
+    low = float(pm_df["Low"].min())
+    close = float(pm_df["Close"].iloc[-1])
+    size = high - low
+    size_pct = (size / close) * 100 if close else None
+
+    return {
+        "available": True,
+        "status": "OK",
+        "message": "Premarket Range calculado",
+        "high": round(high, 2),
+        "low": round(low, 2),
+        "close": round(close, 2),
+        "size": round(size, 2),
+        "sizePct": round(size_pct, 2) if size_pct is not None else None
     }
 
 
@@ -425,7 +546,7 @@ def build_trade_levels(price):
     }
 
 
-def get_option_snapshot(price):
+def get_option_snapshot(price, session_code):
     try:
         ticker = yf.Ticker(TICKER)
         expirations = list(ticker.options)
@@ -442,6 +563,7 @@ def get_option_snapshot(price):
                 "longCallOI": None,
                 "shortCallVolume": None,
                 "longCallVolume": None,
+                "quotesUsable": False,
                 "notes": "Sin expiraciones disponibles"
             }
 
@@ -462,6 +584,7 @@ def get_option_snapshot(price):
                 "longCallOI": None,
                 "shortCallVolume": None,
                 "longCallVolume": None,
+                "quotesUsable": False,
                 "notes": "Sin calls disponibles"
             }
 
@@ -487,12 +610,19 @@ def get_option_snapshot(price):
         short_vol = safe_float(short_row.get("volume"))
         long_vol = safe_float(long_row.get("volume"))
 
-        notes = "OK"
-        if (
+        zero_quotes = (
             (short_bid in [0, 0.0, None] and short_ask in [0, 0.0, None]) or
             (long_bid in [0, 0.0, None] and long_ask in [0, 0.0, None])
-        ):
+        )
+
+        quotes_usable = not zero_quotes
+
+        if zero_quotes and session_code == "premarket":
+            notes = "Premarket: quotes de opciones aún no fiables"
+        elif zero_quotes:
             notes = "Quotes no útiles en este momento"
+        else:
+            notes = "OK"
 
         return {
             "expiration": expiry,
@@ -506,6 +636,7 @@ def get_option_snapshot(price):
             "longCallOI": long_oi,
             "shortCallVolume": short_vol,
             "longCallVolume": long_vol,
+            "quotesUsable": quotes_usable,
             "notes": notes
         }
     except Exception as e:
@@ -521,6 +652,7 @@ def get_option_snapshot(price):
             "longCallOI": None,
             "shortCallVolume": None,
             "longCallVolume": None,
+            "quotesUsable": False,
             "notes": f"Options no disponibles: {str(e)}"
         }
 
@@ -697,7 +829,7 @@ def get_upcoming_macro():
     }
 
 
-def build_summary(price, trade_levels, expected_move, macro_block, earnings_block, session_label, freshness):
+def build_summary(price, trade_levels, expected_move, macro_block, earnings_block, session_label, freshness, option_snapshot):
     parts = []
 
     if freshness.get("isStale"):
@@ -716,6 +848,9 @@ def build_summary(price, trade_levels, expected_move, macro_block, earnings_bloc
                 parts.append("short strike por encima del expected move")
             else:
                 parts.append("short strike dentro o cerca del expected move")
+
+    if option_snapshot.get("quotesUsable") is False:
+        parts.append("quotes de opciones no fiables todavía")
 
     next_er = earnings_block.get("next")
     if next_er and next_er.get("dias") is not None:
@@ -782,7 +917,7 @@ def calculate_score(change_pct, trade_levels, vwap_dist_pct, vwap_zscore, openin
         else:
             reasons.append("VWAP dentro de rango razonable")
 
-    if opening_range:
+    if opening_range and opening_range.get("available"):
         or_pct = opening_range.get("sizePct")
         if or_pct is not None:
             if or_pct >= 0.60:
@@ -813,9 +948,13 @@ def calculate_score(change_pct, trade_levels, vwap_dist_pct, vwap_zscore, openin
     long_oi = option_snapshot.get("longCallOI")
     short_vol = option_snapshot.get("shortCallVolume")
 
-    if notes == "Quotes no útiles en este momento":
-        score -= 10
-        reasons.append("Sin liquidez útil en options")
+    if option_snapshot.get("quotesUsable") is False:
+        if session_code == "premarket":
+            score -= 8
+            reasons.append("Premarket: quotes de opciones no fiables")
+        else:
+            score -= 10
+            reasons.append("Sin liquidez útil en options")
     elif bid is None or ask is None:
         score -= 6
         reasons.append("Sin quote válida en short call")
@@ -974,10 +1113,11 @@ def build_state():
 
     change, change_pct = compute_change(price, prev_close)
     levels = build_trade_levels(price)
-    option_snapshot = get_option_snapshot(price)
+    option_snapshot = get_option_snapshot(price, session_code)
 
     vwap_value, vwap_dist_pct, vwap_zscore, vwap_sigma, vwap_bias = compute_vwap(intraday_df)
-    opening_range = compute_opening_range(intraday_df, minutes=5)
+    opening_range = compute_opening_range(intraday_df, now_ny, minutes=5)
+    premarket_range = compute_premarket_range(intraday_df, now_ny)
     expected_move = compute_expected_move(price, intraday_df)
 
     macro_block = get_upcoming_macro()
@@ -1012,7 +1152,8 @@ def build_state():
         macro_block,
         earnings_block,
         session_label,
-        freshness
+        freshness,
+        option_snapshot
     )
 
     return {
@@ -1041,6 +1182,7 @@ def build_state():
             "bias": vwap_bias
         },
         "openingRange": opening_range,
+        "premarketRange": premarket_range,
         "expectedMove": expected_move,
         "freshness": freshness,
         "score": score,
@@ -1094,6 +1236,7 @@ def main():
         f"macro_status={state['macro']['status']} | "
         f"earnings_status={state['earnings']['status']} | "
         f"em_status={state['expectedMove']['status']} | "
+        f"or_status={state['openingRange']['status']} | "
         f"score={state['score']} | history={len(history)}"
     )
 
