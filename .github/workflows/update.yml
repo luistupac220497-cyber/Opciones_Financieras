@@ -30,13 +30,17 @@ jobs:
         run: |
           python scripts/build_data.py
 
-      - name: Show generated files
+      - name: Debug generated files
         run: |
-          echo "----- data folder -----"
+          echo "PWD:"
+          pwd
+          echo "ROOT:"
+          ls -la
+          echo "DATA:"
           ls -la data || true
-          echo "----- state.json -----"
+          echo "STATE:"
           cat data/state.json || true
-          echo "----- history.json -----"
+          echo "HISTORY:"
           cat data/history.json || true
 
       - name: Commit and push if changed
