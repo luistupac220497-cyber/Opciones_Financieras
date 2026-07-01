@@ -27,7 +27,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run dashboard script
-        run: python update_dashboard.py
+        run: |
+          python update_dashboard.py
 
       - name: Ensure files exist
         run: |
@@ -35,10 +36,31 @@ jobs:
           test -f state.json
           test -f history.json
 
+      - name: Debug generated files
+        run: |
+          echo "PWD:"
+          pwd
+          echo ""
+          echo "FILES:"
+          ls -la
+          echo ""
+          echo "STATE:"
+          cat state.json || true
+          echo ""
+          echo "HISTORY HEAD:"
+          head -n 40 history.json || true
+          echo ""
+          echo "GIT STATUS:"
+          git status
+          echo ""
+          echo "GIT DIFF:"
+          git diff -- index.html state.json history.json || true
+
       - name: Commit generated files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html qqq-spread-dashboard.html state.json history.json
+          git add index.html state.json history.json qqq-spread-dashboard.html
+          git diff --cached --stat
           git diff --cached --quiet || git commit -m "Update dashboard data"
           git push
