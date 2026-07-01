@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -8,6 +9,9 @@ import yfinance as yf
 
 TICKER = "QQQ"
 MAX_HISTORY_ITEMS = 200
+SPREAD_WIDTH = 1.0
+NET_CREDIT = 0.10
+MODEL_BUFFER_PCT = 0.0185
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
@@ -42,24 +46,58 @@ def flatten_columns(df):
     return df
 
 
-def get_qqq_price():
+def safe_float(value, default=None):
+    try:
+        if value is None or pd.isna(value):
+            return default
+        return float(value)
+    except Exception:
+        return default
+
+
+def get_price_snapshot():
     df = yf.download(
         tickers=TICKER,
-        period="1d",
+        period="2d",
         interval="5m",
         auto_adjust=True,
         progress=False,
         prepost=True,
         threads=False,
     )
-
     df = flatten_columns(df)
+
     if df is not None and not df.empty and "Close" in df.columns:
         closes = df["Close"].dropna()
         if not closes.empty:
-            return float(closes.iloc[-1]), "intraday_5m"
+            last_price = float(closes.iloc[-1])
 
-    df = yf.download(
+            daily_df = yf.download(
+                tickers=TICKER,
+                period="5d",
+                interval="1d",
+                auto_adjust=True,
+                progress=False,
+                prepost=False,
+                threads=False,
+            )
+            daily_df = flatten_columns(daily_df)
+
+            prev_close = None
+            if daily_df is not None and not daily_df.empty and "Close" in daily_df.columns:
+                daily_closes = daily_df["Close"].dropna()
+                if len(daily_closes) >= 2:
+                    prev_close = float(daily_closes.iloc[-2])
+                elif len(daily_closes) == 1:
+                    prev_close = float(daily_closes.iloc[-1])
+
+            return {
+                "price": last_price,
+                "prev_close": prev_close,
+                "source": "intraday_5m"
+            }
+
+    daily_df = yf.download(
         tickers=TICKER,
         period="5d",
         interval="1d",
@@ -68,26 +106,131 @@ def get_qqq_price():
         prepost=False,
         threads=False,
     )
+    daily_df = flatten_columns(daily_df)
 
-    df = flatten_columns(df)
-    if df is not None and not df.empty and "Close" in df.columns:
-        closes = df["Close"].dropna()
-        if not closes.empty:
-            return float(closes.iloc[-1]), "daily_close"
+    if daily_df is not None and not daily_df.empty and "Close" in daily_df.columns:
+        daily_closes = daily_df["Close"].dropna()
+        if not daily_closes.empty:
+            last_price = float(daily_closes.iloc[-1])
+            prev_close = float(daily_closes.iloc[-2]) if len(daily_closes) >= 2 else None
+            return {
+                "price": last_price,
+                "prev_close": prev_close,
+                "source": "daily_close"
+            }
 
     raise RuntimeError("No se pudo obtener el precio de QQQ.")
 
 
+def compute_change(price, prev_close):
+    if prev_close is None or prev_close == 0:
+        return None, None
+    chg = price - prev_close
+    chg_pct = (chg / prev_close) * 100
+    return chg, chg_pct
+
+
+def build_trade_levels(price):
+    projected_upside_price = price * (1 + MODEL_BUFFER_PCT)
+    short_strike = math.ceil(projected_upside_price)
+    long_strike = short_strike + SPREAD_WIDTH
+    breakeven = short_strike + NET_CREDIT
+
+    return {
+        "bufferPct": round(MODEL_BUFFER_PCT * 100, 2),
+        "shortStrike": short_strike,
+        "longStrike": long_strike,
+        "breakeven": round(breakeven, 2),
+        "spreadWidth": SPREAD_WIDTH,
+        "netCredit": NET_CREDIT
+    }
+
+
+def get_option_snapshot(price):
+    try:
+        ticker = yf.Ticker(TICKER)
+        expirations = list(ticker.options)
+        if not expirations:
+            return {
+                "expiration": None,
+                "shortCallBid": None,
+                "shortCallAsk": None,
+                "longCallBid": None,
+                "longCallAsk": None,
+                "notes": "Sin expiraciones disponibles"
+            }
+
+        expiry = expirations[0]
+        chain = ticker.option_chain(expiry)
+        calls = chain.calls.copy()
+
+        if calls.empty or "strike" not in calls.columns:
+            return {
+                "expiration": expiry,
+                "shortCallBid": None,
+                "shortCallAsk": None,
+                "longCallBid": None,
+                "longCallAsk": None,
+                "notes": "Sin calls disponibles"
+            }
+
+        levels = build_trade_levels(price)
+        short_strike = levels["shortStrike"]
+        long_strike = levels["longStrike"]
+
+        calls["strike_diff_short"] = (calls["strike"] - short_strike).abs()
+        calls["strike_diff_long"] = (calls["strike"] - long_strike).abs()
+
+        short_row = calls.sort_values("strike_diff_short").iloc[0]
+        long_row = calls.sort_values("strike_diff_long").iloc[0]
+
+        return {
+            "expiration": expiry,
+            "shortCallBid": safe_float(short_row.get("bid")),
+            "shortCallAsk": safe_float(short_row.get("ask")),
+            "longCallBid": safe_float(long_row.get("bid")),
+            "longCallAsk": safe_float(long_row.get("ask")),
+            "notes": "OK"
+        }
+    except Exception as e:
+        return {
+            "expiration": None,
+            "shortCallBid": None,
+            "shortCallAsk": None,
+            "longCallBid": None,
+            "longCallAsk": None,
+            "notes": f"Options no disponibles: {str(e)}"
+        }
+
+
 def build_state():
-    price, source = get_qqq_price()
+    snapshot = get_price_snapshot()
+    price = snapshot["price"]
+    prev_close = snapshot["prev_close"]
+    source = snapshot["source"]
+
+    change, change_pct = compute_change(price, prev_close)
+    levels = build_trade_levels(price)
+    option_snapshot = get_option_snapshot(price)
+
     now_utc = datetime.now(timezone.utc)
+
+    tone = "neutral"
+    if change is not None:
+        tone = "up" if change > 0 else "down" if change < 0 else "flat"
 
     return {
         "ticker": TICKER,
         "price": round(price, 2),
+        "prevClose": round(prev_close, 2) if prev_close is not None else None,
+        "change": round(change, 2) if change is not None else None,
+        "changePct": round(change_pct, 2) if change_pct is not None else None,
+        "tone": tone,
         "source": source,
         "updatedAt": now_utc.isoformat(),
         "updatedAtText": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "trade": levels,
+        "options": option_snapshot
     }
 
 
@@ -99,7 +242,10 @@ def update_history(state):
         "updatedAtText": state["updatedAtText"],
         "ticker": state["ticker"],
         "price": state["price"],
-        "source": state["source"],
+        "change": state["change"],
+        "changePct": state["changePct"],
+        "tone": state["tone"],
+        "source": state["source"]
     }
 
     if history and history[-1].get("updatedAt") == row["updatedAt"]:
@@ -118,7 +264,12 @@ def main():
     save_json(STATE_FILE, state)
     history = update_history(state)
 
-    print(f"OK | {state['ticker']} | {state['price']} | {state['updatedAtText']} | history={len(history)}")
+    print(
+        f"OK | {state['ticker']} | price={state['price']} | "
+        f"changePct={state['changePct']} | "
+        f"short={state['trade']['shortStrike']} long={state['trade']['longStrike']} | "
+        f"history={len(history)}"
+    )
 
 
 if __name__ == "__main__":
