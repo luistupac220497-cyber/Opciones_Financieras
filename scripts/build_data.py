@@ -1,13 +1,19 @@
-import os
+# build_data.py
+
 import json
 import math
 from datetime import datetime, timedelta, timezone, date
+from pathlib import Path
 
 import pandas as pd
 import yfinance as yf
 
-STATE_FILE = "state.json"
-HISTORY_FILE = "history.json"
+BASE_DIR = Path.cwd()
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
+
+STATE_FILE = DATA_DIR / "state.json"
+HISTORY_FILE = DATA_DIR / "history.json"
 
 SYMBOL = "QQQ"
 BASE_BUFFER = 1.85
@@ -81,10 +87,12 @@ def get_quote(symbol):
     t = yf.Ticker(symbol)
     hist_1m = None
     hist_1d = None
+
     try:
         hist_1m = t.history(period="1d", interval="1m", auto_adjust=False, prepost=True)
     except Exception:
         pass
+
     try:
         hist_1d = t.history(period="5d", interval="1d", auto_adjust=False, prepost=True)
     except Exception:
@@ -333,35 +341,15 @@ def get_mag7_earnings():
         if d is not None:
             found[sym] = (d, source)
 
-    missing = [sym for sym in MAG7 if sym not in found]
-    if missing:
-        try:
-            cal = yf.Calendars(start=now_ny().date(), end=now_ny().date() + timedelta(days=30))
-            df = cal.get_earnings_calendar(limit=100, force=True)
-            if df is not None and not df.empty:
-                symbol_col = None
-                date_col = None
-                for c in df.columns:
-                    lc = str(c).lower()
-                    if symbol_col is None and ("symbol" in lc or "ticker" in lc):
-                        symbol_col = c
-                    if date_col is None and ("date" in lc or "earn" in lc or "startdatetime" in lc):
-                        date_col = c
-
-                if symbol_col is not None:
-                    for _, row in df.iterrows():
-                        sym = str(row.get(symbol_col, "")).upper().strip()
-                        if sym in missing and sym not in found:
-                            d = normalize_earnings_date(row.get(date_col)) if date_col is not None else None
-                            if d is not None:
-                                found[sym] = (d, "calendars_get_earnings_calendar")
-        except Exception:
-            pass
-
     out = []
     for sym in MAG7:
         d, source = found.get(sym, (None, None))
-        out.append({"symbol": sym, "date": None if d is None else str(d), "status": classify_earnings_status(d), "source": source})
+        out.append({
+            "symbol": sym,
+            "date": None if d is None else str(d),
+            "status": classify_earnings_status(d),
+            "source": source
+        })
     return out
 
 
@@ -408,7 +396,9 @@ def choose_option_setup(ticker, spot, dynamic_buffer, phase):
     if "delta" not in calls.columns:
         calls["delta"] = None
 
-    calls["delta_abs_diff"] = calls["delta"].apply(lambda x: abs(abs(x) - SHORT_DELTA_TARGET) if x is not None and pd.notna(x) else 999)
+    calls["delta_abs_diff"] = calls["delta"].apply(
+        lambda x: abs(abs(x) - SHORT_DELTA_TARGET) if x is not None and pd.notna(x) else 999
+    )
     target_short = ceil_step(spot + dynamic_buffer, STRIKE_STEP)
     calls = calls[calls["strike"] >= spot].copy()
     if calls.empty:
@@ -469,7 +459,9 @@ def choose_option_setup(ticker, spot, dynamic_buffer, phase):
         elif spread <= 0.10:
             liquidity_score += 10
 
-    quotes_reliable = phase in ("opening_range", "regular") and not (safe_float(short.get("bid"), 0) == 0 and safe_float(short.get("ask"), 0) == 0)
+    quotes_reliable = phase in ("opening_range", "regular") and not (
+        safe_float(short.get("bid"), 0) == 0 and safe_float(short.get("ask"), 0) == 0
+    )
 
     return {
         "expiration": expiration,
@@ -535,6 +527,7 @@ def score_trade(price, vwap, dynamic_buffer, short_strike, expected_move, openin
     if earnings_block:
         score -= 45
         notes.append("Veto por earnings cercanos.")
+
     if macro_risk:
         if macro_risk["impact"] == "high":
             score -= 22
@@ -542,9 +535,11 @@ def score_trade(price, vwap, dynamic_buffer, short_strike, expected_move, openin
         elif macro_risk["impact"] == "medium":
             score -= 10
             notes.append("Macro de impacto medio cercana.")
+
     if freshness_min is not None and freshness_min > DATA_STALE_MINUTES:
         score -= 12
         notes.append("Datos con frescura insuficiente.")
+
     if price is not None and vwap is not None:
         if price > vwap:
             score -= 8
@@ -648,6 +643,35 @@ def build_summary(decision, score, phase, fresh_mins, option_setup, trade_setup)
     return " ".join(pieces)
 
 
+def append_history(state, dynamic_buffer):
+    new_row = {
+        "timestamp_utc": state["timestamp_utc"],
+        "timestamp_ny": state["timestamp_ny"],
+        "price": state["price"],
+        "score": state["score"],
+        "decision": state["decision"],
+        "buffer_dynamic": dynamic_buffer,
+        "vwap": state["vwap"],
+        "session": state["session"],
+    }
+
+    history = []
+    if HISTORY_FILE.exists():
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                history = json.load(f)
+            if not isinstance(history, list):
+                history = []
+        except Exception:
+            history = []
+
+    history.append(new_row)
+    history = history[-300:]
+
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
+
 def main():
     try:
         phase = market_phase(now_ny())
@@ -655,6 +679,7 @@ def main():
         price = quote["price"]
         ticker = quote["ticker"]
         hist_1m = quote["hist_1m"]
+
         vwap = compute_vwap(hist_1m)
         ranges = compute_ranges(hist_1m)
         expected_move = compute_expected_move(ticker, price)
@@ -677,7 +702,17 @@ def main():
         option_setup["buffer_reason"] = buffer_reason
 
         short_strike = safe_float(option_setup.get("short_call", {}).get("strike")) if option_setup.get("short_call") else None
-        freshness = 0.0
+
+        freshness = None
+        if hist_1m is not None and not hist_1m.empty:
+            try:
+                last_idx = hist_1m.index[-1]
+                last_dt = pd.to_datetime(last_idx).to_pydatetime()
+                if last_dt.tzinfo is None:
+                    last_dt = last_dt.replace(tzinfo=timezone.utc)
+                freshness = max((now_utc() - last_dt.astimezone(timezone.utc)).total_seconds() / 60, 0.0)
+            except Exception:
+                freshness = None
 
         score, decision, risk, notes = score_trade(
             price=price,
@@ -703,7 +738,7 @@ def main():
             "session": session_name(phase),
             "phase": phase,
             "freshness_minutes": freshness,
-            "freshness_alert": freshness > DATA_STALE_MINUTES,
+            "freshness_alert": freshness is not None and freshness > DATA_STALE_MINUTES,
             "price": price,
             "change": quote["change"],
             "change_pct": quote["change_pct"],
@@ -720,7 +755,11 @@ def main():
             "risk": risk,
             "summary": summary,
             "notes": notes,
-            "buffer": {"base": BASE_BUFFER, "dynamic": dynamic_buffer, "reason_short": buffer_reason},
+            "buffer": {
+                "base": BASE_BUFFER,
+                "dynamic": dynamic_buffer,
+                "reason_short": buffer_reason
+            },
             "trade_setup": trade_setup,
             "options_snapshot": {
                 "status": option_setup.get("status"),
@@ -733,23 +772,21 @@ def main():
                 "net_credit_mid": option_setup.get("net_credit_mid"),
                 "spread_width": option_setup.get("spread_width"),
             },
-            "macro": {"next_events": macro_events, "risk_context": macro_risk},
-            "earnings": {"mag7": earnings, "earnings_veto": earnings_block},
+            "macro": {
+                "next_events": macro_events,
+                "risk_context": macro_risk
+            },
+            "earnings": {
+                "mag7": earnings,
+                "earnings_veto": earnings_block
+            },
         }
 
         with open(STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
 
-        history = [{
-            "timestamp_utc": state["timestamp_utc"],
-            "price": state["price"],
-            "score": state["score"],
-            "decision": state["decision"],
-            "buffer_dynamic": dynamic_buffer,
-            "vwap": state["vwap"],
-        }]
-        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history, f, ensure_ascii=False, indent=2)
+        append_history(state, dynamic_buffer)
+
     except Exception as e:
         fallback = {
             "symbol": SYMBOL,
@@ -767,7 +804,13 @@ def main():
             "day_low": None,
             "volume": None,
             "vwap": None,
-            "expected_move": {"method": "unavailable", "daily_vol_pct": None, "expected_move_dollar": None, "upper": None, "lower": None},
+            "expected_move": {
+                "method": "unavailable",
+                "daily_vol_pct": None,
+                "expected_move_dollar": None,
+                "upper": None,
+                "lower": None
+            },
             "premarket_range": None,
             "opening_range": None,
             "score": 0,
@@ -775,16 +818,43 @@ def main():
             "risk": "Alto",
             "summary": f"Error generando estado: {e}",
             "notes": [str(e)],
-            "buffer": {"base": BASE_BUFFER, "dynamic": BASE_BUFFER, "reason_short": "error"},
-            "trade_setup": {"buffer_dynamic": BASE_BUFFER},
-            "options_snapshot": {"status": "error", "message": "Error generando snapshot", "quotes_reliable": False},
-            "macro": {"next_events": get_macro_events(), "risk_context": None},
-            "earnings": {"mag7": [{"symbol": s, "date": None, "status": "No cercano", "source": None} for s in MAG7], "earnings_veto": False},
+            "buffer": {
+                "base": BASE_BUFFER,
+                "dynamic": BASE_BUFFER,
+                "reason_short": "error"
+            },
+            "trade_setup": {
+                "buffer_dynamic": BASE_BUFFER
+            },
+            "options_snapshot": {
+                "status": "error",
+                "message": "Error generando snapshot",
+                "quotes_reliable": False
+            },
+            "macro": {
+                "next_events": get_macro_events(),
+                "risk_context": None
+            },
+            "earnings": {
+                "mag7": [{"symbol": s, "date": None, "status": "No cercano", "source": None} for s in MAG7],
+                "earnings_veto": False
+            },
         }
+
         with open(STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(fallback, f, ensure_ascii=False, indent=2)
+
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump([{"timestamp_utc": fallback["timestamp_utc"], "price": None, "score": 0, "decision": "No entraría", "buffer_dynamic": BASE_BUFFER, "vwap": None}], f, ensure_ascii=False, indent=2)
+            json.dump([{
+                "timestamp_utc": fallback["timestamp_utc"],
+                "timestamp_ny": fallback["timestamp_ny"],
+                "price": None,
+                "score": 0,
+                "decision": "No entraría",
+                "buffer_dynamic": BASE_BUFFER,
+                "vwap": None,
+                "session": "Error",
+            }], f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
