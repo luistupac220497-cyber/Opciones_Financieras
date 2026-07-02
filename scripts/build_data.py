@@ -7,8 +7,9 @@ import yfinance as yf
 STATE_FILE = "state.json"
 TICKER = "QQQ"
 BASE_BUFFER_PCT = 1.85
+MIN_BUFFER_PCT = 1.35
+MAX_BUFFER_PCT = 3.40
 SPREAD_WIDTH = 1.0
-TARGET_SHORT_DELTA = 0.15
 
 NY_TZ = timezone(timedelta(hours=-4))
 
@@ -37,9 +38,13 @@ def round2(v):
     return None if v is None else round(float(v), 2)
 
 
+def clamp(v, lo, hi):
+    return max(lo, min(hi, v))
+
+
 def ceil_strike(x, step=1.0):
     if x is None:
-        return None
+      return None
     return math.ceil(x / step) * step
 
 
@@ -138,10 +143,35 @@ def compute_opening_range(hist):
             "message": "Opening Range disponible a partir de 09:30 ET"
         }
 
+    try:
+        reg = hist.between_time("09:30", "10:30")
+        if reg is not None and not reg.empty:
+            high = safe_float(reg["High"].max())
+            low = safe_float(reg["Low"].min())
+            close = safe_float(reg.iloc[-1]["Close"])
+            size = None if high is None or low is None else high - low
+            size_pct = None if close in (None, 0) or size is None else (size / close) * 100
+
+            now_et = now_ny()
+            complete = now_et.hour > 10 or (now_et.hour == 10 and now_et.minute >= 30)
+
+            return {
+                "available": complete,
+                "status": "OK" if complete else "En formación",
+                "message": "Opening Range calculado" if complete else "Opening Range en formación",
+                "high": round2(high),
+                "low": round2(low),
+                "close": round2(close),
+                "size": round2(size),
+                "sizePct": round2(size_pct)
+            }
+    except Exception:
+        pass
+
     return {
         "available": False,
         "status": "Pendiente",
-        "message": "Opening Range pendiente de cálculo en esta versión"
+        "message": "Opening Range pendiente de cálculo"
     }
 
 
@@ -270,31 +300,73 @@ def get_earnings_block():
     }
 
 
-def compute_dynamic_buffer_pct(expected_move, pm_range, session_code, macro):
+def compute_dynamic_buffer_pct(expected_move, pm_range, opening_range, session_code, macro, vwap, tone):
     base = BASE_BUFFER_PCT
-    em_factor = safe_float(expected_move.get("movePct"), 0) * 0.85 if expected_move.get("status") == "OK" else 0
-    pm_factor = safe_float(pm_range.get("sizePct"), 0) * 1.10 if pm_range.get("available") else 0
+    em_pct = safe_float(expected_move.get("movePct"), 0)
+    pm_pct = safe_float(pm_range.get("sizePct"), 0)
+    or_pct = safe_float(opening_range.get("sizePct"), 0)
+    vwap_dist = abs(safe_float(vwap.get("distPct"), 0))
 
-    dyn = max(base, em_factor, pm_factor)
-    reason_parts = [
-        f"base {base:.2f}%"
-    ]
+    reasons = [f"base {base:.2f}%"]
+    dynamic_candidates = []
 
-    if em_factor:
-        reason_parts.append(f"expected move factor {em_factor:.2f}%")
-    if pm_factor:
-        reason_parts.append(f"premarket range factor {pm_factor:.2f}%")
+    if em_pct:
+        em_factor = em_pct * 0.78
+        dynamic_candidates.append(em_factor)
+        reasons.append(f"expected move factor {em_factor:.2f}%")
+
+    if pm_pct:
+        pm_factor = pm_pct * 0.90
+        dynamic_candidates.append(pm_factor)
+        reasons.append(f"premarket range factor {pm_factor:.2f}%")
+
+    if or_pct:
+        or_factor = or_pct * 1.05
+        dynamic_candidates.append(or_factor)
+        reasons.append(f"opening range factor {or_factor:.2f}%")
+
+    if dynamic_candidates:
+        raw = sum(dynamic_candidates) / len(dynamic_candidates)
+    else:
+        raw = base
+
+    compressed = False
+    if em_pct and em_pct < 1.55:
+        raw -= 0.18
+        compressed = True
+        reasons.append("low expected move adjustment -0.18%")
+
+    if pm_pct and pm_pct < 0.55:
+        raw -= 0.12
+        compressed = True
+        reasons.append("tight premarket adjustment -0.12%")
+
+    if or_pct and or_pct < 0.45:
+        raw -= 0.10
+        compressed = True
+        reasons.append("tight opening range adjustment -0.10%")
 
     if session_code == "premarket":
-        dyn *= 1.08
-        reason_parts.append("premarket multiplier x1.08")
+        raw *= 1.05
+        reasons.append("premarket multiplier x1.05")
+
+    if session_code == "regular" and compressed:
+        raw *= 0.96
+        reasons.append("regular compression multiplier x0.96")
 
     nxt = macro.get("next")
     if nxt and safe_float(nxt.get("totalHoras")) is not None and nxt["totalHoras"] <= 36 and nxt.get("impacto") == "alto":
-        dyn *= 1.10
-        reason_parts.append("high impact macro <=36h x1.10")
+        raw *= 1.10
+        reasons.append("high impact macro <=36h x1.10")
 
-    return round2(dyn), " | ".join(reason_parts)
+    if vwap_dist > 1.0 and tone == "down":
+        raw *= 1.04
+        reasons.append("trend extension x1.04")
+
+    final_buffer = clamp(raw, MIN_BUFFER_PCT, MAX_BUFFER_PCT)
+    reasons.append(f"final {final_buffer:.2f}%")
+
+    return round2(final_buffer), " | ".join(reasons)
 
 
 def get_options_trade(tk, price, buffer_pct):
@@ -407,6 +479,9 @@ def compute_score(state):
     decision_label = "🟡 Esperar confirmación"
     risk_label = "🟡 Riesgo medio"
 
+    if state["trade"]["bufferDynamicPct"] <= 1.55:
+        reasons.append("Buffer reducido por compresión de rango")
+
     return score, decision, decision_tone, decision_label, risk_label, reasons
 
 
@@ -423,10 +498,13 @@ def main():
     earnings = get_earnings_block()
 
     dyn_buffer_pct, buffer_reason = compute_dynamic_buffer_pct(
-        expected_move,
-        pm_range,
-        session["code"],
-        macro
+        expected_move=expected_move,
+        pm_range=pm_range,
+        opening_range=opening_range,
+        session_code=session["code"],
+        macro=macro,
+        vwap=vwap,
+        tone=px["tone"]
     )
 
     opt = get_options_trade(tk, px["price"], dyn_buffer_pct)
@@ -470,6 +548,7 @@ def main():
         f"{state['earnings']['next']['empresa']} en {state['earnings']['next']['dias']}d"
         if state["earnings"].get("next") else "sin earnings cercanos"
     )
+
     state["summary"] = (
         f"buffer dinámico {state['trade']['bufferDynamicPct']:.2f}% "
         f"(base {state['trade']['bufferBasePct']:.2f}%) · "
