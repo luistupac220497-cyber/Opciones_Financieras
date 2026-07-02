@@ -1936,5 +1936,13 @@
     "decision": "esperar confirmación",
     "bufferDynamicPct": 2.2,
     "shortStrike": 737.0
+  },
+  {
+    "updatedAt": "2026-07-02T09:20:31.302274+00:00",
+    "price": 720.5,
+    "score": 55,
+    "decision": "esperar confirmación",
+    "bufferDynamicPct": 2.2,
+    "shortStrike": 737.0
   }
 ]
