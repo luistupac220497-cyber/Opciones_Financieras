@@ -1,29 +1,29 @@
 {
   "ticker": "QQQ",
-  "price": 726.19,
+  "price": 727.17,
   "prevClose": 736.4,
-  "change": -10.21,
-  "changePct": -1.39,
+  "change": -9.23,
+  "changePct": -1.25,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T12:10:37.580926+00:00",
-  "updatedAtText": "2026-07-02 12:10:37 UTC",
-  "updatedAtNY": "2026-07-02 08:10:36 ET",
+  "updatedAt": "2026-07-02T12:20:23.306158+00:00",
+  "updatedAtText": "2026-07-02 12:20:23 UTC",
+  "updatedAtNY": "2026-07-02 08:20:21 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
   },
-  "summary": "buffer dinámico 2.20% (base 1.85%) · short strike 743 · premarket: quotes de opciones aún no fiables · próximo earnings relevante: Tesla en 20d · tramo actual: premarket",
+  "summary": "buffer dinámico 2.20% (base 1.85%) · short strike 744 · premarket: quotes de opciones aún no fiables · próximo earnings relevante: Tesla en 20d · tramo actual: premarket",
   "trade": {
     "bufferBasePct": 1.85,
     "bufferDynamicPct": 2.2,
     "bufferReason": "base 1.85% | expected move factor 1.27% | premarket range factor 1.30% | premarket multiplier x1.08 | high impact macro <=36h x1.10",
-    "shortStrike": 743.0,
-    "longStrike": 744.0,
-    "breakeven": 743.0,
+    "shortStrike": 744.0,
+    "longStrike": 745.0,
+    "breakeven": 744.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 16.81
+    "distToShort": 16.83
   },
   "options": {
     "expiration": "2026-07-02",
@@ -33,10 +33,10 @@
     "longCallAsk": 0.0,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 2962.0,
-    "longCallOI": 3286.0,
-    "shortCallVolume": 5812.0,
-    "longCallVolume": 5141.0,
+    "shortCallOI": 3286.0,
+    "longCallOI": 10089.0,
+    "shortCallVolume": 5141.0,
+    "longCallVolume": 11972.0,
     "quotesUsable": false,
     "notes": "Premarket: quotes de opciones aún no fiables"
   },
@@ -58,17 +58,17 @@
     "message": "Premarket Range calculado",
     "high": 728.04,
     "low": 719.46,
-    "close": 726.19,
+    "close": 727.17,
     "size": 8.58,
     "sizePct": 1.18
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 1.49,
-    "move": 10.82,
+    "move": 10.83,
     "movePct": 1.49,
-    "upper": 737.01,
-    "lower": 715.37,
+    "upper": 738.0,
+    "lower": 716.34,
     "status": "OK"
   },
   "freshness": {
