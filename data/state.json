@@ -6,14 +6,14 @@
   "changePct": -1.63,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T04:20:30.119033+00:00",
-  "updatedAtText": "2026-07-02 04:20:30 UTC",
-  "updatedAtNY": "2026-07-02 00:20:30 ET",
+  "updatedAt": "2026-07-02T04:30:43.156342+00:00",
+  "updatedAtText": "2026-07-02 04:30:43 UTC",
+  "updatedAtNY": "2026-07-02 00:30:43 ET",
   "session": {
     "code": "overnight",
     "label": "Overnight"
   },
-  "summary": "macro Nóminas no agrícolas (NFP) en 1d 8h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 20d · tramo actual: overnight",
+  "summary": "macro Nóminas no agrícolas (NFP) en 1d 7h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 20d · tramo actual: overnight",
   "trade": {
     "bufferPct": 1.85,
     "shortStrike": 738,
@@ -98,8 +98,8 @@
       "dateNY": "2026-07-03",
       "timeNY": "08:30",
       "dias": 1,
-      "horas": 8,
-      "totalHoras": 32.16,
+      "horas": 7,
+      "totalHoras": 31.99,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -111,7 +111,7 @@
       "timeNY": "10:00",
       "dias": -1,
       "horas": 14,
-      "totalHoras": -14.34,
+      "totalHoras": -14.51,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -123,8 +123,8 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 1,
-        "horas": 8,
-        "totalHoras": 32.16,
+        "horas": 7,
+        "totalHoras": 31.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -135,8 +135,8 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 1,
-        "horas": 8,
-        "totalHoras": 32.16,
+        "horas": 7,
+        "totalHoras": 31.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -147,8 +147,8 @@
         "dateNY": "2026-07-15",
         "timeNY": "08:30",
         "dias": 13,
-        "horas": 8,
-        "totalHoras": 320.16,
+        "horas": 7,
+        "totalHoras": 319.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -159,8 +159,8 @@
         "dateNY": "2026-07-16",
         "timeNY": "08:30",
         "dias": 14,
-        "horas": 8,
-        "totalHoras": 344.16,
+        "horas": 7,
+        "totalHoras": 343.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -171,8 +171,8 @@
         "dateNY": "2026-07-16",
         "timeNY": "08:30",
         "dias": 14,
-        "horas": 8,
-        "totalHoras": 344.16,
+        "horas": 7,
+        "totalHoras": 343.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -186,7 +186,7 @@
         "timeNY": "10:00",
         "dias": -1,
         "horas": 14,
-        "totalHoras": -14.34,
+        "totalHoras": -14.51,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -197,8 +197,8 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 1,
-        "horas": 8,
-        "totalHoras": 32.16,
+        "horas": 7,
+        "totalHoras": 31.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -209,8 +209,8 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 1,
-        "horas": 8,
-        "totalHoras": 32.16,
+        "horas": 7,
+        "totalHoras": 31.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -221,8 +221,8 @@
         "dateNY": "2026-07-15",
         "timeNY": "08:30",
         "dias": 13,
-        "horas": 8,
-        "totalHoras": 320.16,
+        "horas": 7,
+        "totalHoras": 319.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -233,8 +233,8 @@
         "dateNY": "2026-07-16",
         "timeNY": "08:30",
         "dias": 14,
-        "horas": 8,
-        "totalHoras": 344.16,
+        "horas": 7,
+        "totalHoras": 343.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -245,8 +245,8 @@
         "dateNY": "2026-07-16",
         "timeNY": "08:30",
         "dias": 14,
-        "horas": 8,
-        "totalHoras": 344.16,
+        "horas": 7,
+        "totalHoras": 343.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -258,7 +258,7 @@
         "timeNY": "14:00",
         "dias": 27,
         "horas": 13,
-        "totalHoras": 661.66,
+        "totalHoras": 661.49,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -269,8 +269,8 @@
         "dateNY": "2026-07-30",
         "timeNY": "08:30",
         "dias": 28,
-        "horas": 8,
-        "totalHoras": 680.16,
+        "horas": 7,
+        "totalHoras": 679.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -281,8 +281,8 @@
         "dateNY": "2026-07-31",
         "timeNY": "08:30",
         "dias": 29,
-        "horas": 8,
-        "totalHoras": 704.16,
+        "horas": 7,
+        "totalHoras": 703.99,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
