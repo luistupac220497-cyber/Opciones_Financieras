@@ -1,29 +1,29 @@
 {
   "ticker": "QQQ",
-  "price": 713.42,
+  "price": 712.46,
   "prevClose": 725.17,
-  "change": -11.75,
-  "changePct": -1.62,
+  "change": -12.71,
+  "changePct": -1.75,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T16:23:05.361773+00:00",
-  "updatedAtText": "2026-07-02 16:23:05 UTC",
-  "updatedAtNY": "2026-07-02 12:23:04 ET",
+  "updatedAt": "2026-07-02T16:30:52.939946+00:00",
+  "updatedAtText": "2026-07-02 16:30:52 UTC",
+  "updatedAtNY": "2026-07-02 12:30:52 ET",
   "session": {
     "code": "regular",
     "label": "Regular"
   },
-  "summary": "buffer 2.60% (base 1.85%) · short 732 · quotes de opciones cargadas · Tesla en 20d · tramo regular",
+  "summary": "buffer 2.60% (base 1.85%) · short 731 · quotes de opciones cargadas · Tesla en 20d · tramo regular",
   "trade": {
     "bufferBasePct": 1.85,
     "bufferDynamicPct": 2.6,
     "bufferReason": "base 1.85% | exp move +0.27% | pm range +0.36% | macro +0.12%",
-    "shortStrike": 732.0,
-    "longStrike": 733.0,
-    "breakeven": 732.0,
+    "shortStrike": 731.0,
+    "longStrike": 732.0,
+    "breakeven": 731.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 18.58
+    "distToShort": 18.54
   },
   "bufferDebug": {
     "base": 1.85,
@@ -44,18 +44,18 @@
     "longCallAsk": 0.04,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 4839.0,
-    "longCallOI": 5482.0,
-    "shortCallVolume": 85595.0,
-    "longCallVolume": 72070.0,
+    "shortCallOI": 5678.0,
+    "longCallOI": 4839.0,
+    "shortCallVolume": 94196.0,
+    "longCallVolume": 86164.0,
     "quotesUsable": true,
     "notes": "Quotes de opciones cargadas"
   },
   "vwap": {
-    "value": 721.45,
-    "distPct": -1.11,
-    "zScore": -1.92,
-    "sigma": 4.17,
+    "value": 721.21,
+    "distPct": -1.21,
+    "zScore": -2.0,
+    "sigma": 4.38,
     "bias": "Muy por debajo"
   },
   "openingRange": {
@@ -76,10 +76,10 @@
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 1.5,
-    "move": 10.69,
+    "move": 10.7,
     "movePct": 1.5,
-    "upper": 724.11,
-    "lower": 702.73,
+    "upper": 723.16,
+    "lower": 701.76,
     "status": "OK"
   },
   "freshness": {
