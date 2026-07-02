@@ -1,14 +1,14 @@
 {
   "ticker": "QQQ",
-  "price": 713.78,
+  "price": 713.82,
   "prevClose": 725.17,
-  "change": -11.39,
+  "change": -11.35,
   "changePct": -1.57,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T22:10:32.973144+00:00",
-  "updatedAtText": "2026-07-02 22:10:32 UTC",
-  "updatedAtNY": "2026-07-02 18:10:32 ET",
+  "updatedAt": "2026-07-02T22:20:38.065231+00:00",
+  "updatedAtText": "2026-07-02 22:20:38 UTC",
+  "updatedAtNY": "2026-07-02 18:20:37 ET",
   "session": {
     "code": "afterhours",
     "label": "After hours"
@@ -23,7 +23,7 @@
     "breakeven": 733.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 19.22
+    "distToShort": 19.18
   },
   "bufferDebug": {
     "base": 1.85,
@@ -53,9 +53,9 @@
   },
   "vwap": {
     "value": 716.5,
-    "distPct": -0.38,
+    "distPct": -0.37,
     "zScore": -0.41,
-    "sigma": 6.6,
+    "sigma": 6.58,
     "bias": "Por debajo"
   },
   "openingRange": {
@@ -78,8 +78,8 @@
     "dailyVolPct": 1.51,
     "move": 10.8,
     "movePct": 1.51,
-    "upper": 724.58,
-    "lower": 702.98,
+    "upper": 724.62,
+    "lower": 703.02,
     "status": "OK"
   },
   "freshness": {
