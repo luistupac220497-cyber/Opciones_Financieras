@@ -9,6 +9,20 @@
   <style>
     :root, [data-theme="light"] {
       --font-body: "Satoshi", system-ui, sans-serif;
+      --text-xs: clamp(0.75rem, 0.72rem + 0.2vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.82rem + 0.28vw, 1rem);
+      --text-base: clamp(1rem, 0.96rem + 0.22vw, 1.08rem);
+      --text-lg: clamp(1.125rem, 1.02rem + 0.5vw, 1.35rem);
+      --text-xl: clamp(1.5rem, 1.24rem + 1vw, 2rem);
+
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+
       --color-bg: #f7f6f2;
       --color-surface: #f9f8f5;
       --color-surface-2: #fbfbf9;
@@ -17,14 +31,17 @@
       --color-text: #28251d;
       --color-text-muted: #73716b;
       --color-primary: #01696f;
+      --color-primary-soft: #dbe7e5;
       --color-success: #437a22;
       --color-success-soft: #dbe7d4;
       --color-warning: #964219;
       --color-warning-soft: #ebdbd1;
       --color-error: #a12c7b;
       --color-error-soft: #ecd7e3;
-      --radius: 16px;
-      --shadow: 0 8px 24px rgba(0,0,0,.06);
+      --radius-md: 14px;
+      --radius-lg: 18px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     [data-theme="dark"] {
@@ -36,427 +53,358 @@
       --color-text: #d8d6d1;
       --color-text-muted: #a09d97;
       --color-primary: #4f98a3;
+      --color-primary-soft: #223437;
       --color-success: #7fb25b;
       --color-success-soft: #273425;
       --color-warning: #d18658;
       --color-warning-soft: #352a24;
       --color-error: #d163a7;
       --color-error-soft: #352532;
-      --shadow: 0 12px 28px rgba(0,0,0,.25);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    html, body { min-height: 100%; }
     body {
       font-family: var(--font-body);
       background: var(--color-bg);
       color: var(--color-text);
+      font-size: var(--text-base);
       line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .wrap {
-      max-width: 1380px;
-      margin: 0 auto;
-      padding: 28px;
-    }
-
+    button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+    .app { max-width: 1380px; margin: 0 auto; padding: var(--space-6); }
     .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 22px;
+      display: flex; justify-content: space-between; align-items: center; gap: var(--space-4);
+      margin-bottom: var(--space-6); flex-wrap: wrap;
     }
+    .title h1 { font-size: var(--text-xl); font-weight: 900; letter-spacing: -.04em; }
+    .title p { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: .2rem; }
 
-    .title {
-      font-size: 2.1rem;
-      font-weight: 900;
-      letter-spacing: -.04em;
+    .chip-row { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .45rem;
+      padding: .55rem .8rem; border-radius: 999px; font-size: var(--text-xs);
+      font-weight: 700; border: 1px solid var(--color-border); background: var(--color-surface-2);
     }
+    .chip-fresh { color: var(--color-success); background: var(--color-success-soft); border-color: transparent; }
+    .chip-stale { color: var(--color-warning); background: var(--color-warning-soft); border-color: transparent; }
 
-    .sub {
-      color: var(--color-text-muted);
-      margin-top: 4px;
-    }
-
-    .theme-btn {
-      border: 1px solid var(--color-border);
-      background: var(--color-surface);
-      color: var(--color-text);
-      border-radius: 999px;
-      padding: 10px 14px;
-      cursor: pointer;
-    }
-
-    .grid { display: grid; gap: 16px; }
-    .hero { grid-template-columns: 1.3fr .9fr; margin-bottom: 16px; }
-    .kpis { grid-template-columns: repeat(4, minmax(0,1fr)); margin-bottom: 16px; }
-    .content { grid-template-columns: repeat(2, minmax(0,1fr)); margin-bottom: 16px; }
+    .grid { display: grid; gap: var(--space-4); }
+    .hero { grid-template-columns: 1.25fr .9fr; margin-bottom: var(--space-4); }
+    .mid { grid-template-columns: repeat(4, 1fr); margin-bottom: var(--space-4); }
+    .bottom { grid-template-columns: repeat(2, 1fr); }
 
     .card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
     }
 
-    .eyebrow {
-      font-size: .82rem;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 10px;
+    .card-title { font-size: var(--text-lg); font-weight: 800; letter-spacing: -.02em; }
+    .card-subtitle {
+      margin-top: .2rem; font-size: var(--text-xs);
+      color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .08em;
     }
 
-    .big {
-      font-size: 3rem;
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -.06em;
-      margin: 14px 0;
-      font-variant-numeric: tabular-nums;
+    .decision-badge {
+      display: inline-flex; margin-top: 1rem; padding: .75rem 1rem; border-radius: 999px;
+      font-size: var(--text-sm); font-weight: 800;
     }
+    .decision-enter { color: var(--color-success); background: var(--color-success-soft); }
+    .decision-wait { color: var(--color-warning); background: var(--color-warning-soft); }
+    .decision-no { color: var(--color-error); background: var(--color-error-soft); }
+
+    .score {
+      font-size: clamp(2.3rem, 2rem + 2vw, 4rem);
+      font-weight: 900; line-height: 1; letter-spacing: -.06em; margin-top: 1rem;
+    }
+
+    .summary {
+      margin-top: 1rem; color: var(--color-text-muted);
+    }
+
+    .mini-grid {
+      margin-top: 1rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem;
+    }
+
+    .mini-box, .stat {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: .95rem;
+    }
+
+    .mini-label, .stat-label {
+      font-size: var(--text-xs); color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem;
+    }
+
+    .mini-value, .stat-value {
+      font-size: var(--text-lg); font-weight: 800;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .price-main {
+      font-size: clamp(2rem, 1.8rem + 1.7vw, 3.4rem);
+      line-height: 1; font-weight: 900; letter-spacing: -.05em;
+      font-variant-numeric: tabular-nums lining-nums;
+      margin-top: 1rem;
+    }
+
+    .delta-up { color: var(--color-success); }
+    .delta-down { color: var(--color-error); }
+    .delta-flat { color: var(--color-text-muted); }
+
+    .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-top: 1rem; }
+
+    .alert {
+      margin-top: 1rem; padding: .9rem 1rem; border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+    }
+    .alert-warning { color: var(--color-warning); background: var(--color-warning-soft); }
+    .alert-error { color: var(--color-error); background: var(--color-error-soft); }
+
+    .list { display: grid; gap: .85rem; margin-top: 1rem; }
+    .list-row {
+      display: flex; justify-content: space-between; gap: 1rem; padding-bottom: .85rem;
+      border-bottom: 1px solid var(--color-divider);
+    }
+    .list-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .list-title { font-size: var(--text-sm); font-weight: 700; }
+    .list-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: .2rem; }
+    .list-value { text-align: right; font-size: var(--text-sm); font-weight: 800; }
+
+    .table-wrap { overflow-x: auto; margin-top: 1rem; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { padding: .8rem .4rem; border-bottom: 1px solid var(--color-divider); font-size: var(--text-sm); }
+    td.num { text-align: right; font-variant-numeric: tabular-nums lining-nums; font-weight: 700; }
+    th { text-align: left; font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .08em; }
 
     .muted { color: var(--color-text-muted); }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-weight: 800;
-      margin-bottom: 16px;
-    }
-
-    .green { color: var(--color-success); background: var(--color-success-soft); }
-    .yellow { color: var(--color-warning); background: var(--color-warning-soft); }
-    .red { color: var(--color-error); background: var(--color-error-soft); }
-
-    .mini-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .mini, .stat {
-      background: var(--color-surface-2);
-      border: 1px solid var(--color-border);
-      border-radius: 14px;
-      padding: 14px;
-    }
-
-    .mini-label {
-      font-size: .78rem;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 8px;
-    }
-
-    .mini-value {
-      font-size: 1.25rem;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    td, th {
-      padding: 11px 6px;
-      border-bottom: 1px solid var(--color-divider);
-      text-align: left;
-      vertical-align: top;
-    }
-
-    td:last-child, .num {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .list { display: grid; gap: 12px; }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--color-divider);
-    }
-
-    .row:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .alert {
-      padding: 12px 14px;
-      border-radius: 12px;
-      margin-bottom: 14px;
-      font-size: .95rem;
-    }
-
-    .history-card {
-      margin-top: 16px;
-    }
-
     @media (max-width: 1100px) {
-      .hero, .kpis, .content { grid-template-columns: 1fr; }
+      .hero, .mid, .bottom { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .app { padding: var(--space-4); }
+      .mini-grid, .stats-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="app">
     <div class="topbar">
-      <div>
-        <div class="title">QQQ 0DTE Dashboard</div>
-        <div id="headerMeta" class="sub">Cargando estado...</div>
+      <div class="title">
+        <h1>QQQ 0DTE Dashboard</h1>
+        <p id="headerMeta">Cargando estado…</p>
       </div>
-      <button id="themeBtn" class="theme-btn" aria-label="Cambiar tema">◐</button>
+      <div class="chip-row">
+        <div id="freshChip" class="chip chip-fresh">Fresh</div>
+        <div id="riskChip" class="chip">Risk</div>
+        <button id="themeToggle" class="chip">◐</button>
+      </div>
     </div>
 
     <section class="grid hero">
       <article class="card">
-        <div class="eyebrow">Decisión operativa</div>
-        <div id="decisionBadge" class="pill yellow">Esperando datos</div>
-        <div id="scoreValue" class="big">--</div>
-        <div id="summaryText" class="muted">Sin datos aún.</div>
+        <div class="card-title">Decisión operativa</div>
+        <div class="card-subtitle">Score y resumen</div>
+        <div id="decisionBadge" class="decision-badge decision-wait">Esperando</div>
+        <div id="scoreValue" class="score">--</div>
+        <div id="summaryText" class="summary">Sin datos.</div>
 
         <div class="mini-grid">
-          <div class="mini">
+          <div class="mini-box">
             <div class="mini-label">Buffer dinámico</div>
             <div id="bufferValue" class="mini-value">--</div>
           </div>
-          <div class="mini">
+          <div class="mini-box">
             <div class="mini-label">Short strike</div>
             <div id="shortStrikeValue" class="mini-value">--</div>
           </div>
-          <div class="mini">
-            <div class="mini-label">Distancia</div>
+          <div class="mini-box">
+            <div class="mini-label">Distancia al short</div>
             <div id="distanceValue" class="mini-value">--</div>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <div class="eyebrow">Precio y sesión</div>
-        <div id="priceValue" class="big">--</div>
-        <div id="changeValue" class="muted">--</div>
+        <div class="card-title">Precio y sesión</div>
+        <div class="card-subtitle">Spot, VWAP y tono</div>
+        <div id="priceValue" class="price-main">--</div>
+        <div id="changeValue" class="muted" style="margin-top:.5rem;">--</div>
 
-        <div class="stats">
+        <div class="stats-row">
           <div class="stat">
-            <div class="mini-label">VWAP</div>
-            <div id="vwapValue" class="mini-value">--</div>
+            <div class="stat-label">VWAP</div>
+            <div id="vwapValue" class="stat-value">--</div>
           </div>
           <div class="stat">
-            <div class="mini-label">Sesión</div>
-            <div id="sessionValue" class="mini-value">--</div>
+            <div class="stat-label">Sesión</div>
+            <div id="sessionValue" class="stat-value">--</div>
           </div>
           <div class="stat">
-            <div class="mini-label">Actualizado NY</div>
-            <div id="updatedNyValue" class="mini-value" style="font-size:1rem;">--</div>
+            <div class="stat-label">Prev close</div>
+            <div id="openValue" class="stat-value">--</div>
           </div>
           <div class="stat">
-            <div class="mini-label">Freshness</div>
-            <div id="freshnessValue" class="mini-value" style="font-size:1rem;">--</div>
+            <div class="stat-label">Vol short</div>
+            <div id="volumeValue" class="stat-value">--</div>
           </div>
         </div>
       </article>
     </section>
 
-    <section class="grid kpis">
+    <section class="grid mid">
       <article class="card">
-        <div style="font-size:1.25rem;font-weight:800;">Premarket range</div>
-        <div class="eyebrow">Lectura previa</div>
-        <div id="premarketBox">--</div>
+        <div class="card-title">Premarket range</div>
+        <div class="card-subtitle">Antes del cash open</div>
+        <div id="premarketBox" class="summary">--</div>
       </article>
 
       <article class="card">
-        <div style="font-size:1.25rem;font-weight:800;">Opening range</div>
-        <div class="eyebrow">09:30–10:30 ET</div>
-        <div id="openingBox">--</div>
+        <div class="card-title">Opening range</div>
+        <div class="card-subtitle">09:30 ET en adelante</div>
+        <div id="openingBox" class="summary">--</div>
       </article>
 
       <article class="card">
-        <div style="font-size:1.25rem;font-weight:800;">Expected move</div>
-        <div class="eyebrow">Referencia diaria</div>
-        <div id="expectedBox">--</div>
+        <div class="card-title">Expected move</div>
+        <div class="card-subtitle">Referencia diaria</div>
+        <div id="expectedBox" class="summary">--</div>
       </article>
 
       <article class="card">
-        <div style="font-size:1.25rem;font-weight:800;">Liquidity snapshot</div>
-        <div class="eyebrow">Opciones</div>
-        <div id="liquidityBox">--</div>
+        <div class="card-title">Liquidity snapshot</div>
+        <div class="card-subtitle">Estado de options</div>
+        <div id="liquidityBox" class="summary">--</div>
       </article>
     </section>
 
-    <section class="grid content">
+    <section class="grid bottom">
       <article class="card">
-        <div style="font-size:1.55rem;font-weight:900;">Trade setup</div>
-        <div class="eyebrow">Buffer, strike y crédito</div>
-        <table>
-          <tbody>
-            <tr><td>Buffer base</td><td id="tsBufferBase" class="num">--</td></tr>
-            <tr><td>Buffer dinámico</td><td id="tsBuffer" class="num">--</td></tr>
-            <tr><td>Motivo buffer</td><td id="tsBufferReason">--</td></tr>
-            <tr><td>Short strike</td><td id="tsShort" class="num">--</td></tr>
-            <tr><td>Long strike</td><td id="tsLong" class="num">--</td></tr>
-            <tr><td>Breakeven</td><td id="tsBeke" class="num">--</td></tr>
-            <tr><td>Spread width</td><td id="tsWidth" class="num">--</td></tr>
-            <tr><td>Net credit</td><td id="tsCredit" class="num">--</td></tr>
-            <tr><td>Distancia al short</td><td id="tsDist" class="num">--</td></tr>
-          </tbody>
-        </table>
+        <div class="card-title">Trade setup</div>
+        <div class="card-subtitle">Buffer, strike y crédito</div>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td>Buffer base</td><td id="tsBufferBase" class="num">--</td></tr>
+              <tr><td>Buffer dinámico</td><td id="tsBufferDyn" class="num">--</td></tr>
+              <tr><td>Motivo buffer</td><td id="tsBufferReason">--</td></tr>
+              <tr><td>Short strike</td><td id="tsShortSel" class="num">--</td></tr>
+              <tr><td>Long strike</td><td id="tsLongSel" class="num">--</td></tr>
+              <tr><td>Breakeven</td><td id="tsBreakeven" class="num">--</td></tr>
+              <tr><td>Spread width</td><td id="tsWidth" class="num">--</td></tr>
+              <tr><td>Net credit</td><td id="tsCredit" class="num">--</td></tr>
+              <tr><td>Distancia al short</td><td id="tsDistance" class="num">--</td></tr>
+            </tbody>
+          </table>
+        </div>
       </article>
 
       <article class="card">
-        <div style="font-size:1.55rem;font-weight:900;">Options snapshot</div>
-        <div class="eyebrow">Estado operativo</div>
+        <div class="card-title">Options snapshot</div>
+        <div class="card-subtitle">Estado operativo</div>
         <div id="optionsAlert"></div>
-        <table>
-          <tbody>
-            <tr><td>Expiración</td><td id="opExp" class="num">--</td></tr>
-            <tr><td>Short bid/ask</td><td id="opShort" class="num">--</td></tr>
-            <tr><td>Long bid/ask</td><td id="opLong" class="num">--</td></tr>
-            <tr><td>Short delta</td><td id="opDelta" class="num">--</td></tr>
-            <tr><td>Short OI</td><td id="opOi" class="num">--</td></tr>
-            <tr><td>Short volume</td><td id="opVol" class="num">--</td></tr>
-            <tr><td>Quotes usables</td><td id="opUsable" class="num">--</td></tr>
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td>Expiración</td><td id="osExpiry" class="num">--</td></tr>
+              <tr><td>Short bid/ask</td><td id="osBidAsk" class="num">--</td></tr>
+              <tr><td>Long bid/ask</td><td id="osLongBidAsk" class="num">--</td></tr>
+              <tr><td>Quotes fiables</td><td id="osReliable">--</td></tr>
+              <tr><td>Short OI</td><td id="osOI" class="num">--</td></tr>
+              <tr><td>Short volume</td><td id="osVol" class="num">--</td></tr>
+            </tbody>
+          </table>
+        </div>
       </article>
 
       <article class="card">
-        <div style="font-size:1.55rem;font-weight:900;">Macro</div>
-        <div class="eyebrow">Próximos eventos</div>
+        <div class="card-title">Macro</div>
+        <div class="card-subtitle">Próximos eventos</div>
         <div id="macroAlert"></div>
         <div id="macroList" class="list"></div>
       </article>
 
       <article class="card">
-        <div style="font-size:1.55rem;font-weight:900;">Mag 7 earnings</div>
-        <div class="eyebrow">Filtro de veto</div>
+        <div class="card-title">Earnings</div>
+        <div class="card-subtitle">Mag 7 / veto</div>
+        <div id="earningsAlert"></div>
         <div id="earningsList" class="list"></div>
       </article>
-    </section>
-
-    <section class="card history-card">
-      <div style="font-size:1.55rem;font-weight:900;">Historial</div>
-      <div class="eyebrow">Últimas muestras guardadas</div>
-      <table>
-        <thead>
-          <tr>
-            <th>UpdatedAt</th>
-            <th>Price</th>
-            <th>Score</th>
-            <th>Decision</th>
-            <th>Buffer dinámico</th>
-            <th>Short strike</th>
-          </tr>
-        </thead>
-        <tbody id="historyRows">
-          <tr><td colspan="6" class="muted">Sin datos todavía.</td></tr>
-        </tbody>
-      </table>
     </section>
   </div>
 
   <script>
-    const qs = id => document.getElementById(id);
-    const money = v => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `$${Number(v).toFixed(2)}`;
-    const pct = v => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `${Number(v).toFixed(2)}%`;
-    const num = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : Number(v).toFixed(d);
-    const txt = v => (v === null || v === undefined || v === "") ? "--" : String(v);
-
-    (function () {
-      const root = document.documentElement;
-      const btn = qs("themeBtn");
-      let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const root = document.documentElement;
+    const themeToggle = document.getElementById("themeToggle");
+    let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    root.setAttribute("data-theme", theme);
+    themeToggle.addEventListener("click", () => {
+      theme = theme === "dark" ? "light" : "dark";
       root.setAttribute("data-theme", theme);
-      btn.addEventListener("click", () => {
-        theme = theme === "dark" ? "light" : "dark";
-        root.setAttribute("data-theme", theme);
-      });
-    })();
+      themeToggle.textContent = theme === "dark" ? "☀" : "◐";
+    });
 
-    function setDecision(decisionTone, decisionLabel) {
+    const fmt = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : Number(v).toFixed(d);
+    const intFmt = (v) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : new Intl.NumberFormat("es-ES").format(Number(v));
+    const money = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `$${Number(v).toFixed(d)}`;
+    const pct = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `${Number(v).toFixed(d)}%`;
+    const text = (v) => (v === null || v === undefined || v === "") ? "--" : String(v);
+    const qs = (id) => document.getElementById(id);
+
+    function setDecisionBadge(label, tone) {
       const el = qs("decisionBadge");
-      el.textContent = decisionLabel || "--";
-      el.className = "pill";
-      if (decisionTone === "green") el.classList.add("green");
-      else if (decisionTone === "red") el.classList.add("red");
-      else el.classList.add("yellow");
+      el.textContent = label || "--";
+      el.className = "decision-badge";
+      if (tone === "red") el.classList.add("decision-no");
+      else if (tone === "yellow") el.classList.add("decision-wait");
+      else el.classList.add("decision-enter");
     }
 
-    function renderRange(boxId, r, type) {
+    function renderRange(boxId, obj, kind = "simple") {
       const el = qs(boxId);
-      if (!r) {
+      if (!obj) {
         el.textContent = "--";
         return;
       }
-      if (!r.available) {
-        el.innerHTML = `<div class="muted">${txt(r.status)} · ${txt(r.message)}</div>`;
+      if (!obj.available) {
+        el.innerHTML = `<div class="muted">${text(obj.message || obj.status)}</div>`;
         return;
       }
-      if (type === "premarket") {
+      if (kind === "premarket") {
         el.innerHTML = `
-          <div><strong>High:</strong> ${money(r.high)}</div>
-          <div><strong>Low:</strong> ${money(r.low)}</div>
-          <div><strong>Close:</strong> ${money(r.close)}</div>
-          <div><strong>Size:</strong> ${money(r.size)} · ${pct(r.sizePct)}</div>
+          <div><strong>High:</strong> ${money(obj.high)}</div>
+          <div><strong>Low:</strong> ${money(obj.low)}</div>
+          <div><strong>Close:</strong> ${money(obj.close)}</div>
+          <div><strong>Size:</strong> ${money(obj.size)} · ${pct(obj.sizePct)}</div>
+          <div class="muted" style="margin-top:.35rem;">${text(obj.message)}</div>
         `;
-      } else {
-        el.innerHTML = `
-          <div><strong>Status:</strong> ${txt(r.status)}</div>
-          <div class="muted">${txt(r.message)}</div>
-        `;
+        return;
       }
+      el.innerHTML = `<div class="muted">${text(obj.message || obj.status)}</div>`;
     }
 
     function renderExpectedMove(em) {
       const el = qs("expectedBox");
-      if (!em) {
-        el.textContent = "--";
+      if (!em || em.status !== "OK") {
+        el.textContent = "Expected move no disponible.";
         return;
       }
       el.innerHTML = `
-        <div><strong>Method:</strong> ${txt(em.method)}</div>
+        <div><strong>Method:</strong> ${text(em.method)}</div>
         <div><strong>Vol diaria:</strong> ${pct(em.dailyVolPct)}</div>
-        <div><strong>Move:</strong> ${money(em.move)} · ${pct(em.movePct)}</div>
+        <div><strong>Expected move:</strong> ${money(em.move)}</div>
         <div><strong>Upper:</strong> ${money(em.upper)}</div>
         <div><strong>Lower:</strong> ${money(em.lower)}</div>
       `;
-    }
-
-    function renderOptions(op) {
-      qs("opExp").textContent = txt(op?.expiration);
-      qs("opShort").textContent = `${money(op?.shortCallBid)} / ${money(op?.shortCallAsk)}`;
-      qs("opLong").textContent = `${money(op?.longCallBid)} / ${money(op?.longCallAsk)}`;
-      qs("opDelta").textContent = num(op?.shortCallDelta, 3);
-      qs("opOi").textContent = txt(op?.shortCallOI);
-      qs("opVol").textContent = txt(op?.shortCallVolume);
-      qs("opUsable").textContent = op?.quotesUsable ? "Sí" : "No";
-
-      qs("liquidityBox").innerHTML = `
-        <div><strong>Notas:</strong> ${txt(op?.notes)}</div>
-        <div><strong>Quotes usables:</strong> ${op?.quotesUsable ? "Sí" : "No"}</div>
-        <div><strong>Short volume:</strong> ${txt(op?.shortCallVolume)}</div>
-      `;
-
-      qs("optionsAlert").innerHTML = op?.notes
-        ? `<div class="alert" style="background:var(--color-warning-soft); color:var(--color-warning);">${txt(op.notes)}</div>`
-        : "";
     }
 
     function renderMacro(macro) {
@@ -466,114 +414,122 @@
       list.innerHTML = "";
 
       if (macro?.next) {
-        alert.innerHTML = `<div class="alert" style="background:var(--color-warning-soft); color:var(--color-warning);">
-          Próximo: ${txt(macro.next.evento)} · ${txt(macro.next.impacto)} · ${txt(macro.next.datetimeNY)}
-        </div>`;
+        const cls = macro.next.impacto === "alto" ? "alert alert-error" : "alert alert-warning";
+        alert.innerHTML = `<div class="${cls}">${text(macro.next.evento)} · impacto ${text(macro.next.impacto)} · ${text(macro.next.totalHoras)}h</div>`;
       }
 
-      (macro?.items || []).slice(0, 5).forEach(item => {
-        const div = document.createElement("div");
-        div.className = "row";
-        div.innerHTML = `
+      (macro?.items || []).forEach(ev => {
+        const row = document.createElement("div");
+        row.className = "list-row";
+        row.innerHTML = `
           <div>
-            <div><strong>${txt(item.evento)}</strong></div>
-            <div class="muted">${txt(item.datetimeNY)} · ${txt(item.momento)}</div>
+            <div class="list-title">${text(ev.evento)}</div>
+            <div class="list-meta">${text(ev.dateNY)} · ${text(ev.timeNY)} ET · ${text(ev.momento)}</div>
           </div>
-          <div><strong>${txt(item.impacto)}</strong></div>
+          <div class="list-value">${text(ev.impacto)}</div>
         `;
-        list.appendChild(div);
+        list.appendChild(row);
       });
     }
 
     function renderEarnings(earnings) {
+      const alert = qs("earningsAlert");
       const list = qs("earningsList");
+      alert.innerHTML = "";
       list.innerHTML = "";
-      (earnings?.items || []).forEach(item => {
-        const div = document.createElement("div");
-        div.className = "row";
-        div.innerHTML = `
+
+      if (earnings?.next) {
+        alert.innerHTML = `<div class="alert alert-warning">Próximo earnings relevante: ${text(earnings.next.empresa)} en ${text(earnings.next.dias)}d.</div>`;
+      } else {
+        alert.innerHTML = `<div class="alert alert-warning">Sin earnings cercanos relevantes.</div>`;
+      }
+
+      (earnings?.items || []).forEach(ev => {
+        const row = document.createElement("div");
+        row.className = "list-row";
+        row.innerHTML = `
           <div>
-            <div><strong>${txt(item.empresa)} (${txt(item.ticker)})</strong></div>
-            <div class="muted">${txt(item.fecha)} · ${txt(item.momento)}</div>
+            <div class="list-title">${text(ev.empresa)} (${text(ev.ticker)})</div>
+            <div class="list-meta">${text(ev.fecha)} · ${text(ev.momento)}</div>
           </div>
-          <div><strong>${txt(item.dias)}d</strong></div>
+          <div class="list-value">${text(ev.dias)}d</div>
         `;
-        list.appendChild(div);
+        list.appendChild(row);
       });
     }
 
-    function renderHistory(rows) {
-      const tbody = qs("historyRows");
-      if (!Array.isArray(rows) || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="muted">Sin datos todavía.</td></tr>`;
-        return;
-      }
+    function renderOptions(os) {
+      qs("osExpiry").textContent = text(os?.expiration);
+      qs("osBidAsk").textContent = `${money(os?.shortCallBid)} / ${money(os?.shortCallAsk)}`;
+      qs("osLongBidAsk").textContent = `${money(os?.longCallBid)} / ${money(os?.longCallAsk)}`;
+      qs("osReliable").textContent = os?.quotesUsable ? "Sí" : "No";
+      qs("osOI").textContent = intFmt(os?.shortCallOI);
+      qs("osVol").textContent = intFmt(os?.shortCallVolume);
 
-      tbody.innerHTML = rows.slice().reverse().slice(0, 20).map(r => `
-        <tr>
-          <td>${txt(r.updatedAt)}</td>
-          <td class="num">${money(r.price)}</td>
-          <td class="num">${txt(r.score)}</td>
-          <td>${txt(r.decision)}</td>
-          <td class="num">${pct(r.bufferDynamicPct)}</td>
-          <td class="num">${money(r.shortStrike)}</td>
-        </tr>
-      `).join("");
+      qs("optionsAlert").innerHTML = os?.notes
+        ? `<div class="alert alert-warning">${text(os.notes)}</div>`
+        : "";
+
+      qs("liquidityBox").innerHTML = `
+        <div><strong>Quotes fiables:</strong> ${os?.quotesUsable ? "Sí" : "No"}</div>
+        <div><strong>Short OI:</strong> ${intFmt(os?.shortCallOI)}</div>
+        <div><strong>Short volume:</strong> ${intFmt(os?.shortCallVolume)}</div>
+        <div><strong>Delta:</strong> ${os?.shortCallDelta == null ? "No disponible" : fmt(os.shortCallDelta, 3)}</div>
+      `;
     }
 
-    async function fetchJson(path) {
-      const res = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" });
-      const text = await res.text();
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status} en ${path}`);
-      }
-      return JSON.parse(text);
+    function renderTrade(trade) {
+      qs("bufferValue").textContent = pct(trade?.bufferDynamicPct);
+      qs("shortStrikeValue").textContent = money(trade?.shortStrike);
+      qs("distanceValue").textContent = money(trade?.distToShort);
+
+      qs("tsBufferBase").textContent = pct(trade?.bufferBasePct);
+      qs("tsBufferDyn").textContent = pct(trade?.bufferDynamicPct);
+      qs("tsBufferReason").textContent = text(trade?.bufferReason);
+      qs("tsShortSel").textContent = money(trade?.shortStrike);
+      qs("tsLongSel").textContent = money(trade?.longStrike);
+      qs("tsBreakeven").textContent = money(trade?.breakeven);
+      qs("tsWidth").textContent = money(trade?.spreadWidth);
+      qs("tsCredit").textContent = money(trade?.netCredit);
+      qs("tsDistance").textContent = money(trade?.distToShort);
     }
 
     async function loadDashboard() {
       try {
-        const [s, h] = await Promise.all([
-          fetchJson("./data/state.json"),
-          fetchJson("./data/history.json")
-        ]);
+        const res = await fetch(`./state.json?ts=${Date.now()}`, { cache: "no-store" });
+        const state = await res.json();
 
-        qs("headerMeta").textContent = `${txt(s.updatedAtNY)} · ${txt(s.updatedAtText)}`;
-        qs("scoreValue").textContent = txt(s.score);
-        qs("summaryText").textContent = txt(s.summary);
-        setDecision(s.decisionTone, s.decisionLabel);
+        qs("headerMeta").textContent = `${text(state.updatedAtNY)} · ${text(state.updatedAtText)}`;
+        qs("scoreValue").textContent = text(state.score);
+        qs("summaryText").textContent = text(state.summary);
+        setDecisionBadge(state.decisionLabel || state.decision, state.decisionTone);
 
-        qs("priceValue").textContent = money(s.price);
-        qs("changeValue").textContent = `${money(s.change)} · ${pct(s.changePct)}`;
-        qs("vwapValue").textContent = money(s.vwap?.value);
-        qs("sessionValue").textContent = txt(s.session?.label);
-        qs("updatedNyValue").textContent = txt(s.updatedAtNY);
-        qs("freshnessValue").textContent = `${txt(s.freshness?.ageMinutes)} min`;
+        qs("riskChip").textContent = text(state.riskLabel || "Risk");
+        const stale = !!state.freshness?.isStale;
+        qs("freshChip").className = `chip ${stale ? "chip-stale" : "chip-fresh"}`;
+        qs("freshChip").textContent = `${stale ? "Stale" : "Fresh"} · ${text(state.freshness?.ageMinutes)}m`;
 
-        qs("bufferValue").textContent = pct(s.trade?.bufferDynamicPct);
-        qs("shortStrikeValue").textContent = money(s.trade?.shortStrike);
-        qs("distanceValue").textContent = money(s.trade?.distToShort);
+        qs("priceValue").textContent = money(state.price);
+        const ch = Number(state.change || 0);
+        const chPct = Number(state.changePct || 0);
+        qs("changeValue").textContent = `${ch >= 0 ? "+" : ""}${money(ch)} · ${chPct >= 0 ? "+" : ""}${pct(chPct)}`;
+        qs("changeValue").className = ch > 0 ? "delta-up" : (ch < 0 ? "delta-down" : "delta-flat");
 
-        qs("tsBufferBase").textContent = pct(s.trade?.bufferBasePct);
-        qs("tsBuffer").textContent = pct(s.trade?.bufferDynamicPct);
-        qs("tsBufferReason").textContent = txt(s.trade?.bufferReason);
-        qs("tsShort").textContent = money(s.trade?.shortStrike);
-        qs("tsLong").textContent = money(s.trade?.longStrike);
-        qs("tsBeke").textContent = money(s.trade?.breakeven);
-        qs("tsWidth").textContent = money(s.trade?.spreadWidth);
-        qs("tsCredit").textContent = money(s.trade?.netCredit);
-        qs("tsDist").textContent = money(s.trade?.distToShort);
+        qs("vwapValue").textContent = money(state.vwap?.value);
+        qs("sessionValue").textContent = text(state.session?.label);
+        qs("openValue").textContent = money(state.prevClose);
+        qs("volumeValue").textContent = intFmt(state.options?.shortCallVolume);
 
-        renderRange("premarketBox", s.premarketRange, "premarket");
-        renderRange("openingBox", s.openingRange, "opening");
-        renderExpectedMove(s.expectedMove);
-        renderOptions(s.options);
-        renderMacro(s.macro);
-        renderEarnings(s.earnings);
-        renderHistory(h);
-      } catch (e) {
-        qs("headerMeta").textContent = "Error cargando datos";
-        qs("summaryText").textContent = e.message;
-        console.error(e);
+        renderRange("premarketBox", state.premarketRange, "premarket");
+        renderRange("openingBox", state.openingRange);
+        renderExpectedMove(state.expectedMove);
+        renderOptions(state.options);
+        renderMacro(state.macro);
+        renderEarnings(state.earnings);
+        renderTrade(state.trade);
+      } catch (err) {
+        qs("summaryText").textContent = "No se pudo cargar state.json.";
+        console.error(err);
       }
     }
 
