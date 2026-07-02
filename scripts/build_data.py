@@ -1,14 +1,15 @@
 import os
 import json
 import math
-import time
 from datetime import datetime, timedelta, timezone
 
 import requests
 import yfinance as yf
+import pandas as pd
 
-STATE_FILE = "state.json"
-HISTORY_FILE = "history.json"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATE_FILE = os.path.join(BASE_DIR, "state.json")
+HISTORY_FILE = os.path.join(BASE_DIR, "history.json")
 
 SYMBOL = "QQQ"
 BASE_BUFFER = 1.85
@@ -68,6 +69,37 @@ def ceil_step(x, step=1.0):
     return math.ceil(x / step) * step
 
 
+def json_safe(obj):
+    if obj is None:
+        return None
+
+    if isinstance(obj, (str, int, float, bool)):
+        return obj
+
+    if isinstance(obj, (datetime, pd.Timestamp)):
+        return obj.isoformat()
+
+    if isinstance(obj, pd.Series):
+        return {str(k): json_safe(v) for k, v in obj.to_dict().items()}
+
+    if isinstance(obj, pd.DataFrame):
+        return [json_safe(row) for row in obj.to_dict(orient="records")]
+
+    if isinstance(obj, dict):
+        return {str(k): json_safe(v) for k, v in obj.items()}
+
+    if isinstance(obj, (list, tuple, set)):
+        return [json_safe(x) for x in obj]
+
+    if hasattr(obj, "item"):
+        try:
+            return obj.item()
+        except Exception:
+            pass
+
+    return str(obj)
+
+
 def market_phase(ny_dt):
     h = ny_dt.hour
     m = ny_dt.minute
@@ -99,18 +131,8 @@ def session_name(phase):
     return mapping.get(phase, phase)
 
 
-def fetch_json(url, timeout=10):
-    try:
-        r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
-        r.raise_for_status()
-        return r.json()
-    except Exception:
-        return None
-
-
 def get_quote(symbol):
     t = yf.Ticker(symbol)
-    info = {}
     fast = None
     try:
         fast = t.fast_info
@@ -414,7 +436,7 @@ def choose_option_setup(ticker, spot, dynamic_buffer, phase):
     if calls is None or calls.empty or spot is None:
         return fallback
 
-    calls["delta_abs_diff"] = (calls["impliedVolatility"] * 0 + SHORT_DELTA_TARGET)
+    calls["delta_abs_diff"] = SHORT_DELTA_TARGET
     if "delta" in calls.columns:
         calls["delta_abs_diff"] = (calls["delta"].abs() - SHORT_DELTA_TARGET).abs()
     else:
@@ -428,19 +450,21 @@ def choose_option_setup(ticker, spot, dynamic_buffer, phase):
     target_short = ceil_step(spot + dynamic_buffer, STRIKE_STEP)
     calls["target_diff"] = (calls["strike"] - target_short).abs()
 
-    sort_cols = ["target_diff", "delta_abs_diff"]
-    calls = calls.sort_values(sort_cols).reset_index(drop=True)
-    short = calls.iloc[0].to_dict()
+    calls = calls.sort_values(["target_diff", "delta_abs_diff"]).reset_index(drop=True)
+    short = json_safe(calls.iloc[0].to_dict())
 
     short_strike = safe_float(short.get("strike"))
     long_strike = short_strike + STRIKE_STEP if short_strike is not None else None
 
     long_row = calls[calls["strike"] == long_strike]
     if long_row.empty:
+      try:
         all_calls = chain.calls.copy()
         long_row = all_calls[all_calls["strike"] == long_strike]
+      except Exception:
+        long_row = pd.DataFrame()
 
-    long_call = long_row.iloc[0].to_dict() if not long_row.empty else None
+    long_call = json_safe(long_row.iloc[0].to_dict()) if not long_row.empty else None
 
     bid = safe_float(short.get("bid"), 0)
     ask = safe_float(short.get("ask"), 0)
@@ -626,17 +650,6 @@ def score_trade(price, vwap, dynamic_buffer, short_strike, expected_move, openin
     return score, decision, risk, notes
 
 
-def freshness_minutes(last_ts):
-    if not last_ts:
-        return None
-    try:
-        dt = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
-        diff = now_utc() - dt
-        return round(diff.total_seconds() / 60, 2)
-    except Exception:
-        return None
-
-
 def format_trade_setup(price, dynamic_buffer, option_setup):
     short_strike = None
     short_delta = None
@@ -691,7 +704,7 @@ def load_history():
 
 def save_json(path, data):
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        json.dump(json_safe(data), f, ensure_ascii=False, indent=2, default=str)
 
 
 def main():
@@ -726,6 +739,7 @@ def main():
     short_strike = None
     if option_setup.get("short_call"):
         short_strike = safe_float(option_setup["short_call"].get("strike"))
+
     fresh_mins = 0.0
 
     score, decision, risk, notes = score_trade(
