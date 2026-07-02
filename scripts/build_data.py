@@ -220,13 +220,13 @@ def compute_expected_move(tk, spot):
         hist = tk.history(period="3mo", interval="1d", auto_adjust=False)
         if hist is not None and len(hist) > 10:
             rets = hist["Close"].pct_change().dropna()
-            daily_vol = float(rets.std()) * 100
-            move = spot * (daily_vol / 100.0) if spot is not None else None
+            daily_vol_pct = float(rets.std()) * 100
+            move = spot * (daily_vol_pct / 100.0) if spot is not None else None
             return {
                 "method": "historical_vol_3mo",
-                "dailyVolPct": round2(daily_vol),
+                "dailyVolPct": round2(daily_vol_pct),
                 "move": round2(move),
-                "movePct": round2(daily_vol),
+                "movePct": round2(daily_vol_pct),
                 "upper": round2(spot + move) if spot is not None and move is not None else None,
                 "lower": round2(spot - move) if spot is not None and move is not None else None,
                 "status": "OK"
@@ -304,27 +304,46 @@ def get_earnings_block():
 
 def compute_dynamic_buffer_pct(expected_move, pm_range, session_code, macro):
     base = BASE_BUFFER_PCT
-    em_factor = safe_float(expected_move.get("movePct"), 0) * 0.85 if expected_move.get("status") == "OK" else 0
-    pm_factor = safe_float(pm_range.get("sizePct"), 0) * 1.10 if pm_range.get("available") else 0
+    move_pct = safe_float(expected_move.get("movePct"), 0) if expected_move.get("status") == "OK" else 0
+    pm_pct = safe_float(pm_range.get("sizePct"), 0) if pm_range.get("available") else 0
 
-    dyn = max(base, em_factor, pm_factor)
-    reason_parts = [f"base {base:.2f}%"]
+    em_component = move_pct * 0.18
+    pm_component = pm_pct * 0.22
 
-    if em_factor:
-        reason_parts.append(f"expected move factor {em_factor:.2f}%")
-    if pm_factor:
-        reason_parts.append(f"premarket range factor {pm_factor:.2f}%")
+    session_boost = 0.18 if session_code == "premarket" else 0.0
 
-    if session_code == "premarket":
-        dyn *= 1.08
-        reason_parts.append("premarket multiplier x1.08")
-
+    macro_boost = 0.0
     nxt = macro.get("next")
     if nxt and safe_float(nxt.get("totalHoras")) is not None and nxt["totalHoras"] <= 36 and nxt.get("impacto") == "alto":
-        dyn *= 1.10
-        reason_parts.append("high impact macro <=36h x1.10")
+        macro_boost = 0.12
 
-    return round2(dyn), " | ".join(reason_parts)
+    raw = base + em_component + pm_component + session_boost + macro_boost
+    final = round2(raw)
+
+    reason_parts = [
+        f"base {base:.2f}%",
+        f"exp move +{em_component:.2f}%",
+        f"pm range +{pm_component:.2f}%"
+    ]
+
+    if session_boost:
+        reason_parts.append(f"premarket +{session_boost:.2f}%")
+    if macro_boost:
+        reason_parts.append(f"macro +{macro_boost:.2f}%")
+
+    debug = {
+        "base": round2(base),
+        "expectedMovePct": round2(move_pct),
+        "premarketRangePct": round2(pm_pct),
+        "emComponent": round2(em_component),
+        "pmComponent": round2(pm_component),
+        "sessionBoost": round2(session_boost),
+        "macroBoost": round2(macro_boost),
+        "rawBeforeRound": raw,
+        "final": final
+    }
+
+    return final, " | ".join(reason_parts), debug
 
 
 def get_options_trade(tk, price, buffer_pct):
@@ -470,6 +489,7 @@ def build_error_state(msg):
             "netCredit": None,
             "distToShort": None
         },
+        "bufferDebug": {},
         "options": {
             "expiration": None,
             "shortCallBid": None,
@@ -530,7 +550,7 @@ def main():
         macro = get_macro_block()
         earnings = get_earnings_block()
 
-        dyn_buffer_pct, buffer_reason = compute_dynamic_buffer_pct(
+        dyn_buffer_pct, buffer_reason, buffer_debug = compute_dynamic_buffer_pct(
             expected_move,
             pm_range,
             session["code"],
@@ -556,6 +576,7 @@ def main():
             "session": session,
             "summary": "",
             "trade": opt["trade"],
+            "bufferDebug": buffer_debug,
             "options": opt["options"],
             "vwap": vwap,
             "openingRange": opening_range,
@@ -580,12 +601,12 @@ def main():
         )
 
         state["summary"] = (
-            f"buffer dinámico {state['trade']['bufferDynamicPct']:.2f}% "
+            f"buffer {state['trade']['bufferDynamicPct']:.2f}% "
             f"(base {state['trade']['bufferBasePct']:.2f}%) · "
-            f"short strike {short_strike_txt} · "
+            f"short {short_strike_txt} · "
             f"{state['options']['notes'].lower()} · "
-            f"próximo earnings relevante: {earnings_txt} · "
-            f"tramo actual: {state['session']['code']}"
+            f"{earnings_txt} · "
+            f"tramo {state['session']['code']}"
         )
 
         score, decision, decision_tone, decision_label, risk_label, reasons = compute_score(state)
