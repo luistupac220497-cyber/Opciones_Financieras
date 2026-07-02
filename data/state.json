@@ -1,14 +1,14 @@
 {
   "ticker": "QQQ",
-  "price": 715.17,
+  "price": 714.66,
   "prevClose": 725.17,
-  "change": -10.0,
-  "changePct": -1.38,
+  "change": -10.51,
+  "changePct": -1.45,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T16:00:53.036106+00:00",
-  "updatedAtText": "2026-07-02 16:00:53 UTC",
-  "updatedAtNY": "2026-07-02 12:00:52 ET",
+  "updatedAt": "2026-07-02T16:10:41.494566+00:00",
+  "updatedAtText": "2026-07-02 16:10:41 UTC",
+  "updatedAtNY": "2026-07-02 12:10:40 ET",
   "session": {
     "code": "regular",
     "label": "Regular"
@@ -20,42 +20,42 @@
     "bufferReason": "base 1.85% | exp move +0.27% | pm range +0.36% | macro +0.12%",
     "shortStrike": 734.0,
     "longStrike": 735.0,
-    "breakeven": 734.01,
+    "breakeven": 734.0,
     "spreadWidth": 1.0,
-    "netCredit": 0.01,
-    "distToShort": 18.83
+    "netCredit": 0.0,
+    "distToShort": 19.34
   },
   "bufferDebug": {
     "base": 1.85,
-    "expectedMovePct": 1.49,
+    "expectedMovePct": 1.5,
     "premarketRangePct": 1.64,
     "emComponent": 0.27,
     "pmComponent": 0.36,
     "sessionBoost": 0.0,
     "macroBoost": 0.12,
-    "rawBeforeRound": 2.5989999999999998,
+    "rawBeforeRound": 2.6008,
     "final": 2.6
   },
   "options": {
     "expiration": "2026-07-02",
     "shortCallBid": 0.03,
     "shortCallAsk": 0.04,
-    "longCallBid": 0.02,
-    "longCallAsk": 0.03,
+    "longCallBid": 0.03,
+    "longCallAsk": 0.04,
     "shortCallDelta": null,
     "longCallDelta": null,
     "shortCallOI": 3074.0,
     "longCallOI": 12881.0,
-    "shortCallVolume": 46850.0,
-    "longCallVolume": 58250.0,
+    "shortCallVolume": 47120.0,
+    "longCallVolume": 58567.0,
     "quotesUsable": true,
     "notes": "Quotes de opciones cargadas"
   },
   "vwap": {
-    "value": 722.19,
-    "distPct": -0.97,
-    "zScore": -1.84,
-    "sigma": 3.83,
+    "value": 721.76,
+    "distPct": -0.98,
+    "zScore": -1.77,
+    "sigma": 4.01,
     "bias": "Muy por debajo"
   },
   "openingRange": {
@@ -75,11 +75,11 @@
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
-    "dailyVolPct": 1.49,
+    "dailyVolPct": 1.5,
     "move": 10.68,
-    "movePct": 1.49,
-    "upper": 725.85,
-    "lower": 704.49,
+    "movePct": 1.5,
+    "upper": 725.34,
+    "lower": 703.98,
     "status": "OK"
   },
   "freshness": {
