@@ -1,10 +1,14 @@
 import json
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
+from pathlib import Path
 
+import pandas as pd
 import yfinance as yf
 
-STATE_FILE = "state.json"
+ROOT_DIR = Path(__file__).resolve().parent.parent
+STATE_FILE = ROOT_DIR / "state.json"
+
 TICKER = "QQQ"
 BASE_BUFFER_PCT = 1.85
 SPREAD_WIDTH = 1.0
@@ -43,6 +47,22 @@ def ceil_strike(x, step=1.0):
     return math.ceil(x / step) * step
 
 
+def json_safe(obj):
+    if isinstance(obj, pd.Timestamp):
+        return obj.isoformat()
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    if isinstance(obj, date):
+        return obj.isoformat()
+    if isinstance(obj, dict):
+        return {k: json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [json_safe(x) for x in obj]
+    if isinstance(obj, tuple):
+        return [json_safe(x) for x in obj]
+    return obj
+
+
 def get_session_label(ny_dt):
     mins = ny_dt.hour * 60 + ny_dt.minute
     if mins < 4 * 60:
@@ -56,8 +76,19 @@ def get_session_label(ny_dt):
 
 def get_price_data(ticker):
     tk = yf.Ticker(ticker)
-    hist_5m = tk.history(period="1d", interval="5m", auto_adjust=False, prepost=True)
-    hist_1d = tk.history(period="5d", interval="1d", auto_adjust=False, prepost=True)
+
+    hist_5m = None
+    hist_1d = None
+
+    try:
+        hist_5m = tk.history(period="1d", interval="5m", auto_adjust=False, prepost=True)
+    except Exception:
+        pass
+
+    try:
+        hist_1d = tk.history(period="5d", interval="1d", auto_adjust=False, prepost=True)
+    except Exception:
+        pass
 
     price = prev_close = change = change_pct = None
     source = "intraday_5m"
@@ -276,9 +307,7 @@ def compute_dynamic_buffer_pct(expected_move, pm_range, session_code, macro):
     pm_factor = safe_float(pm_range.get("sizePct"), 0) * 1.10 if pm_range.get("available") else 0
 
     dyn = max(base, em_factor, pm_factor)
-    reason_parts = [
-        f"base {base:.2f}%"
-    ]
+    reason_parts = [f"base {base:.2f}%"]
 
     if em_factor:
         reason_parts.append(f"expected move factor {em_factor:.2f}%")
@@ -328,6 +357,7 @@ def get_options_trade(tk, price, buffer_pct):
                     short_ask = safe_float(sc.get("ask"), 0)
                     short_oi = safe_float(sc.get("openInterest"), 0)
                     short_vol = safe_float(sc.get("volume"), 0)
+                    short_delta = safe_float(sc.get("delta"))
 
                 if not lc.empty:
                     lc = lc.iloc[0]
@@ -335,11 +365,12 @@ def get_options_trade(tk, price, buffer_pct):
                     long_ask = safe_float(lc.get("ask"), 0)
                     long_oi = safe_float(lc.get("openInterest"), 0)
                     long_vol = safe_float(lc.get("volume"), 0)
+                    long_delta = safe_float(lc.get("delta"))
 
                 short_mid = ((short_bid or 0) + (short_ask or 0)) / 2
                 long_mid = ((long_bid or 0) + (long_ask or 0)) / 2
                 net_credit = short_mid - long_mid
-                breakeven = short_strike + net_credit
+                breakeven = short_strike + net_credit if short_strike is not None and net_credit is not None else None
 
                 quotes_usable = any([
                     (short_bid or 0) > 0,
@@ -352,7 +383,7 @@ def get_options_trade(tk, price, buffer_pct):
     except Exception:
         pass
 
-    return {
+    payload = {
         "trade": {
             "bufferBasePct": round2(BASE_BUFFER_PCT),
             "bufferDynamicPct": round2(buffer_pct),
@@ -370,8 +401,8 @@ def get_options_trade(tk, price, buffer_pct):
             "shortCallAsk": round2(short_ask),
             "longCallBid": round2(long_bid),
             "longCallAsk": round2(long_ask),
-            "shortCallDelta": short_delta,
-            "longCallDelta": long_delta,
+            "shortCallDelta": round2(short_delta),
+            "longCallDelta": round2(long_delta),
             "shortCallOI": round2(short_oi),
             "longCallOI": round2(long_oi),
             "shortCallVolume": round2(short_vol),
@@ -380,6 +411,8 @@ def get_options_trade(tk, price, buffer_pct):
             "notes": notes
         }
     }
+
+    return json_safe(payload)
 
 
 def compute_score(state):
@@ -404,16 +437,16 @@ def compute_score(state):
 
     decision = "esperar confirmación"
     decision_tone = "yellow"
-    decision_label = "🟡 Esperar confirmación"
-    risk_label = "🟡 Riesgo medio"
+    decision_label = "esperar confirmación"
+    risk_label = "Riesgo medio"
 
     return score, decision, decision_tone, decision_label, risk_label, reasons
 
 
 def main():
     ny = now_ny()
-    session = get_session_label(ny)
     tk, hist_5m, px = get_price_data(TICKER)
+    session = get_session_label(ny)
 
     vwap = compute_vwap(hist_5m)
     opening_range = compute_opening_range(hist_5m)
@@ -470,6 +503,7 @@ def main():
         f"{state['earnings']['next']['empresa']} en {state['earnings']['next']['dias']}d"
         if state["earnings"].get("next") else "sin earnings cercanos"
     )
+
     state["summary"] = (
         f"buffer dinámico {state['trade']['bufferDynamicPct']:.2f}% "
         f"(base {state['trade']['bufferBasePct']:.2f}%) · "
@@ -488,7 +522,7 @@ def main():
     state["reasons"] = reasons
 
     with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f, ensure_ascii=False, indent=2)
+        json.dump(json_safe(state), f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
