@@ -4,7 +4,6 @@ import math
 from datetime import datetime, timedelta, timezone, date
 
 import pandas as pd
-import requests
 import yfinance as yf
 
 STATE_FILE = "state.json"
@@ -15,9 +14,7 @@ BASE_BUFFER = 1.85
 SHORT_DELTA_TARGET = 0.15
 STRIKE_STEP = 1.0
 DATA_STALE_MINUTES = 3
-
 MAG7 = ["AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "TSLA"]
-
 NY_TZ = timezone(timedelta(hours=-4))
 
 
@@ -51,12 +48,6 @@ def safe_float(v, default=None):
         return default
 
 
-def round_step(x, step=1.0):
-    if x is None:
-        return None
-    return round(x / step) * step
-
-
 def ceil_step(x, step=1.0):
     if x is None:
         return None
@@ -64,55 +55,40 @@ def ceil_step(x, step=1.0):
 
 
 def market_phase(ny_dt):
-    h = ny_dt.hour
-    m = ny_dt.minute
-    mins = h * 60 + m
-    pm_start = 4 * 60
-    open_start = 9 * 60 + 30
-    or_end = 10 * 60 + 30
-    close_time = 16 * 60
-
-    if mins < pm_start:
+    mins = ny_dt.hour * 60 + ny_dt.minute
+    if mins < 4 * 60:
         return "overnight"
-    if pm_start <= mins < open_start:
+    if mins < 9 * 60 + 30:
         return "premarket"
-    if open_start <= mins < or_end:
+    if mins < 10 * 60 + 30:
         return "opening_range"
-    if or_end <= mins < close_time:
+    if mins < 16 * 60:
         return "regular"
     return "afterhours"
 
 
 def session_name(phase):
-    mapping = {
+    return {
         "overnight": "Overnight",
         "premarket": "Premarket",
         "opening_range": "Opening range",
         "regular": "Regular",
         "afterhours": "After hours",
-    }
-    return mapping.get(phase, phase)
+    }.get(phase, phase)
 
 
 def get_quote(symbol):
     t = yf.Ticker(symbol)
-    fast = None
-    try:
-        fast = t.fast_info
-    except Exception:
-        fast = None
-
-    hist_1d = None
-    try:
-        hist_1d = t.history(period="5d", interval="1d", auto_adjust=False, prepost=True)
-    except Exception:
-        hist_1d = None
-
     hist_1m = None
+    hist_1d = None
     try:
         hist_1m = t.history(period="1d", interval="1m", auto_adjust=False, prepost=True)
     except Exception:
-        hist_1m = None
+        pass
+    try:
+        hist_1d = t.history(period="5d", interval="1d", auto_adjust=False, prepost=True)
+    except Exception:
+        pass
 
     price = None
     prev_close = None
@@ -121,13 +97,16 @@ def get_quote(symbol):
     day_low = None
     volume = None
 
-    if fast:
-        price = safe_float(getattr(fast, "last_price", None), price)
-        prev_close = safe_float(getattr(fast, "previous_close", None), prev_close)
-        open_price = safe_float(getattr(fast, "open", None), open_price)
-        day_high = safe_float(getattr(fast, "day_high", None), day_high)
-        day_low = safe_float(getattr(fast, "day_low", None), day_low)
-        volume = safe_float(getattr(fast, "last_volume", None), volume)
+    try:
+        fi = t.fast_info
+        price = safe_float(getattr(fi, "last_price", None), price)
+        prev_close = safe_float(getattr(fi, "previous_close", None), prev_close)
+        open_price = safe_float(getattr(fi, "open", None), open_price)
+        day_high = safe_float(getattr(fi, "day_high", None), day_high)
+        day_low = safe_float(getattr(fi, "day_low", None), day_low)
+        volume = safe_float(getattr(fi, "last_volume", None), volume)
+    except Exception:
+        pass
 
     if hist_1m is not None and not hist_1m.empty:
         last = hist_1m.iloc[-1]
@@ -168,15 +147,11 @@ def get_quote(symbol):
 def compute_vwap(hist_1m):
     if hist_1m is None or hist_1m.empty:
         return None
-    try:
-        df = hist_1m.copy()
-        tp = (df["High"] + df["Low"] + df["Close"]) / 3.0
-        vol = df["Volume"].fillna(0)
-        if vol.sum() == 0:
-            return None
-        return float((tp * vol).sum() / vol.sum())
-    except Exception:
+    tp = (hist_1m["High"] + hist_1m["Low"] + hist_1m["Close"]) / 3.0
+    vol = hist_1m["Volume"].fillna(0)
+    if vol.sum() == 0:
         return None
+    return float((tp * vol).sum() / vol.sum())
 
 
 def compute_ranges(hist_1m):
@@ -197,30 +172,18 @@ def compute_ranges(hist_1m):
                 "message": "Rango del premarket calculado.",
             }
         else:
-            out["premarket_range"] = {
-                "status": "pending",
-                "message": "Premarket aún no disponible.",
-            }
+            out["premarket_range"] = {"status": "pending", "message": "Premarket aún no disponible."}
     except Exception:
-        out["premarket_range"] = {
-            "status": "pending",
-            "message": "Premarket range no disponible.",
-        }
+        out["premarket_range"] = {"status": "pending", "message": "Premarket range no disponible."}
 
     try:
         reg = hist_1m.between_time("09:30", "10:30")
         phase = market_phase(now_ny())
         if phase in ("overnight", "premarket"):
-            out["opening_range"] = {
-                "status": "pending",
-                "message": "Opening range pendiente hasta la apertura regular.",
-            }
+            out["opening_range"] = {"status": "pending", "message": "Opening range pendiente hasta la apertura regular."}
         elif phase == "opening_range":
             if reg.empty:
-                out["opening_range"] = {
-                    "status": "forming",
-                    "message": "Opening range formándose.",
-                }
+                out["opening_range"] = {"status": "forming", "message": "Opening range formándose."}
             else:
                 r_high = safe_float(reg["High"].max())
                 r_low = safe_float(reg["Low"].min())
@@ -233,10 +196,7 @@ def compute_ranges(hist_1m):
                 }
         else:
             if reg.empty:
-                out["opening_range"] = {
-                    "status": "missing",
-                    "message": "Opening range no disponible.",
-                }
+                out["opening_range"] = {"status": "missing", "message": "Opening range no disponible."}
             else:
                 r_high = safe_float(reg["High"].max())
                 r_low = safe_float(reg["Low"].min())
@@ -248,73 +208,54 @@ def compute_ranges(hist_1m):
                     "message": "Opening range completado.",
                 }
     except Exception:
-        out["opening_range"] = {
-            "status": "missing",
-            "message": "Opening range no disponible.",
-        }
+        out["opening_range"] = {"status": "missing", "message": "Opening range no disponible."}
 
     return out
 
 
 def compute_expected_move(ticker, spot):
-    methods = [("3mo", "3mo"), ("1mo", "1mo")]
-    for label, period in methods:
+    for period in ["3mo", "1mo"]:
         try:
             hist = ticker.history(period=period, interval="1d", auto_adjust=False)
             if hist is not None and len(hist) >= 10:
                 rets = hist["Close"].pct_change().dropna()
                 hv_daily = float(rets.std())
-                if hv_daily and hv_daily > 0:
-                    em_pct = hv_daily * 100
-                    em_dollar = spot * hv_daily if spot else None
+                if hv_daily > 0 and spot:
+                    em_dollar = spot * hv_daily
                     return {
-                        "method": f"historical_vol_{label}",
-                        "daily_vol_pct": em_pct,
+                        "method": f"historical_vol_{period}",
+                        "daily_vol_pct": hv_daily * 100,
                         "expected_move_dollar": em_dollar,
-                        "upper": None if em_dollar is None or spot is None else spot + em_dollar,
-                        "lower": None if em_dollar is None or spot is None else spot - em_dollar,
+                        "upper": spot + em_dollar,
+                        "lower": spot - em_dollar,
                     }
         except Exception:
             pass
 
     try:
         hist = ticker.history(period="5d", interval="5m", auto_adjust=False, prepost=True)
-        if hist is not None and len(hist) >= 30:
+        if hist is not None and len(hist) >= 30 and spot:
             rets = hist["Close"].pct_change().dropna()
             hv_5m = float(rets.std())
-            bars = 78
-            hv_daily = hv_5m * math.sqrt(bars)
-            em_pct = hv_daily * 100
-            em_dollar = spot * hv_daily if spot else None
+            hv_daily = hv_5m * math.sqrt(78)
+            em_dollar = spot * hv_daily
             return {
                 "method": "intraday_fallback_5m",
-                "daily_vol_pct": em_pct,
+                "daily_vol_pct": hv_daily * 100,
                 "expected_move_dollar": em_dollar,
-                "upper": None if em_dollar is None or spot is None else spot + em_dollar,
-                "lower": None if em_dollar is None or spot is None else spot - em_dollar,
+                "upper": spot + em_dollar,
+                "lower": spot - em_dollar,
             }
     except Exception:
         pass
 
-    return {
-        "method": "unavailable",
-        "daily_vol_pct": None,
-        "expected_move_dollar": None,
-        "upper": None,
-        "lower": None,
-    }
+    return {"method": "unavailable", "daily_vol_pct": None, "expected_move_dollar": None, "upper": None, "lower": None}
 
 
 def get_macro_events():
     today = now_ny().date()
-    # Placeholder simple; puedes sustituirlo por tu fuente real
     return [
-        {
-            "time_et": "08:30",
-            "title": "Macro placeholder",
-            "impact": "medium",
-            "date": str(today),
-        }
+        {"time_et": "08:30", "title": "Macro placeholder", "impact": "medium", "date": str(today)}
     ]
 
 
@@ -333,18 +274,14 @@ def nearest_macro_risk(macro_events):
         diff = (dt - ny).total_seconds() / 60
         if -15 <= diff <= 120:
             if soon is None or abs(diff) < abs(soon["mins"]):
-                soon = {
-                    "mins": diff,
-                    "impact": ev.get("impact", "low"),
-                    "title": ev.get("title", ""),
-                }
+                soon = {"mins": diff, "impact": ev.get("impact", "low"), "title": ev.get("title", "")}
     return soon
 
 
 def normalize_earnings_date(value):
-    if value is None:
-        return None
     try:
+        if value is None:
+            return None
         if isinstance(value, pd.Timestamp):
             return value.date()
         if isinstance(value, datetime):
@@ -377,11 +314,11 @@ def get_symbol_earnings_date(symbol):
         t = yf.Ticker(symbol)
         df = t.get_earnings_dates(limit=12)
         if df is not None and not df.empty:
-            idx = list(df.index)
-            dates = [normalize_earnings_date(x) for x in idx]
-            dates = [d for d in dates if d is not None]
-            today = now_ny().date()
-            future_dates = [d for d in dates if d >= today]
+            future_dates = []
+            for idx in df.index:
+                d = normalize_earnings_date(idx)
+                if d and d >= now_ny().date():
+                    future_dates.append(d)
             if future_dates:
                 return min(future_dates), "ticker_get_earnings_dates"
     except Exception:
@@ -390,30 +327,25 @@ def get_symbol_earnings_date(symbol):
 
 
 def get_mag7_earnings():
-    out = []
     found = {}
-
     for sym in MAG7:
         d, source = get_symbol_earnings_date(sym)
         if d is not None:
             found[sym] = (d, source)
 
     missing = [sym for sym in MAG7 if sym not in found]
-
     if missing:
         try:
             cal = yf.Calendars(start=now_ny().date(), end=now_ny().date() + timedelta(days=30))
             df = cal.get_earnings_calendar(limit=100, force=True)
             if df is not None and not df.empty:
-                cols = {str(c).lower(): c for c in df.columns}
                 symbol_col = None
                 date_col = None
-
                 for c in df.columns:
                     lc = str(c).lower()
                     if symbol_col is None and ("symbol" in lc or "ticker" in lc):
                         symbol_col = c
-                    if date_col is None and ("date" in lc or "earnings" in lc or "startdatetime" in lc):
+                    if date_col is None and ("date" in lc or "earn" in lc or "startdatetime" in lc):
                         date_col = c
 
                 if symbol_col is not None:
@@ -426,24 +358,15 @@ def get_mag7_earnings():
         except Exception:
             pass
 
+    out = []
     for sym in MAG7:
         d, source = found.get(sym, (None, None))
-        out.append({
-            "symbol": sym,
-            "date": None if d is None else str(d),
-            "status": classify_earnings_status(d),
-            "source": source,
-        })
-
+        out.append({"symbol": sym, "date": None if d is None else str(d), "status": classify_earnings_status(d), "source": source})
     return out
 
 
 def earnings_veto(earnings):
-    for e in earnings:
-        status = (e.get("status") or "").lower()
-        if status in ("today", "tomorrow", "this week"):
-            return True
-    return False
+    return any((e.get("status") or "").lower() in ("today", "tomorrow", "this week") for e in earnings)
 
 
 def choose_expiration(ticker):
@@ -485,9 +408,7 @@ def choose_option_setup(ticker, spot, dynamic_buffer, phase):
     if "delta" not in calls.columns:
         calls["delta"] = None
 
-    calls["delta_abs_diff"] = calls["delta"].apply(
-        lambda x: abs(abs(x) - SHORT_DELTA_TARGET) if x is not None and pd.notna(x) else 999
-    )
+    calls["delta_abs_diff"] = calls["delta"].apply(lambda x: abs(abs(x) - SHORT_DELTA_TARGET) if x is not None and pd.notna(x) else 999)
     target_short = ceil_step(spot + dynamic_buffer, STRIKE_STEP)
     calls = calls[calls["strike"] >= spot].copy()
     if calls.empty:
@@ -548,9 +469,7 @@ def choose_option_setup(ticker, spot, dynamic_buffer, phase):
         elif spread <= 0.10:
             liquidity_score += 10
 
-    quotes_reliable = phase in ("opening_range", "regular") and not (
-        safe_float(short.get("bid"), 0) == 0 and safe_float(short.get("ask"), 0) == 0
-    )
+    quotes_reliable = phase in ("opening_range", "regular") and not (safe_float(short.get("bid"), 0) == 0 and safe_float(short.get("ask"), 0) == 0)
 
     return {
         "expiration": expiration,
@@ -577,50 +496,36 @@ def build_buffer_logic(price, expected_move, opening_range, premarket_range, pha
     pm_component = pm_width * 0.18 if pm_width is not None else 0
 
     raw = max(base, em_component, or_component, pm_component)
-
-    short_reasons = []
-    long_reasons = [f"base {base:.2f}"]
+    reasons = [f"base {base:.2f}"]
 
     if em_component > base:
-        short_reasons.append("EM")
-        long_reasons.append(f"expected move factor {em_component:.2f}")
+        reasons.append(f"expected move factor {em_component:.2f}")
     if or_component > base:
-        short_reasons.append("OR")
-        long_reasons.append(f"opening range factor {or_component:.2f}")
+        reasons.append(f"opening range factor {or_component:.2f}")
     if pm_component > base:
-        short_reasons.append("premarket")
-        long_reasons.append(f"premarket range factor {pm_component:.2f}")
+        reasons.append(f"premarket range factor {pm_component:.2f}")
 
-    multiplier = 1.0
-
+    mult = 1.0
     if phase == "premarket":
-        multiplier *= 1.08
-        short_reasons.append("premarket x1.08")
-        long_reasons.append("premarket multiplier x1.08")
+        mult *= 1.08
+        reasons.append("premarket multiplier x1.08")
     elif phase == "opening_range":
-        multiplier *= 1.10
-        short_reasons.append("open x1.10")
-        long_reasons.append("opening range multiplier x1.10")
+        mult *= 1.10
+        reasons.append("opening range multiplier x1.10")
 
     if macro_risk and macro_risk.get("impact") == "high":
-        multiplier *= 1.10
-        short_reasons.append("macro")
-        long_reasons.append("high impact macro x1.10")
+        mult *= 1.10
+        reasons.append("high impact macro x1.10")
     elif macro_risk and macro_risk.get("impact") == "medium":
-        multiplier *= 1.05
-        short_reasons.append("macro")
-        long_reasons.append("medium impact macro x1.05")
+        mult *= 1.05
+        reasons.append("medium impact macro x1.05")
 
     if price is not None and vwap is not None and price > vwap:
-        multiplier *= 1.05
-        short_reasons.append("above VWAP")
-        long_reasons.append("price above VWAP x1.05")
+        mult *= 1.05
+        reasons.append("price above VWAP x1.05")
 
-    dynamic_buffer = round(raw * multiplier, 2)
-    reason_short = " + ".join(short_reasons) if short_reasons else "base"
-    reason_long = " | ".join(long_reasons)
-
-    return dynamic_buffer, reason_short, reason_long
+    dynamic = round(raw * mult, 2)
+    return dynamic, " | ".join(reasons)
 
 
 def score_trade(price, vwap, dynamic_buffer, short_strike, expected_move, opening_range, macro_risk, earnings_block, option_setup, phase, freshness_min):
@@ -630,7 +535,6 @@ def score_trade(price, vwap, dynamic_buffer, short_strike, expected_move, openin
     if earnings_block:
         score -= 45
         notes.append("Veto por earnings cercanos.")
-
     if macro_risk:
         if macro_risk["impact"] == "high":
             score -= 22
@@ -638,11 +542,9 @@ def score_trade(price, vwap, dynamic_buffer, short_strike, expected_move, openin
         elif macro_risk["impact"] == "medium":
             score -= 10
             notes.append("Macro de impacto medio cercana.")
-
     if freshness_min is not None and freshness_min > DATA_STALE_MINUTES:
         score -= 12
         notes.append("Datos con frescura insuficiente.")
-
     if price is not None and vwap is not None:
         if price > vwap:
             score -= 8
@@ -700,56 +602,28 @@ def score_trade(price, vwap, dynamic_buffer, short_strike, expected_move, openin
         notes.append("Premarket: contexto menos fiable.")
 
     score = clamp(int(round(score)), 0, 100)
-
     if earnings_block or score < 45:
-        decision = "No entraría"
-        risk = "Alto"
-    elif score < 65:
-        decision = "Esperar confirmación"
-        risk = "Medio"
-    else:
-        decision = "Entraría"
-        risk = "Controlado"
-
-    return score, decision, risk, notes
+        return score, "No entraría", "Alto", notes
+    if score < 65:
+        return score, "Esperar confirmación", "Medio", notes
+    return score, "Entraría", "Controlado", notes
 
 
-def format_trade_setup(price, dynamic_buffer, option_setup, buffer_reason_short):
-    short_strike = None
-    long_strike = None
-    short_delta = None
-    short_oi = None
-    short_vol = None
-    net_credit = None
-    spread_width = None
-    breakeven = None
-    liquidity_score = None
-
-    if option_setup and option_setup.get("short_call"):
-        sc = option_setup["short_call"]
-        short_strike = safe_float(sc.get("strike"))
-        short_delta = safe_float(sc.get("delta"))
-        short_oi = safe_float(sc.get("openInterest"))
-        short_vol = safe_float(sc.get("volume"))
-
-    if option_setup and option_setup.get("long_call"):
-        lc = option_setup["long_call"]
-        long_strike = safe_float(lc.get("strike"))
-
-    if option_setup:
-        net_credit = safe_float(option_setup.get("net_credit_mid"))
-        spread_width = safe_float(option_setup.get("spread_width"))
-        liquidity_score = safe_float(option_setup.get("liquidity_score"))
-
-    if short_strike is not None and net_credit is not None:
-        breakeven = short_strike + net_credit
-
-    distance = None if price is None or short_strike is None else short_strike - price
-
+def format_trade_setup(price, dynamic_buffer, option_setup):
+    sc = option_setup.get("short_call") if option_setup else None
+    lc = option_setup.get("long_call") if option_setup else None
+    short_strike = safe_float(sc.get("strike")) if sc else None
+    long_strike = safe_float(lc.get("strike")) if lc else None
+    short_delta = safe_float(sc.get("delta")) if sc else None
+    short_oi = safe_float(sc.get("openInterest")) if sc else None
+    short_vol = safe_float(sc.get("volume")) if sc else None
+    net_credit = safe_float(option_setup.get("net_credit_mid")) if option_setup else None
+    spread_width = safe_float(option_setup.get("spread_width")) if option_setup else None
+    liq = safe_float(option_setup.get("liquidity_score")) if option_setup else None
+    breakeven = short_strike + net_credit if short_strike is not None and net_credit is not None else None
+    distance = short_strike - price if short_strike is not None and price is not None else None
     return {
-        "buffer_base": BASE_BUFFER,
         "buffer_dynamic": dynamic_buffer,
-        "buffer_reason": buffer_reason_short,
         "short_strike_selected": short_strike,
         "long_strike_selected": long_strike,
         "distance_to_short_strike": distance,
@@ -759,7 +633,7 @@ def format_trade_setup(price, dynamic_buffer, option_setup, buffer_reason_short)
         "spread_width": spread_width,
         "estimated_credit_mid": net_credit,
         "breakeven": breakeven,
-        "liquidity_score": liquidity_score,
+        "liquidity_score": liq,
     }
 
 
@@ -768,143 +642,149 @@ def build_summary(decision, score, phase, fresh_mins, option_setup, trade_setup)
     if fresh_mins is not None:
         pieces.append(f"Frescura: {fresh_mins:.1f} min.")
     if trade_setup.get("short_strike_selected") is not None and trade_setup.get("distance_to_short_strike") is not None:
-        pieces.append(
-            f"Short {trade_setup['short_strike_selected']:.2f}, distancia {trade_setup['distance_to_short_strike']:.2f}."
-        )
+        pieces.append(f"Short {trade_setup['short_strike_selected']:.2f}, distancia {trade_setup['distance_to_short_strike']:.2f}.")
     if option_setup and not option_setup.get("quotes_reliable", True):
         pieces.append("Quotes de opciones aún no fiables.")
     return " ".join(pieces)
 
 
-def save_json(path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
 def main():
-    phase = market_phase(now_ny())
+    try:
+        phase = market_phase(now_ny())
+        quote = get_quote(SYMBOL)
+        price = quote["price"]
+        ticker = quote["ticker"]
+        hist_1m = quote["hist_1m"]
+        vwap = compute_vwap(hist_1m)
+        ranges = compute_ranges(hist_1m)
+        expected_move = compute_expected_move(ticker, price)
+        macro_events = get_macro_events()
+        earnings = get_mag7_earnings()
+        macro_risk = nearest_macro_risk(macro_events)
+        earnings_block = earnings_veto(earnings)
 
-    quote = get_quote(SYMBOL)
-    price = quote["price"]
-    ticker = quote["ticker"]
-    hist_1m = quote["hist_1m"]
-    vwap = compute_vwap(hist_1m)
-    ranges = compute_ranges(hist_1m)
+        dynamic_buffer, buffer_reason = build_buffer_logic(
+            price=price,
+            expected_move=expected_move,
+            opening_range=ranges.get("opening_range"),
+            premarket_range=ranges.get("premarket_range"),
+            phase=phase,
+            vwap=vwap,
+            macro_risk=macro_risk,
+        )
 
-    expected_move = compute_expected_move(ticker, price)
-    macro_events = get_macro_events()
-    earnings = get_mag7_earnings()
-    macro_risk = nearest_macro_risk(macro_events)
-    earnings_block = earnings_veto(earnings)
+        option_setup = choose_option_setup(ticker, price, dynamic_buffer, phase)
+        option_setup["buffer_reason"] = buffer_reason
 
-    dynamic_buffer, buffer_reason_short, buffer_reason_long = build_buffer_logic(
-        price=price,
-        expected_move=expected_move,
-        opening_range=ranges.get("opening_range"),
-        premarket_range=ranges.get("premarket_range"),
-        phase=phase,
-        vwap=vwap,
-        macro_risk=macro_risk,
-    )
+        short_strike = safe_float(option_setup.get("short_call", {}).get("strike")) if option_setup.get("short_call") else None
+        freshness = 0.0
 
-    option_setup = choose_option_setup(ticker, price, dynamic_buffer, phase)
-    option_setup["buffer_reason_long"] = buffer_reason_long
+        score, decision, risk, notes = score_trade(
+            price=price,
+            vwap=vwap,
+            dynamic_buffer=dynamic_buffer,
+            short_strike=short_strike,
+            expected_move=expected_move,
+            opening_range=ranges.get("opening_range"),
+            macro_risk=macro_risk,
+            earnings_block=earnings_block,
+            option_setup=option_setup,
+            phase=phase,
+            freshness_min=freshness,
+        )
 
-    short_strike = None
-    if option_setup.get("short_call"):
-        short_strike = safe_float(option_setup["short_call"].get("strike"))
+        trade_setup = format_trade_setup(price, dynamic_buffer, option_setup)
+        summary = build_summary(decision, score, phase, freshness, option_setup, trade_setup)
 
-    fresh_mins = 0.0
+        state = {
+            "symbol": SYMBOL,
+            "timestamp_utc": iso(now_utc()),
+            "timestamp_ny": now_ny().strftime("%Y-%m-%d %H:%M:%S ET"),
+            "session": session_name(phase),
+            "phase": phase,
+            "freshness_minutes": freshness,
+            "freshness_alert": freshness > DATA_STALE_MINUTES,
+            "price": price,
+            "change": quote["change"],
+            "change_pct": quote["change_pct"],
+            "open": quote["open"],
+            "day_high": quote["day_high"],
+            "day_low": quote["day_low"],
+            "volume": quote["volume"],
+            "vwap": vwap,
+            "expected_move": expected_move,
+            "premarket_range": ranges.get("premarket_range"),
+            "opening_range": ranges.get("opening_range"),
+            "score": score,
+            "decision": decision,
+            "risk": risk,
+            "summary": summary,
+            "notes": notes,
+            "buffer": {"base": BASE_BUFFER, "dynamic": dynamic_buffer, "reason_short": buffer_reason},
+            "trade_setup": trade_setup,
+            "options_snapshot": {
+                "status": option_setup.get("status"),
+                "message": option_setup.get("message"),
+                "quotes_reliable": option_setup.get("quotes_reliable"),
+                "liquidity_score": option_setup.get("liquidity_score"),
+                "expiration": option_setup.get("expiration"),
+                "short_call": option_setup.get("short_call"),
+                "long_call": option_setup.get("long_call"),
+                "net_credit_mid": option_setup.get("net_credit_mid"),
+                "spread_width": option_setup.get("spread_width"),
+            },
+            "macro": {"next_events": macro_events, "risk_context": macro_risk},
+            "earnings": {"mag7": earnings, "earnings_veto": earnings_block},
+        }
 
-    score, decision, risk, notes = score_trade(
-        price=price,
-        vwap=vwap,
-        dynamic_buffer=dynamic_buffer,
-        short_strike=short_strike,
-        expected_move=expected_move,
-        opening_range=ranges.get("opening_range"),
-        macro_risk=macro_risk,
-        earnings_block=earnings_block,
-        option_setup=option_setup,
-        phase=phase,
-        freshness_min=fresh_mins,
-    )
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f, ensure_ascii=False, indent=2)
 
-    trade_setup = format_trade_setup(price, dynamic_buffer, option_setup, buffer_reason_short)
-    summary = build_summary(decision, score, phase, fresh_mins, option_setup, trade_setup)
-
-    state = {
-        "symbol": SYMBOL,
-        "timestamp_utc": iso(now_utc()),
-        "timestamp_ny": now_ny().strftime("%Y-%m-%d %H:%M:%S ET"),
-        "session": session_name(phase),
-        "phase": phase,
-        "freshness_minutes": fresh_mins,
-        "freshness_alert": fresh_mins > DATA_STALE_MINUTES,
-
-        "price": price,
-        "change": quote["change"],
-        "change_pct": quote["change_pct"],
-        "open": quote["open"],
-        "day_high": quote["day_high"],
-        "day_low": quote["day_low"],
-        "volume": quote["volume"],
-        "vwap": vwap,
-
-        "expected_move": expected_move,
-        "premarket_range": ranges.get("premarket_range"),
-        "opening_range": ranges.get("opening_range"),
-
-        "score": score,
-        "decision": decision,
-        "risk": risk,
-        "summary": summary,
-        "notes": notes,
-
-        "buffer": {
-            "base": BASE_BUFFER,
-            "dynamic": dynamic_buffer,
-            "reason_short": buffer_reason_short,
-            "reason_long": buffer_reason_long,
-        },
-
-        "trade_setup": trade_setup,
-
-        "options_snapshot": {
-            "status": option_setup.get("status"),
-            "message": option_setup.get("message"),
-            "quotes_reliable": option_setup.get("quotes_reliable"),
-            "liquidity_score": option_setup.get("liquidity_score"),
-            "expiration": option_setup.get("expiration"),
-            "short_call": option_setup.get("short_call"),
-            "long_call": option_setup.get("long_call"),
-            "net_credit_mid": option_setup.get("net_credit_mid"),
-            "spread_width": option_setup.get("spread_width"),
-        },
-
-        "macro": {
-            "next_events": macro_events,
-            "risk_context": macro_risk,
-        },
-
-        "earnings": {
-            "mag7": earnings,
-            "earnings_veto": earnings_block,
-        },
-    }
-
-    save_json(STATE_FILE, state)
-
-    # Lo sigo generando por si tú lo quieres conservar para debug, pero ya no lo usará el HTML principal.
-    history_stub = [{
-        "timestamp_utc": state["timestamp_utc"],
-        "price": state["price"],
-        "score": state["score"],
-        "decision": state["decision"],
-        "buffer_dynamic": dynamic_buffer,
-        "vwap": state["vwap"],
-    }]
-    save_json(HISTORY_FILE, history_stub)
+        history = [{
+            "timestamp_utc": state["timestamp_utc"],
+            "price": state["price"],
+            "score": state["score"],
+            "decision": state["decision"],
+            "buffer_dynamic": dynamic_buffer,
+            "vwap": state["vwap"],
+        }]
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        fallback = {
+            "symbol": SYMBOL,
+            "timestamp_utc": iso(now_utc()),
+            "timestamp_ny": now_ny().strftime("%Y-%m-%d %H:%M:%S ET"),
+            "session": "Error",
+            "phase": "error",
+            "freshness_minutes": None,
+            "freshness_alert": True,
+            "price": None,
+            "change": None,
+            "change_pct": None,
+            "open": None,
+            "day_high": None,
+            "day_low": None,
+            "volume": None,
+            "vwap": None,
+            "expected_move": {"method": "unavailable", "daily_vol_pct": None, "expected_move_dollar": None, "upper": None, "lower": None},
+            "premarket_range": None,
+            "opening_range": None,
+            "score": 0,
+            "decision": "No entraría",
+            "risk": "Alto",
+            "summary": f"Error generando estado: {e}",
+            "notes": [str(e)],
+            "buffer": {"base": BASE_BUFFER, "dynamic": BASE_BUFFER, "reason_short": "error"},
+            "trade_setup": {"buffer_dynamic": BASE_BUFFER},
+            "options_snapshot": {"status": "error", "message": "Error generando snapshot", "quotes_reliable": False},
+            "macro": {"next_events": get_macro_events(), "risk_context": None},
+            "earnings": {"mag7": [{"symbol": s, "date": None, "status": "No cercano", "source": None} for s in MAG7], "earnings_veto": False},
+        }
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(fallback, f, ensure_ascii=False, indent=2)
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump([{"timestamp_utc": fallback["timestamp_utc"], "price": None, "score": 0, "decision": "No entraría", "buffer_dynamic": BASE_BUFFER, "vwap": None}], f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
