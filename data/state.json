@@ -1,29 +1,40 @@
 {
   "ticker": "QQQ",
-  "price": 727.37,
+  "price": 730.1,
   "prevClose": 736.4,
-  "change": -9.03,
-  "changePct": -1.23,
+  "change": -6.3,
+  "changePct": -0.86,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T12:25:17.565110+00:00",
-  "updatedAtText": "2026-07-02 12:25:17 UTC",
-  "updatedAtNY": "2026-07-02 08:25:16 ET",
+  "updatedAt": "2026-07-02T12:30:45.081965+00:00",
+  "updatedAtText": "2026-07-02 12:30:45 UTC",
+  "updatedAtNY": "2026-07-02 08:30:44 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
   },
-  "summary": "buffer dinámico 2.20% (base 1.85%) · short strike 744 · premarket: quotes de opciones aún no fiables · próximo earnings relevante: Tesla en 20d · tramo actual: premarket",
+  "summary": "buffer 2.74% (base 1.85%) · short 751 · premarket: quotes de opciones aún no fiables · Tesla en 20d · tramo premarket",
   "trade": {
     "bufferBasePct": 1.85,
-    "bufferDynamicPct": 2.2,
-    "bufferReason": "base 1.85% | expected move factor 1.27% | premarket range factor 1.30% | premarket multiplier x1.08 | high impact macro <=36h x1.10",
-    "shortStrike": 744.0,
-    "longStrike": 745.0,
-    "breakeven": 744.0,
+    "bufferDynamicPct": 2.74,
+    "bufferReason": "base 1.85% | exp move +0.27% | pm range +0.32% | premarket +0.18% | macro +0.12%",
+    "shortStrike": 751.0,
+    "longStrike": 752.0,
+    "breakeven": 751.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 16.63
+    "distToShort": 20.9
+  },
+  "bufferDebug": {
+    "base": 1.85,
+    "expectedMovePct": 1.49,
+    "premarketRangePct": 1.46,
+    "emComponent": 0.27,
+    "pmComponent": 0.32,
+    "sessionBoost": 0.18,
+    "macroBoost": 0.12,
+    "rawBeforeRound": 2.7394000000000003,
+    "final": 2.74
   },
   "options": {
     "expiration": "2026-07-02",
@@ -33,10 +44,10 @@
     "longCallAsk": 0.0,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 3286.0,
-    "longCallOI": 10089.0,
-    "shortCallVolume": 5141.0,
-    "longCallVolume": 11972.0,
+    "shortCallOI": 1140.0,
+    "longCallOI": 3241.0,
+    "shortCallVolume": 1058.0,
+    "longCallVolume": 1556.0,
     "quotesUsable": false,
     "notes": "Premarket: quotes de opciones aún no fiables"
   },
@@ -56,19 +67,19 @@
     "available": true,
     "status": "OK",
     "message": "Premarket Range calculado",
-    "high": 728.04,
+    "high": 730.1,
     "low": 719.46,
-    "close": 727.37,
-    "size": 8.58,
-    "sizePct": 1.18
+    "close": 730.1,
+    "size": 10.64,
+    "sizePct": 1.46
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 1.49,
-    "move": 10.84,
+    "move": 10.88,
     "movePct": 1.49,
-    "upper": 738.21,
-    "lower": 716.53,
+    "upper": 740.98,
+    "lower": 719.22,
     "status": "OK"
   },
   "freshness": {
@@ -84,7 +95,7 @@
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Buffer base: 1.85%",
-    "Buffer dinámico aplicado: 2.20%",
+    "Buffer dinámico aplicado: 2.74%",
     "Sesgo bajista favorable",
     "Premarket: quotes de opciones no fiables",
     "Macro próxima: Nóminas no agrícolas (NFP)"
