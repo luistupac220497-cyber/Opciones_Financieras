@@ -620,34 +620,44 @@
     }
 
     async function loadDashboard() {
-      const stamp = Date.now();
-      const stateRes = await fetch(`./state.json?t=${stamp}`, { cache: "no-store" });
-      const historyRes = await fetch(`./history.json?t=${stamp}`, { cache: "no-store" });
+      try {
+        const stamp = Date.now();
+        const stateRes = await fetch(`./data/state.json?t=${stamp}`, { cache: "no-store" });
+        const historyRes = await fetch(`./data/history.json?t=${stamp}`, { cache: "no-store" });
 
-      const state = await stateRes.json();
-      const history = await historyRes.json();
+        if (!stateRes.ok || !historyRes.ok) {
+          throw new Error(`Fetch error: state ${stateRes.status}, history ${historyRes.status}`);
+        }
 
-      q("headerMeta").textContent = `${text(state.timestamp_ny)} · ${text(state.timestamp_utc)}`;
-      q("scoreValue").textContent = text(state.score);
-      q("summaryText").textContent = text(state.summary);
+        const state = await stateRes.json();
+        const history = await historyRes.json();
 
-      setDecisionBadge(state.decision);
+        q("headerMeta").textContent = `${text(state.timestamp_ny)} · ${text(state.timestamp_utc)}`;
+        q("scoreValue").textContent = text(state.score);
+        q("summaryText").textContent = text(state.summary);
 
-      q("priceValue").textContent = money(state.price);
-      q("changeValue").textContent = `${Number(state.change || 0) >= 0 ? "+" : ""}${money(state.change)} · ${Number(state.change_pct || 0) >= 0 ? "+" : ""}${pct(state.change_pct)}`;
-      q("vwapValue").textContent = money(state.vwap);
-      q("sessionValue").textContent = text(state.session);
-      q("openValue").textContent = money(state.open);
-      q("volumeValue").textContent = intFmt(state.volume);
+        setDecisionBadge(state.decision);
 
-      renderRange("premarketBox", state.premarket_range);
-      renderRange("openingBox", state.opening_range);
-      renderExpectedMove(state.expected_move);
-      renderOptions(state.options_snapshot);
-      renderMacro(state.macro);
-      renderEarnings(state.earnings);
-      renderTradeSetup(state.trade_setup, state.buffer);
-      renderHistory(history);
+        q("priceValue").textContent = money(state.price);
+        q("changeValue").textContent = `${Number(state.change || 0) >= 0 ? "+" : ""}${money(state.change)} · ${Number(state.change_pct || 0) >= 0 ? "+" : ""}${pct(state.change_pct)}`;
+        q("vwapValue").textContent = money(state.vwap);
+        q("sessionValue").textContent = text(state.session);
+        q("openValue").textContent = money(state.open);
+        q("volumeValue").textContent = intFmt(state.volume);
+
+        renderRange("premarketBox", state.premarket_range);
+        renderRange("openingBox", state.opening_range);
+        renderExpectedMove(state.expected_move);
+        renderOptions(state.options_snapshot);
+        renderMacro(state.macro);
+        renderEarnings(state.earnings);
+        renderTradeSetup(state.trade_setup, state.buffer);
+        renderHistory(history);
+      } catch (err) {
+        q("headerMeta").textContent = "Error cargando datos";
+        q("summaryText").textContent = "No se pudo cargar data/state.json o data/history.json.";
+        console.error(err);
+      }
     }
 
     loadDashboard();
