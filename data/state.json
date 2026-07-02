@@ -1,14 +1,14 @@
 {
   "ticker": "QQQ",
-  "price": 710.35,
+  "price": 710.04,
   "prevClose": 725.17,
-  "change": -14.82,
-  "changePct": -2.04,
+  "change": -15.13,
+  "changePct": -2.09,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T17:00:56.572545+00:00",
-  "updatedAtText": "2026-07-02 17:00:56 UTC",
-  "updatedAtNY": "2026-07-02 13:00:55 ET",
+  "updatedAt": "2026-07-02T17:10:52.804599+00:00",
+  "updatedAtText": "2026-07-02 17:10:52 UTC",
+  "updatedAtNY": "2026-07-02 13:10:51 ET",
   "session": {
     "code": "regular",
     "label": "Regular"
@@ -23,7 +23,7 @@
     "breakeven": 729.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 18.65
+    "distToShort": 18.96
   },
   "bufferDebug": {
     "base": 1.85,
@@ -38,24 +38,24 @@
   },
   "options": {
     "expiration": "2026-07-02",
-    "shortCallBid": 0.02,
-    "shortCallAsk": 0.03,
-    "longCallBid": 0.02,
-    "longCallAsk": 0.03,
+    "shortCallBid": 0.01,
+    "shortCallAsk": 0.02,
+    "longCallBid": 0.01,
+    "longCallAsk": 0.02,
     "shortCallDelta": null,
     "longCallDelta": null,
     "shortCallOI": 4402.0,
     "longCallOI": 11789.0,
-    "shortCallVolume": 124333.0,
-    "longCallVolume": 217166.0,
+    "shortCallVolume": 125758.0,
+    "longCallVolume": 221423.0,
     "quotesUsable": true,
     "notes": "Quotes de opciones cargadas"
   },
   "vwap": {
-    "value": 720.14,
+    "value": 719.8,
     "distPct": -1.36,
-    "zScore": -1.95,
-    "sigma": 5.01,
+    "zScore": -1.86,
+    "sigma": 5.24,
     "bias": "Muy por debajo"
   },
   "openingRange": {
@@ -78,8 +78,8 @@
     "dailyVolPct": 1.51,
     "move": 10.72,
     "movePct": 1.51,
-    "upper": 721.07,
-    "lower": 699.63,
+    "upper": 720.76,
+    "lower": 699.32,
     "status": "OK"
   },
   "freshness": {
