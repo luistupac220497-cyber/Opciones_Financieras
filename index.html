@@ -46,6 +46,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: var(--font-body);
       background: var(--color-bg);
@@ -90,7 +91,7 @@
     .grid { display: grid; gap: 16px; }
     .hero { grid-template-columns: 1.3fr .9fr; margin-bottom: 16px; }
     .kpis { grid-template-columns: repeat(4, minmax(0,1fr)); margin-bottom: 16px; }
-    .content { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .content { grid-template-columns: repeat(2, minmax(0,1fr)); margin-bottom: 16px; }
 
     .card {
       background: var(--color-surface);
@@ -206,15 +207,8 @@
       font-size: .95rem;
     }
 
-    .debug {
-      margin-top: 18px;
-      background: var(--color-surface);
-      border: 1px dashed var(--color-border);
-      border-radius: 14px;
-      padding: 16px;
-      font-size: .92rem;
-      color: var(--color-text-muted);
-      white-space: pre-wrap;
+    .history-card {
+      margin-top: 16px;
     }
 
     @media (max-width: 1100px) {
@@ -241,7 +235,7 @@
 
         <div class="mini-grid">
           <div class="mini">
-            <div class="mini-label">Buffer</div>
+            <div class="mini-label">Buffer dinámico</div>
             <div id="bufferValue" class="mini-value">--</div>
           </div>
           <div class="mini">
@@ -313,7 +307,9 @@
         <div class="eyebrow">Buffer, strike y crédito</div>
         <table>
           <tbody>
-            <tr><td>Buffer</td><td id="tsBuffer" class="num">--</td></tr>
+            <tr><td>Buffer base</td><td id="tsBufferBase" class="num">--</td></tr>
+            <tr><td>Buffer dinámico</td><td id="tsBuffer" class="num">--</td></tr>
+            <tr><td>Motivo buffer</td><td id="tsBufferReason">--</td></tr>
             <tr><td>Short strike</td><td id="tsShort" class="num">--</td></tr>
             <tr><td>Long strike</td><td id="tsLong" class="num">--</td></tr>
             <tr><td>Breakeven</td><td id="tsBeke" class="num">--</td></tr>
@@ -355,7 +351,25 @@
       </article>
     </section>
 
-    <div id="debugBox" class="debug">Debug inicializando…</div>
+    <section class="card history-card">
+      <div style="font-size:1.55rem;font-weight:900;">Historial</div>
+      <div class="eyebrow">Últimas muestras guardadas</div>
+      <table>
+        <thead>
+          <tr>
+            <th>UpdatedAt</th>
+            <th>Price</th>
+            <th>Score</th>
+            <th>Decision</th>
+            <th>Buffer dinámico</th>
+            <th>Short strike</th>
+          </tr>
+        </thead>
+        <tbody id="historyRows">
+          <tr><td colspan="6" class="muted">Sin datos todavía.</td></tr>
+        </tbody>
+      </table>
+    </section>
   </div>
 
   <script>
@@ -488,28 +502,40 @@
       });
     }
 
-    function setDebug(message) {
-      qs("debugBox").textContent = message;
+    function renderHistory(rows) {
+      const tbody = qs("historyRows");
+      if (!Array.isArray(rows) || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="muted">Sin datos todavía.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.slice().reverse().slice(0, 20).map(r => `
+        <tr>
+          <td>${txt(r.updatedAt)}</td>
+          <td class="num">${money(r.price)}</td>
+          <td class="num">${txt(r.score)}</td>
+          <td>${txt(r.decision)}</td>
+          <td class="num">${pct(r.bufferDynamicPct)}</td>
+          <td class="num">${money(r.shortStrike)}</td>
+        </tr>
+      `).join("");
     }
 
     async function fetchJson(path) {
       const res = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" });
       const text = await res.text();
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status} en ${path}\n\n${text.slice(0, 500)}`);
+        throw new Error(`HTTP ${res.status} en ${path}`);
       }
-      try {
-        return JSON.parse(text);
-      } catch (err) {
-        throw new Error(`JSON inválido en ${path}\n\n${text.slice(0, 500)}`);
-      }
+      return JSON.parse(text);
     }
 
     async function loadDashboard() {
       try {
-        setDebug("Intentando cargar ./data/state.json ...");
-        const s = await fetchJson("./data/state.json");
-        setDebug("state.json cargado correctamente.");
+        const [s, h] = await Promise.all([
+          fetchJson("./data/state.json"),
+          fetchJson("./data/history.json")
+        ]);
 
         qs("headerMeta").textContent = `${txt(s.updatedAtNY)} · ${txt(s.updatedAtText)}`;
         qs("scoreValue").textContent = txt(s.score);
@@ -523,11 +549,13 @@
         qs("updatedNyValue").textContent = txt(s.updatedAtNY);
         qs("freshnessValue").textContent = `${txt(s.freshness?.ageMinutes)} min`;
 
-        qs("bufferValue").textContent = `${num(s.trade?.bufferPct)}%`;
+        qs("bufferValue").textContent = pct(s.trade?.bufferDynamicPct);
         qs("shortStrikeValue").textContent = money(s.trade?.shortStrike);
         qs("distanceValue").textContent = money(s.trade?.distToShort);
 
-        qs("tsBuffer").textContent = `${num(s.trade?.bufferPct)}%`;
+        qs("tsBufferBase").textContent = pct(s.trade?.bufferBasePct);
+        qs("tsBuffer").textContent = pct(s.trade?.bufferDynamicPct);
+        qs("tsBufferReason").textContent = txt(s.trade?.bufferReason);
         qs("tsShort").textContent = money(s.trade?.shortStrike);
         qs("tsLong").textContent = money(s.trade?.longStrike);
         qs("tsBeke").textContent = money(s.trade?.breakeven);
@@ -541,17 +569,10 @@
         renderOptions(s.options);
         renderMacro(s.macro);
         renderEarnings(s.earnings);
-
-        try {
-          const h = await fetchJson("./data/history.json");
-          setDebug(`state.json OK · history.json OK · muestras history: ${Array.isArray(h) ? h.length : "n/a"}`);
-        } catch (histErr) {
-          setDebug(`state.json OK · history.json fallo:\n${histErr.message}`);
-        }
+        renderHistory(h);
       } catch (e) {
         qs("headerMeta").textContent = "Error cargando datos";
-        qs("summaryText").textContent = "Revisa la ruta de los JSON en GitHub Pages.";
-        setDebug(e.message);
+        qs("summaryText").textContent = e.message;
         console.error(e);
       }
     }
