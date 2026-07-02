@@ -3,26 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QQQ 0DTE Bear Call Dashboard</title>
+  <title>QQQ 0DTE Dashboard</title>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
   <style>
     :root, [data-theme="light"] {
       --font-body: "Satoshi", system-ui, sans-serif;
-      --text-xs: clamp(0.75rem, 0.72rem + 0.2vw, 0.875rem);
-      --text-sm: clamp(0.875rem, 0.82rem + 0.28vw, 1rem);
-      --text-base: clamp(1rem, 0.96rem + 0.22vw, 1.08rem);
-      --text-lg: clamp(1.125rem, 1.02rem + 0.5vw, 1.35rem);
-      --text-xl: clamp(1.5rem, 1.24rem + 1vw, 2rem);
-
-      --space-1: 0.25rem;
-      --space-2: 0.5rem;
-      --space-3: 0.75rem;
-      --space-4: 1rem;
-      --space-5: 1.25rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
-
       --color-bg: #f7f6f2;
       --color-surface: #f9f8f5;
       --color-surface-2: #fbfbf9;
@@ -39,9 +25,7 @@
       --color-error: #a12c7b;
       --color-error-soft: #ecd7e3;
       --radius: 16px;
-      --radius-sm: 10px;
     }
-
     [data-theme="dark"] {
       --color-bg: #171614;
       --color-surface: #1c1b19;
@@ -59,410 +43,310 @@
       --color-error: #d163a7;
       --color-error-soft: #352532;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: var(--font-body);
       background: var(--color-bg);
       color: var(--color-text);
-      font-size: var(--text-base);
       line-height: 1.5;
     }
-
-    button {
-      border: 0;
-      background: none;
-      cursor: pointer;
-      color: inherit;
-      font: inherit;
-    }
-
     .wrap {
-      max-width: 1280px;
+      max-width: 1380px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 28px;
     }
-
     .topbar {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      margin-bottom: 22px;
     }
-
-    .title h1 {
-      font-size: var(--text-xl);
+    h1 {
+      font-size: 2.1rem;
       font-weight: 900;
-      letter-spacing: -0.03em;
+      letter-spacing: -.04em;
     }
-
-    .title p {
+    .sub {
       color: var(--color-text-muted);
-      font-size: var(--text-sm);
       margin-top: 4px;
     }
-
-    .theme-btn {
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: var(--color-surface);
+    .btn {
       border: 1px solid var(--color-border);
-      min-width: 44px;
-      min-height: 44px;
+      background: var(--color-surface);
+      color: var(--color-text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
     }
-
     .grid {
       display: grid;
       gap: 16px;
     }
-
     .hero {
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: 1.3fr .9fr;
       margin-bottom: 16px;
     }
-
-    .four {
-      grid-template-columns: repeat(4, 1fr);
+    .kpis {
+      grid-template-columns: repeat(4, minmax(0,1fr));
       margin-bottom: 16px;
     }
-
-    .two {
-      grid-template-columns: repeat(2, 1fr);
-      margin-bottom: 16px;
+    .content {
+      grid-template-columns: repeat(2, minmax(0,1fr));
     }
-
     .card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius);
       padding: 20px;
     }
-
-    .card h2 {
-      font-size: var(--text-lg);
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    .sub {
+    .eyebrow {
+      font-size: .82rem;
       color: var(--color-text-muted);
-      font-size: var(--text-xs);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 14px;
-    }
-
-    .decision-badge {
-      display: inline-block;
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: var(--text-sm);
-      margin-bottom: 16px;
-    }
-
-    .enter { color: var(--color-success); background: var(--color-success-soft); }
-    .wait { color: var(--color-warning); background: var(--color-warning-soft); }
-    .no { color: var(--color-error); background: var(--color-error-soft); }
-
-    .score {
-      font-size: clamp(2.5rem, 2rem + 2vw, 4rem);
-      font-weight: 900;
-      line-height: 1;
+      letter-spacing: .08em;
       margin-bottom: 10px;
     }
-
-    .summary {
-      color: var(--color-text-muted);
-      margin-bottom: 18px;
+    .title {
+      font-size: 1.75rem;
+      font-weight: 900;
+      letter-spacing: -.04em;
     }
-
+    .big {
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.06em;
+      margin: 14px 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .muted { color: var(--color-text-muted); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .green { color: var(--color-success); background: var(--color-success-soft); }
+    .yellow { color: var(--color-warning); background: var(--color-warning-soft); }
+    .red { color: var(--color-error); background: var(--color-error-soft); }
     .mini-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0,1fr));
       gap: 12px;
+      margin-top: 18px;
     }
-
     .mini {
       background: var(--color-surface-2);
       border: 1px solid var(--color-border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 14px;
     }
-
-    .mini .label {
-      font-size: var(--text-xs);
+    .mini-label {
+      font-size: .78rem;
       color: var(--color-text-muted);
       text-transform: uppercase;
       letter-spacing: .08em;
-      margin-bottom: 6px;
-    }
-
-    .mini .value {
-      font-size: var(--text-lg);
-      font-weight: 800;
-    }
-
-    .big-price {
-      font-size: clamp(2rem, 1.7rem + 1.7vw, 3.2rem);
-      font-weight: 900;
-      line-height: 1;
       margin-bottom: 8px;
     }
-
-    .muted { color: var(--color-text-muted); }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-top: 16px;
+    .mini-value {
+      font-size: 1.3rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
     }
-
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
     .stat {
       background: var(--color-surface-2);
       border: 1px solid var(--color-border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 14px;
     }
-
-    .stat .label {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 6px;
+    .table {
+      width: 100%;
+      border-collapse: collapse;
     }
-
-    .stat .value {
-      font-weight: 800;
+    .table td, .table th {
+      padding: 11px 6px;
+      border-bottom: 1px solid var(--color-divider);
+      text-align: left;
+      vertical-align: top;
     }
-
-    .alert {
-      padding: 12px 14px;
-      border-radius: 12px;
-      font-size: var(--text-sm);
-      margin-bottom: 12px;
-    }
-
-    .alert-warning { color: var(--color-warning); background: var(--color-warning-soft); }
-    .alert-error { color: var(--color-error); background: var(--color-error-soft); }
-
+    .table td:last-child, .num { text-align: right; font-variant-numeric: tabular-nums; }
     .list {
       display: grid;
-      gap: 10px;
+      gap: 12px;
     }
-
-    .list-row {
+    .row {
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      padding-bottom: 10px;
+      padding-bottom: 12px;
       border-bottom: 1px solid var(--color-divider);
     }
-
-    .list-row:last-child { border-bottom: 0; padding-bottom: 0; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: var(--text-sm);
+    .row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .alert {
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 14px;
     }
-
-    th, td {
-      text-align: left;
-      padding: 10px 6px;
-      border-bottom: 1px solid var(--color-divider);
-      vertical-align: top;
-    }
-
-    th {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .num { text-align: right; font-variant-numeric: tabular-nums; }
-
+    .nowrap { white-space: nowrap; }
     @media (max-width: 1100px) {
-      .hero, .four, .two { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 700px) {
-      .wrap { padding: 14px; }
-      .mini-grid, .stat-grid { grid-template-columns: 1fr; }
+      .hero, .kpis, .content { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="title">
+      <div>
         <h1>QQQ 0DTE Dashboard</h1>
-        <p id="headerMeta">Cargando estado…</p>
+        <div id="headerMeta" class="sub">Cargando estado...</div>
       </div>
-      <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema">◐</button>
+      <button id="themeBtn" class="btn" aria-label="Cambiar tema">◐</button>
     </div>
 
     <section class="grid hero">
       <article class="card">
-        <div class="sub">Decisión operativa</div>
-        <div id="decisionBadge" class="decision-badge wait">Esperando datos</div>
-        <div id="scoreValue" class="score">--</div>
-        <div id="summaryText" class="summary">Sin datos aún.</div>
+        <div class="eyebrow">Decisión operativa</div>
+        <div id="decisionBadge" class="pill yellow">Esperando datos</div>
+        <div id="scoreValue" class="big">--</div>
+        <div id="summaryText" class="muted">Sin datos aún.</div>
 
         <div class="mini-grid">
           <div class="mini">
-            <div class="label">Buffer dinámico</div>
-            <div id="bufferValue" class="value">--</div>
+            <div class="mini-label">Buffer dinámico</div>
+            <div id="bufferValue" class="mini-value">--</div>
           </div>
           <div class="mini">
-            <div class="label">Short strike</div>
-            <div id="shortStrikeValue" class="value">--</div>
+            <div class="mini-label">Short strike</div>
+            <div id="shortStrikeValue" class="mini-value">--</div>
           </div>
           <div class="mini">
-            <div class="label">Distancia</div>
-            <div id="distanceValue" class="value">--</div>
+            <div class="mini-label">Distancia</div>
+            <div id="distanceValue" class="mini-value">--</div>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <div class="sub">Precio y sesión</div>
-        <div id="priceValue" class="big-price">--</div>
+        <div class="eyebrow">Precio y sesión</div>
+        <div id="priceValue" class="big">--</div>
         <div id="changeValue" class="muted">--</div>
 
-        <div class="stat-grid">
+        <div class="stats">
           <div class="stat">
-            <div class="label">VWAP</div>
-            <div id="vwapValue" class="value">--</div>
+            <div class="mini-label">VWAP</div>
+            <div id="vwapValue" class="mini-value">--</div>
           </div>
           <div class="stat">
-            <div class="label">Sesión</div>
-            <div id="sessionValue" class="value">--</div>
+            <div class="mini-label">Sesión</div>
+            <div id="sessionValue" class="mini-value">--</div>
           </div>
           <div class="stat">
-            <div class="label">Open</div>
-            <div id="openValue" class="value">--</div>
+            <div class="mini-label">Actualizado NY</div>
+            <div id="updatedNyValue" class="mini-value" style="font-size:1rem;">--</div>
           </div>
           <div class="stat">
-            <div class="label">Volumen</div>
-            <div id="volumeValue" class="value">--</div>
+            <div class="mini-label">Freshness</div>
+            <div id="freshnessValue" class="mini-value" style="font-size:1rem;">--</div>
           </div>
         </div>
       </article>
     </section>
 
-    <section class="grid four">
+    <section class="grid kpis">
       <article class="card">
-        <h2>Premarket range</h2>
-        <div class="sub">Lectura previa</div>
+        <div class="title" style="font-size:1.25rem;">Premarket range</div>
+        <div class="eyebrow">Lectura previa</div>
         <div id="premarketBox">--</div>
       </article>
 
       <article class="card">
-        <h2>Opening range</h2>
-        <div class="sub">09:30–10:30 ET</div>
+        <div class="title" style="font-size:1.25rem;">Opening range</div>
+        <div class="eyebrow">09:30–10:30 ET</div>
         <div id="openingBox">--</div>
       </article>
 
       <article class="card">
-        <h2>Expected move</h2>
-        <div class="sub">Referencia diaria</div>
+        <div class="title" style="font-size:1.25rem;">Expected move</div>
+        <div class="eyebrow">Referencia diaria</div>
         <div id="expectedBox">--</div>
       </article>
 
       <article class="card">
-        <h2>Liquidity snapshot</h2>
-        <div class="sub">Opciones</div>
+        <div class="title" style="font-size:1.25rem;">Liquidity snapshot</div>
+        <div class="eyebrow">Opciones</div>
         <div id="liquidityBox">--</div>
       </article>
     </section>
 
-    <section class="grid two">
+    <section class="grid content">
       <article class="card">
-        <h2>Trade setup</h2>
-        <div class="sub">Buffer, strike y crédito</div>
-        <table>
+        <div class="title" style="font-size:1.6rem;">Trade setup</div>
+        <div class="eyebrow">Buffer, strike y crédito</div>
+        <table class="table">
           <tbody>
-            <tr><td>Buffer base</td><td id="tsBufferBase" class="num">--</td></tr>
-            <tr><td>Buffer dinámico</td><td id="tsBufferDyn" class="num">--</td></tr>
-            <tr><td>Motivo del buffer</td><td id="tsBufferReason">--</td></tr>
-            <tr><td>Short target</td><td id="tsShortTarget" class="num">--</td></tr>
-            <tr><td>Short elegido</td><td id="tsShortSel" class="num">--</td></tr>
-            <tr><td>Delta short</td><td id="tsDelta" class="num">--</td></tr>
-            <tr><td>Open interest</td><td id="tsOI" class="num">--</td></tr>
-            <tr><td>Volumen</td><td id="tsVol" class="num">--</td></tr>
-            <tr><td>Crédito mid</td><td id="tsCredit" class="num">--</td></tr>
+            <tr><td>Buffer</td><td id="tsBuffer" class="num">--</td></tr>
+            <tr><td>Short strike</td><td id="tsShort" class="num">--</td></tr>
+            <tr><td>Long strike</td><td id="tsLong" class="num">--</td></tr>
+            <tr><td>Breakeven</td><td id="tsBeke" class="num">--</td></tr>
+            <tr><td>Spread width</td><td id="tsWidth" class="num">--</td></tr>
+            <tr><td>Net credit</td><td id="tsCredit" class="num">--</td></tr>
+            <tr><td>Distancia al short</td><td id="tsDist" class="num">--</td></tr>
           </tbody>
         </table>
       </article>
 
       <article class="card">
-        <h2>Options snapshot</h2>
-        <div class="sub">Estado operativo</div>
+        <div class="title" style="font-size:1.6rem;">Options snapshot</div>
+        <div class="eyebrow">Estado operativo</div>
         <div id="optionsAlert"></div>
-        <table>
+        <table class="table">
           <tbody>
-            <tr><td>Expiración</td><td id="osExpiry" class="num">--</td></tr>
-            <tr><td>Short bid/ask</td><td id="osBidAsk" class="num">--</td></tr>
-            <tr><td>Long bid/ask</td><td id="osLongBidAsk" class="num">--</td></tr>
-            <tr><td>Spread width</td><td id="osWidth" class="num">--</td></tr>
-            <tr><td>Quotes fiables</td><td id="osReliable">--</td></tr>
-            <tr><td>Liquidity score</td><td id="osLiq" class="num">--</td></tr>
+            <tr><td>Expiración</td><td id="opExp" class="num">--</td></tr>
+            <tr><td>Short bid/ask</td><td id="opShort" class="num">--</td></tr>
+            <tr><td>Long bid/ask</td><td id="opLong" class="num">--</td></tr>
+            <tr><td>Short delta</td><td id="opDelta" class="num">--</td></tr>
+            <tr><td>Short OI</td><td id="opOi" class="num">--</td></tr>
+            <tr><td>Short volume</td><td id="opVol" class="num">--</td></tr>
+            <tr><td>Quotes usables</td><td id="opUsable" class="num">--</td></tr>
           </tbody>
         </table>
       </article>
 
       <article class="card">
-        <h2>Macro</h2>
-        <div class="sub">Próximos eventos</div>
+        <div class="title" style="font-size:1.6rem;">Macro</div>
+        <div class="eyebrow">Próximos eventos</div>
         <div id="macroAlert"></div>
         <div id="macroList" class="list"></div>
       </article>
 
       <article class="card">
-        <h2>Mag 7 earnings</h2>
-        <div class="sub">Filtro de veto</div>
-        <div id="earningsAlert"></div>
+        <div class="title" style="font-size:1.6rem;">Mag 7 earnings</div>
+        <div class="eyebrow">Filtro de veto</div>
         <div id="earningsList" class="list"></div>
-      </article>
-
-      <article class="card" style="grid-column: 1 / -1;">
-        <h2>Historial reciente</h2>
-        <div class="sub">Últimas muestras</div>
-        <table>
-          <thead>
-            <tr>
-              <th>UTC</th>
-              <th>Precio</th>
-              <th>Score</th>
-              <th>Decision</th>
-              <th>Buffer</th>
-              <th>VWAP</th>
-            </tr>
-          </thead>
-          <tbody id="historyTable"></tbody>
-        </table>
       </article>
     </section>
   </div>
 
   <script>
-    const fmt = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : Number(v).toFixed(d);
-    const money = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `$${Number(v).toFixed(d)}`;
-    const pct = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `${Number(v).toFixed(d)}%`;
-    const text = (v) => (v === null || v === undefined || v === "") ? "--" : String(v);
-    const intFmt = (v) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : new Intl.NumberFormat("es-ES").format(Number(v));
+    const qs = id => document.getElementById(id);
+    const money = v => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `$${Number(v).toFixed(2)}`;
+    const pct = v => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `${Number(v).toFixed(2)}%`;
+    const num = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : Number(v).toFixed(d);
+    const txt = v => (v === null || v === undefined || v === "") ? "--" : String(v);
 
-    const q = (id) => document.getElementById(id);
-
-    (function initTheme() {
+    (function () {
       const root = document.documentElement;
-      const btn = q("themeBtn");
+      const btn = qs("themeBtn");
       let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       root.setAttribute("data-theme", theme);
       btn.addEventListener("click", () => {
@@ -471,192 +355,157 @@
       });
     })();
 
-    function setDecisionBadge(decision) {
-      const el = q("decisionBadge");
-      el.textContent = text(decision);
-      el.className = "decision-badge";
-      const d = (decision || "").toLowerCase();
-      if (d.includes("no")) el.classList.add("no");
-      else if (d.includes("esper")) el.classList.add("wait");
-      else el.classList.add("enter");
+    function setDecision(decisionTone, decisionLabel) {
+      const el = qs("decisionBadge");
+      el.textContent = decisionLabel || "--";
+      el.className = "pill";
+      if (decisionTone === "green") el.classList.add("green");
+      else if (decisionTone === "red") el.classList.add("red");
+      else el.classList.add("yellow");
     }
 
-    function renderRange(id, obj) {
-      const el = q(id);
-      if (!obj) {
+    function renderRange(boxId, r, type) {
+      const el = qs(boxId);
+      if (!r) {
         el.textContent = "--";
         return;
       }
-      if (obj.status === "pending" || obj.status === "forming" || obj.status === "missing") {
-        el.textContent = text(obj.message);
+      if (!r.available) {
+        el.innerHTML = `<div class="muted">${txt(r.status)} · ${txt(r.message)}</div>`;
         return;
       }
-      el.innerHTML = `
-        <div>High: ${money(obj.high)}</div>
-        <div>Low: ${money(obj.low)}</div>
-        <div>Width: ${money(obj.width)}</div>
-        <div class="muted" style="margin-top:6px;">${text(obj.message)}</div>
-      `;
+      if (type === "premarket") {
+        el.innerHTML = `
+          <div><strong>High:</strong> ${money(r.high)}</div>
+          <div><strong>Low:</strong> ${money(r.low)}</div>
+          <div><strong>Close:</strong> ${money(r.close)}</div>
+          <div><strong>Size:</strong> ${money(r.size)} · ${pct(r.sizePct)}</div>
+        `;
+      } else {
+        el.innerHTML = `
+          <div><strong>Status:</strong> ${txt(r.status)}</div>
+          <div class="muted">${txt(r.message)}</div>
+        `;
+      }
     }
 
     function renderExpectedMove(em) {
-      const el = q("expectedBox");
-      if (!em || !em.method || em.method === "unavailable") {
-        el.textContent = "Expected move no disponible.";
+      const el = qs("expectedBox");
+      if (!em) {
+        el.textContent = "--";
         return;
       }
       el.innerHTML = `
-        <div>Method: ${text(em.method)}</div>
-        <div>Vol diaria: ${pct(em.daily_vol_pct)}</div>
-        <div>Expected move: ${money(em.expected_move_dollar)}</div>
-        <div>Upper: ${money(em.upper)}</div>
-        <div>Lower: ${money(em.lower)}</div>
+        <div><strong>Method:</strong> ${txt(em.method)}</div>
+        <div><strong>Vol diaria:</strong> ${pct(em.dailyVolPct)}</div>
+        <div><strong>Move:</strong> ${money(em.move)} · ${pct(em.movePct)}</div>
+        <div><strong>Upper:</strong> ${money(em.upper)}</div>
+        <div><strong>Lower:</strong> ${money(em.lower)}</div>
       `;
     }
 
+    function renderOptions(op) {
+      qs("opExp").textContent = txt(op?.expiration);
+      qs("opShort").textContent = `${money(op?.shortCallBid)} / ${money(op?.shortCallAsk)}`;
+      qs("opLong").textContent = `${money(op?.longCallBid)} / ${money(op?.longCallAsk)}`;
+      qs("opDelta").textContent = num(op?.shortCallDelta, 3);
+      qs("opOi").textContent = txt(op?.shortCallOI);
+      qs("opVol").textContent = txt(op?.shortCallVolume);
+      qs("opUsable").textContent = op?.quotesUsable ? "Sí" : "No";
+
+      qs("liquidityBox").innerHTML = `
+        <div><strong>Notas:</strong> ${txt(op?.notes)}</div>
+        <div><strong>Quotes usables:</strong> ${op?.quotesUsable ? "Sí" : "No"}</div>
+        <div><strong>Short volume:</strong> ${txt(op?.shortCallVolume)}</div>
+      `;
+
+      qs("optionsAlert").innerHTML = op?.notes
+        ? `<div class="alert" style="background:var(--color-warning-soft); color:var(--color-warning);">${txt(op.notes)}</div>`
+        : "";
+    }
+
     function renderMacro(macro) {
-      q("macroAlert").innerHTML = "";
-      q("macroList").innerHTML = "";
-      if (macro && macro.risk_context) {
-        const impact = text(macro.risk_context.impact).toLowerCase();
-        q("macroAlert").innerHTML = `<div class="alert ${impact === "high" ? "alert-error" : "alert-warning"}">${text(macro.risk_context.title)} · ${text(macro.risk_context.impact)} impact · ${fmt(macro.risk_context.mins, 0)} min</div>`;
+      const alert = qs("macroAlert");
+      const list = qs("macroList");
+      alert.innerHTML = "";
+      list.innerHTML = "";
+
+      if (macro?.next) {
+        alert.innerHTML = `<div class="alert" style="background:var(--color-warning-soft); color:var(--color-warning);">
+          Próximo: ${txt(macro.next.evento)} · ${txt(macro.next.impacto)} · ${txt(macro.next.datetimeNY)}
+        </div>`;
       }
-      const events = (macro && macro.next_events) || [];
-      if (!events.length) {
-        q("macroList").innerHTML = `<div class="muted">Sin eventos macro.</div>`;
-        return;
-      }
-      events.forEach(ev => {
-        const row = document.createElement("div");
-        row.className = "list-row";
-        row.innerHTML = `
+
+      (macro?.items || []).slice(0, 5).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `
           <div>
-            <div><strong>${text(ev.title)}</strong></div>
-            <div class="muted">${text(ev.date)} · ${text(ev.time_et)} ET</div>
+            <div><strong>${txt(item.evento)}</strong></div>
+            <div class="muted">${txt(item.datetimeNY)} · ${txt(item.momento)}</div>
           </div>
-          <div><strong>${text(ev.impact)}</strong></div>
+          <div class="nowrap"><strong>${txt(item.impacto)}</strong></div>
         `;
-        q("macroList").appendChild(row);
+        list.appendChild(div);
       });
     }
 
     function renderEarnings(earnings) {
-      q("earningsAlert").innerHTML = earnings?.earnings_veto
-        ? `<div class="alert alert-error">Veto activo por earnings cercanos.</div>`
-        : `<div class="alert alert-warning">Sin veto activo por earnings.</div>`;
-
-      q("earningsList").innerHTML = "";
-      ((earnings && earnings.mag7) || []).forEach(ev => {
-        const row = document.createElement("div");
-        row.className = "list-row";
-        row.innerHTML = `
+      const list = qs("earningsList");
+      list.innerHTML = "";
+      (earnings?.items || []).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `
           <div>
-            <div><strong>${text(ev.symbol)}</strong></div>
-            <div class="muted">${text(ev.date)}</div>
+            <div><strong>${txt(item.empresa)} (${txt(item.ticker)})</strong></div>
+            <div class="muted">${txt(item.fecha)} · ${txt(item.momento)}</div>
           </div>
-          <div><strong>${text(ev.status)}</strong></div>
+          <div class="nowrap"><strong>${txt(item.dias)}d</strong></div>
         `;
-        q("earningsList").appendChild(row);
-      });
-    }
-
-    function renderOptions(os) {
-      const sc = os?.short_call || {};
-      const lc = os?.long_call || {};
-
-      q("osExpiry").textContent = text(os?.expiration);
-      q("osBidAsk").textContent = `${money(sc.bid)} / ${money(sc.ask)}`;
-      q("osLongBidAsk").textContent = `${money(lc.bid)} / ${money(lc.ask)}`;
-      q("osWidth").textContent = money(os?.spread_width);
-      q("osReliable").textContent = os?.quotes_reliable ? "Sí" : "No";
-      q("osLiq").textContent = text(os?.liquidity_score);
-
-      q("optionsAlert").innerHTML = os?.message
-        ? `<div class="alert alert-warning">${text(os.message)}</div>`
-        : "";
-
-      q("liquidityBox").innerHTML = `
-        <div>Liquidity score: ${text(os?.liquidity_score)}</div>
-        <div>Quotes fiables: ${os?.quotes_reliable ? "Sí" : "No"}</div>
-        <div>Crédito mid: ${money(os?.net_credit_mid)}</div>
-      `;
-    }
-
-    function renderTradeSetup(ts, buffer) {
-      q("bufferValue").textContent = money(buffer?.dynamic);
-      q("shortStrikeValue").textContent = money(ts?.short_strike_selected);
-      q("distanceValue").textContent = money(ts?.distance_to_short_strike);
-
-      q("tsBufferBase").textContent = money(ts?.buffer_base);
-      q("tsBufferDyn").textContent = money(ts?.buffer_dynamic);
-      q("tsBufferReason").textContent = text(ts?.buffer_reason);
-      q("tsShortTarget").textContent = money(ts?.short_strike_target);
-      q("tsShortSel").textContent = money(ts?.short_strike_selected);
-      q("tsDelta").textContent = fmt(ts?.short_delta, 3);
-      q("tsOI").textContent = intFmt(ts?.short_open_interest);
-      q("tsVol").textContent = intFmt(ts?.short_volume);
-      q("tsCredit").textContent = money(ts?.estimated_credit_mid);
-    }
-
-    function renderHistory(rows) {
-      const tbody = q("historyTable");
-      tbody.innerHTML = "";
-      if (!Array.isArray(rows) || !rows.length) {
-        tbody.innerHTML = `<tr><td colspan="6">Sin historial.</td></tr>`;
-        return;
-      }
-      rows.slice().reverse().slice(0, 20).forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${text(r.timestamp_utc)}</td>
-          <td class="num">${money(r.price)}</td>
-          <td class="num">${text(r.score)}</td>
-          <td>${text(r.decision)}</td>
-          <td class="num">${money(r.buffer_dynamic)}</td>
-          <td class="num">${money(r.vwap)}</td>
-        `;
-        tbody.appendChild(tr);
+        list.appendChild(div);
       });
     }
 
     async function loadDashboard() {
       try {
-        const stamp = Date.now();
-        const stateRes = await fetch(`./data/state.json?t=${stamp}`, { cache: "no-store" });
-        const historyRes = await fetch(`./data/history.json?t=${stamp}`, { cache: "no-store" });
+        const res = await fetch(`./state.json?t=${Date.now()}`);
+        const s = await res.json();
 
-        if (!stateRes.ok || !historyRes.ok) {
-          throw new Error(`Fetch error: state ${stateRes.status}, history ${historyRes.status}`);
-        }
+        qs("headerMeta").textContent = `${txt(s.updatedAtNY)} · ${txt(s.updatedAtText)}`;
+        qs("scoreValue").textContent = txt(s.score);
+        qs("summaryText").textContent = txt(s.summary);
+        setDecision(s.decisionTone, s.decisionLabel);
 
-        const state = await stateRes.json();
-        const history = await historyRes.json();
+        qs("priceValue").textContent = money(s.price);
+        qs("changeValue").textContent = `${money(s.change)} · ${pct(s.changePct)}`;
+        qs("vwapValue").textContent = money(s.vwap?.value);
+        qs("sessionValue").textContent = txt(s.session?.label);
+        qs("updatedNyValue").textContent = txt(s.updatedAtNY);
+        qs("freshnessValue").textContent = `${txt(s.freshness?.ageMinutes)} min`;
 
-        q("headerMeta").textContent = `${text(state.timestamp_ny)} · ${text(state.timestamp_utc)}`;
-        q("scoreValue").textContent = text(state.score);
-        q("summaryText").textContent = text(state.summary);
+        qs("bufferValue").textContent = `${num(s.trade?.bufferPct)}%`;
+        qs("shortStrikeValue").textContent = money(s.trade?.shortStrike);
+        qs("distanceValue").textContent = money(s.trade?.distToShort);
 
-        setDecisionBadge(state.decision);
+        qs("tsBuffer").textContent = `${num(s.trade?.bufferPct)}%`;
+        qs("tsShort").textContent = money(s.trade?.shortStrike);
+        qs("tsLong").textContent = money(s.trade?.longStrike);
+        qs("tsBeke").textContent = money(s.trade?.breakeven);
+        qs("tsWidth").textContent = money(s.trade?.spreadWidth);
+        qs("tsCredit").textContent = money(s.trade?.netCredit);
+        qs("tsDist").textContent = money(s.trade?.distToShort);
 
-        q("priceValue").textContent = money(state.price);
-        q("changeValue").textContent = `${Number(state.change || 0) >= 0 ? "+" : ""}${money(state.change)} · ${Number(state.change_pct || 0) >= 0 ? "+" : ""}${pct(state.change_pct)}`;
-        q("vwapValue").textContent = money(state.vwap);
-        q("sessionValue").textContent = text(state.session);
-        q("openValue").textContent = money(state.open);
-        q("volumeValue").textContent = intFmt(state.volume);
-
-        renderRange("premarketBox", state.premarket_range);
-        renderRange("openingBox", state.opening_range);
-        renderExpectedMove(state.expected_move);
-        renderOptions(state.options_snapshot);
-        renderMacro(state.macro);
-        renderEarnings(state.earnings);
-        renderTradeSetup(state.trade_setup, state.buffer);
-        renderHistory(history);
-      } catch (err) {
-        q("headerMeta").textContent = "Error cargando datos";
-        q("summaryText").textContent = "No se pudo cargar data/state.json o data/history.json.";
-        console.error(err);
+        renderRange("premarketBox", s.premarketRange, "premarket");
+        renderRange("openingBox", s.openingRange, "opening");
+        renderExpectedMove(s.expectedMove);
+        renderOptions(s.options);
+        renderMacro(s.macro);
+        renderEarnings(s.earnings);
+      } catch (e) {
+        qs("headerMeta").textContent = "Error cargando state.json";
+        qs("summaryText").textContent = e.message;
+        console.error(e);
       }
     }
 
