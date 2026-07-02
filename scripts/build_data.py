@@ -1,62 +1,692 @@
+import os
 import json
 import math
-from pathlib import Path
-from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
+import time
+from datetime import datetime, timedelta, timezone
 
-import pandas as pd
+import requests
 import yfinance as yf
 
+STATE_FILE = "state.json"
+HISTORY_FILE = "history.json"
 
-TICKER = "QQQ"
-MAX_HISTORY_ITEMS = 200
-SPREAD_WIDTH = 1.0
-NET_CREDIT = 0.10
-MODEL_BUFFER_PCT = 0.0185
-STALE_MINUTES = 3
+SYMBOL = "QQQ"
+BASE_BUFFER = 1.85
+SHORT_DELTA_TARGET = 0.15
+STRIKE_STEP = 1.0
+DATA_STALE_MINUTES = 3
+HISTORY_LIMIT = 300
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
-STATE_FILE = DATA_DIR / "state.json"
-HISTORY_FILE = DATA_DIR / "history.json"
-
-NY_TZ = ZoneInfo("America/New_York")
-
-MAG7 = {
-    "AAPL": "Apple",
-    "MSFT": "Microsoft",
-    "NVDA": "Nvidia",
-    "AMZN": "Amazon",
-    "META": "Meta",
-    "GOOGL": "Alphabet",
-    "TSLA": "Tesla",
-}
-
-MACRO_EVENTS = [
-    {"evento": "ISM Manufacturero", "datetime_ny": "2026-07-01 10:00", "impacto": "alto"},
-    {"evento": "Nóminas no agrícolas (NFP)", "datetime_ny": "2026-07-03 08:30", "impacto": "alto"},
-    {"evento": "Tasa de desempleo", "datetime_ny": "2026-07-03 08:30", "impacto": "alto"},
-    {"evento": "IPC (CPI)", "datetime_ny": "2026-07-15 08:30", "impacto": "alto"},
-    {"evento": "IPP (PPI)", "datetime_ny": "2026-07-16 08:30", "impacto": "alto"},
-    {"evento": "Ventas minoristas", "datetime_ny": "2026-07-16 08:30", "impacto": "medio"},
-    {"evento": "PIB", "datetime_ny": "2026-07-30 08:30", "impacto": "alto"},
-    {"evento": "PCE subyacente", "datetime_ny": "2026-07-31 08:30", "impacto": "alto"},
-    {"evento": "Decisión FOMC / tipos", "datetime_ny": "2026-07-29 14:00", "impacto": "alto"},
-]
+NY_TZ = timezone(timedelta(hours=-4))
 
 
-def ensure_dirs():
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+def now_utc():
+    return datetime.now(timezone.utc)
 
 
-def load_json(path, default):
-    if not path.exists():
-        return default
+def now_ny():
+    return now_utc().astimezone(NY_TZ)
+
+
+def iso(dt):
+    return dt.astimezone(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def clamp(v, lo, hi):
+    return max(lo, min(hi, v))
+
+
+def safe_float(v, default=None):
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        if v is None:
+            return default
+        if isinstance(v, str) and not v.strip():
+            return default
+        x = float(v)
+        if math.isnan(x):
+            return default
+        return x
     except Exception:
         return default
+
+
+def round_step(x, step=1.0):
+    if x is None:
+        return None
+    return round(x / step) * step
+
+
+def floor_step(x, step=1.0):
+    if x is None:
+        return None
+    return math.floor(x / step) * step
+
+
+def ceil_step(x, step=1.0):
+    if x is None:
+        return None
+    return math.ceil(x / step) * step
+
+
+def market_phase(ny_dt):
+    h = ny_dt.hour
+    m = ny_dt.minute
+    mins = h * 60 + m
+    pm_start = 4 * 60
+    open_start = 9 * 60 + 30
+    or_end = 10 * 60 + 30
+    close_time = 16 * 60
+
+    if mins < pm_start:
+        return "overnight"
+    if pm_start <= mins < open_start:
+        return "premarket"
+    if open_start <= mins < or_end:
+        return "opening_range"
+    if or_end <= mins < close_time:
+        return "regular"
+    return "afterhours"
+
+
+def session_name(phase):
+    mapping = {
+        "overnight": "Overnight",
+        "premarket": "Premarket",
+        "opening_range": "Opening range",
+        "regular": "Regular",
+        "afterhours": "After hours",
+    }
+    return mapping.get(phase, phase)
+
+
+def fetch_json(url, timeout=10):
+    try:
+        r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
+        r.raise_for_status()
+        return r.json()
+    except Exception:
+        return None
+
+
+def get_quote(symbol):
+    t = yf.Ticker(symbol)
+    info = {}
+    fast = None
+    try:
+        fast = t.fast_info
+    except Exception:
+        fast = None
+
+    hist_1d = None
+    try:
+        hist_1d = t.history(period="5d", interval="1d", auto_adjust=False, prepost=True)
+    except Exception:
+        hist_1d = None
+
+    hist_1m = None
+    try:
+        hist_1m = t.history(period="1d", interval="1m", auto_adjust=False, prepost=True)
+    except Exception:
+        hist_1m = None
+
+    price = None
+    prev_close = None
+    open_price = None
+    day_high = None
+    day_low = None
+    volume = None
+
+    if fast:
+        price = safe_float(getattr(fast, "last_price", None), price)
+        prev_close = safe_float(getattr(fast, "previous_close", None), prev_close)
+        open_price = safe_float(getattr(fast, "open", None), open_price)
+        day_high = safe_float(getattr(fast, "day_high", None), day_high)
+        day_low = safe_float(getattr(fast, "day_low", None), day_low)
+        volume = safe_float(getattr(fast, "last_volume", None), volume)
+
+    if hist_1m is not None and not hist_1m.empty:
+        last = hist_1m.iloc[-1]
+        price = safe_float(last.get("Close"), price)
+        day_high = safe_float(hist_1m["High"].max(), day_high)
+        day_low = safe_float(hist_1m["Low"].min(), day_low)
+        volume = safe_float(hist_1m["Volume"].sum(), volume)
+        try:
+            reg = hist_1m.between_time("09:30", "16:00")
+            if not reg.empty:
+                open_price = safe_float(reg.iloc[0]["Open"], open_price)
+        except Exception:
+            pass
+
+    if hist_1d is not None and len(hist_1d) >= 2:
+        prev_close = safe_float(hist_1d.iloc[-2]["Close"], prev_close)
+
+    chg = None
+    chg_pct = None
+    if price is not None and prev_close not in (None, 0):
+        chg = price - prev_close
+        chg_pct = (chg / prev_close) * 100
+
+    return {
+        "price": price,
+        "previous_close": prev_close,
+        "open": open_price,
+        "day_high": day_high,
+        "day_low": day_low,
+        "volume": volume,
+        "change": chg,
+        "change_pct": chg_pct,
+        "hist_1m": hist_1m,
+        "ticker": t,
+    }
+
+
+def compute_vwap(hist_1m):
+    if hist_1m is None or hist_1m.empty:
+        return None
+    try:
+        df = hist_1m.copy()
+        tp = (df["High"] + df["Low"] + df["Close"]) / 3.0
+        vol = df["Volume"].fillna(0)
+        if vol.sum() == 0:
+            return None
+        return float((tp * vol).sum() / vol.sum())
+    except Exception:
+        return None
+
+
+def compute_ranges(hist_1m):
+    out = {
+        "premarket_range": None,
+        "opening_range": None,
+    }
+    if hist_1m is None or hist_1m.empty:
+        return out
+
+    try:
+        pm = hist_1m.between_time("04:00", "09:29")
+        if not pm.empty:
+            pm_high = safe_float(pm["High"].max())
+            pm_low = safe_float(pm["Low"].min())
+            out["premarket_range"] = {
+                "status": "available",
+                "high": pm_high,
+                "low": pm_low,
+                "width": None if pm_high is None or pm_low is None else pm_high - pm_low,
+                "message": "Rango del premarket calculado.",
+            }
+        else:
+            out["premarket_range"] = {
+                "status": "pending",
+                "message": "Premarket aún no disponible.",
+            }
+    except Exception:
+        out["premarket_range"] = {
+            "status": "pending",
+            "message": "Premarket range no disponible.",
+        }
+
+    try:
+        reg = hist_1m.between_time("09:30", "10:30")
+        ny = now_ny()
+        phase = market_phase(ny)
+        if phase in ("overnight", "premarket"):
+            out["opening_range"] = {
+                "status": "pending",
+                "message": "Opening range pendiente hasta la apertura regular.",
+            }
+        elif phase == "opening_range":
+            if reg.empty:
+                out["opening_range"] = {
+                    "status": "forming",
+                    "message": "Opening range formándose.",
+                }
+            else:
+                r_high = safe_float(reg["High"].max())
+                r_low = safe_float(reg["Low"].min())
+                out["opening_range"] = {
+                    "status": "forming",
+                    "high": r_high,
+                    "low": r_low,
+                    "width": None if r_high is None or r_low is None else r_high - r_low,
+                    "message": "Opening range en formación.",
+                }
+        else:
+            if reg.empty:
+                out["opening_range"] = {
+                    "status": "missing",
+                    "message": "Opening range no disponible.",
+                }
+            else:
+                r_high = safe_float(reg["High"].max())
+                r_low = safe_float(reg["Low"].min())
+                out["opening_range"] = {
+                    "status": "available",
+                    "high": r_high,
+                    "low": r_low,
+                    "width": None if r_high is None or r_low is None else r_high - r_low,
+                    "message": "Opening range completado.",
+                }
+    except Exception:
+        out["opening_range"] = {
+            "status": "missing",
+            "message": "Opening range no disponible.",
+        }
+
+    return out
+
+
+def compute_expected_move(ticker, spot):
+    methods = [
+        ("3mo", "3mo"),
+        ("1mo", "1mo"),
+    ]
+    for label, period in methods:
+        try:
+            hist = ticker.history(period=period, interval="1d", auto_adjust=False)
+            if hist is not None and len(hist) >= 10:
+                rets = hist["Close"].pct_change().dropna()
+                hv_daily = float(rets.std())
+                if hv_daily and hv_daily > 0:
+                    em_pct = hv_daily * 100
+                    em_dollar = spot * hv_daily if spot else None
+                    return {
+                        "method": f"historical_vol_{label}",
+                        "daily_vol_pct": em_pct,
+                        "expected_move_dollar": em_dollar,
+                        "upper": None if em_dollar is None or spot is None else spot + em_dollar,
+                        "lower": None if em_dollar is None or spot is None else spot - em_dollar,
+                    }
+        except Exception:
+            pass
+
+    try:
+        hist = ticker.history(period="5d", interval="5m", auto_adjust=False, prepost=True)
+        if hist is not None and len(hist) >= 30:
+            rets = hist["Close"].pct_change().dropna()
+            hv_5m = float(rets.std())
+            bars = 78
+            hv_daily = hv_5m * math.sqrt(bars)
+            em_pct = hv_daily * 100
+            em_dollar = spot * hv_daily if spot else None
+            return {
+                "method": "intraday_fallback_5m",
+                "daily_vol_pct": em_pct,
+                "expected_move_dollar": em_dollar,
+                "upper": None if em_dollar is None or spot is None else spot + em_dollar,
+                "lower": None if em_dollar is None or spot is None else spot - em_dollar,
+            }
+    except Exception:
+        pass
+
+    return {
+        "method": "unavailable",
+        "daily_vol_pct": None,
+        "expected_move_dollar": None,
+        "upper": None,
+        "lower": None,
+    }
+
+
+def get_macro_events():
+    today = now_utc().date()
+    return [
+        {
+            "time_et": "08:30",
+            "title": "Macro placeholder",
+            "impact": "medium",
+            "date": str(today),
+        }
+    ]
+
+
+def get_mag7_earnings():
+    return [
+        {"symbol": "AAPL", "date": None, "status": "No cercano"},
+        {"symbol": "MSFT", "date": None, "status": "No cercano"},
+        {"symbol": "NVDA", "date": None, "status": "No cercano"},
+        {"symbol": "AMZN", "date": None, "status": "No cercano"},
+        {"symbol": "META", "date": None, "status": "No cercano"},
+        {"symbol": "GOOGL", "date": None, "status": "No cercano"},
+        {"symbol": "TSLA", "date": None, "status": "No cercano"},
+    ]
+
+
+def nearest_macro_risk(macro_events):
+    ny = now_ny()
+    today = str(ny.date())
+    soon = None
+    for ev in macro_events:
+        if ev.get("date") != today:
+            continue
+        t = ev.get("time_et")
+        if not t:
+            continue
+        hh, mm = map(int, t.split(":"))
+        dt = ny.replace(hour=hh, minute=mm, second=0, microsecond=0)
+        diff = (dt - ny).total_seconds() / 60
+        if -15 <= diff <= 90:
+            if soon is None or abs(diff) < abs(soon["mins"]):
+                soon = {"mins": diff, "impact": ev.get("impact", "low"), "title": ev.get("title", "")}
+    return soon
+
+
+def earnings_veto(earnings):
+    for e in earnings:
+        status = (e.get("status") or "").lower()
+        if "today" in status or "mañana" in status or "tomorrow" in status:
+            return True
+    return False
+
+
+def choose_expiration(ticker):
+    try:
+        exps = ticker.options
+        if exps:
+            return exps[0]
+    except Exception:
+        pass
+    return None
+
+
+def choose_option_setup(ticker, spot, dynamic_buffer, phase):
+    expiration = choose_expiration(ticker)
+    fallback = {
+        "expiration": expiration,
+        "status": "no_chain",
+        "message": "Cadena de opciones no disponible.",
+        "short_call": None,
+        "long_call": None,
+        "spread_width": 1.0,
+        "net_credit_mid": None,
+        "liquidity_score": 0,
+        "quotes_reliable": phase in ("opening_range", "regular"),
+        "short_strike_target": ceil_step((spot or 0) + dynamic_buffer, STRIKE_STEP) if spot else None,
+    }
+    if not expiration:
+        return fallback
+
+    try:
+        chain = ticker.option_chain(expiration)
+        calls = chain.calls.copy()
+    except Exception:
+        return fallback
+
+    if calls is None or calls.empty or spot is None:
+        return fallback
+
+    calls["delta_abs_diff"] = (calls["impliedVolatility"] * 0 + SHORT_DELTA_TARGET)
+    if "delta" in calls.columns:
+        calls["delta_abs_diff"] = (calls["delta"].abs() - SHORT_DELTA_TARGET).abs()
+    else:
+        calls["delta"] = None
+
+    calls["distance_from_spot"] = calls["strike"] - spot
+    calls = calls[calls["strike"] >= spot]
+    if calls.empty:
+        return fallback
+
+    target_short = ceil_step(spot + dynamic_buffer, STRIKE_STEP)
+    calls["target_diff"] = (calls["strike"] - target_short).abs()
+
+    sort_cols = ["target_diff", "delta_abs_diff"]
+    calls = calls.sort_values(sort_cols).reset_index(drop=True)
+    short = calls.iloc[0].to_dict()
+
+    short_strike = safe_float(short.get("strike"))
+    long_strike = short_strike + STRIKE_STEP if short_strike is not None else None
+
+    long_row = calls[calls["strike"] == long_strike]
+    if long_row.empty:
+        all_calls = chain.calls.copy()
+        long_row = all_calls[all_calls["strike"] == long_strike]
+
+    long_call = long_row.iloc[0].to_dict() if not long_row.empty else None
+
+    bid = safe_float(short.get("bid"), 0)
+    ask = safe_float(short.get("ask"), 0)
+    mid_short = (bid + ask) / 2 if (bid is not None and ask is not None) else None
+
+    long_mid = None
+    if long_call:
+        lb = safe_float(long_call.get("bid"), 0)
+        la = safe_float(long_call.get("ask"), 0)
+        long_mid = (lb + la) / 2 if (lb is not None and la is not None) else None
+
+    net_credit = None
+    if mid_short is not None and long_mid is not None:
+        net_credit = mid_short - long_mid
+
+    oi = safe_float(short.get("openInterest"), 0)
+    vol = safe_float(short.get("volume"), 0)
+    spread = None if bid is None or ask is None else ask - bid
+
+    liquidity_score = 0
+    if oi >= 1000:
+        liquidity_score += 40
+    elif oi >= 500:
+        liquidity_score += 25
+    elif oi >= 100:
+        liquidity_score += 10
+
+    if vol >= 500:
+        liquidity_score += 30
+    elif vol >= 100:
+        liquidity_score += 15
+    elif vol >= 25:
+        liquidity_score += 8
+
+    if spread is not None:
+        if spread <= 0.03:
+            liquidity_score += 30
+        elif spread <= 0.06:
+            liquidity_score += 20
+        elif spread <= 0.10:
+            liquidity_score += 10
+
+    quotes_reliable = phase in ("opening_range", "regular") and not (
+        safe_float(short.get("bid"), 0) == 0 and safe_float(short.get("ask"), 0) == 0
+    )
+
+    return {
+        "expiration": expiration,
+        "status": "ok",
+        "message": "Opciones cargadas." if quotes_reliable else "Premarket: quotes de opciones aún no fiables.",
+        "short_call": short,
+        "long_call": long_call,
+        "spread_width": STRIKE_STEP,
+        "net_credit_mid": net_credit,
+        "liquidity_score": clamp(liquidity_score, 0, 100),
+        "quotes_reliable": quotes_reliable,
+        "short_strike_target": target_short,
+    }
+
+
+def compute_dynamic_buffer(price, expected_move, opening_range, phase, vwap, macro_risk):
+    base = BASE_BUFFER
+    em = safe_float((expected_move or {}).get("expected_move_dollar"))
+    or_width = safe_float((opening_range or {}).get("width"))
+    em_component = em * 0.14 if em is not None else 0
+    or_component = or_width * 0.33 if or_width is not None else 0
+
+    buffer_value = max(base, em_component, or_component)
+
+    reasons = [f"base {base:.2f}"]
+    if em_component > base:
+        reasons.append(f"expected move {em_component:.2f}")
+    if or_component > base:
+        reasons.append(f"opening range {or_component:.2f}")
+
+    if macro_risk and macro_risk["impact"] in ("high", "medium"):
+        mult = 1.18 if macro_risk["impact"] == "high" else 1.10
+        buffer_value *= mult
+        reasons.append(f"macro x{mult:.2f}")
+
+    if phase == "opening_range":
+        buffer_value *= 1.10
+        reasons.append("opening range x1.10")
+    elif phase == "premarket":
+        buffer_value *= 1.06
+        reasons.append("premarket x1.06")
+
+    if price is not None and vwap is not None and price > vwap:
+        buffer_value *= 1.05
+        reasons.append("price>VWAP x1.05")
+
+    return round(buffer_value, 2), ", ".join(reasons)
+
+
+def score_trade(price, vwap, dynamic_buffer, short_strike, expected_move, opening_range, macro_risk, earnings_block, option_setup, phase, freshness_min):
+    score = 70
+    notes = []
+
+    if earnings_block:
+        score -= 45
+        notes.append("Veto por earnings cercanos.")
+
+    if macro_risk:
+        if macro_risk["impact"] == "high":
+            score -= 22
+            notes.append("Macro de alto impacto cercana.")
+        elif macro_risk["impact"] == "medium":
+            score -= 10
+            notes.append("Macro de impacto medio cercana.")
+
+    if freshness_min is not None and freshness_min > DATA_STALE_MINUTES:
+        score -= 12
+        notes.append("Datos con frescura insuficiente.")
+
+    if price is not None and vwap is not None:
+        if price > vwap:
+            score -= 8
+            notes.append("Precio por encima de VWAP.")
+        else:
+            score += 6
+            notes.append("Precio por debajo de VWAP.")
+
+    em = safe_float((expected_move or {}).get("expected_move_dollar"))
+    if short_strike is not None and price is not None:
+        dist = short_strike - price
+        if dist >= dynamic_buffer:
+            score += 10
+            notes.append("Distancia al short strike aceptable.")
+        else:
+            score -= 16
+            notes.append("Short strike demasiado cerca.")
+        if em is not None:
+            if dist < em * 0.10:
+                score -= 14
+                notes.append("Strike muy cerca para el expected move.")
+            elif dist > em * 0.18:
+                score += 5
+                notes.append("Colchón razonable frente al expected move.")
+
+    or_width = safe_float((opening_range or {}).get("width"))
+    if or_width is not None:
+        if or_width > 4.0:
+            score -= 8
+            notes.append("Opening range amplio.")
+        elif or_width < 2.0:
+            score += 4
+            notes.append("Opening range contenido.")
+
+    if option_setup:
+        liq = safe_float(option_setup.get("liquidity_score"), 0)
+        if liq >= 70:
+            score += 8
+            notes.append("Liquidez de opciones buena.")
+        elif liq < 30:
+            score -= 10
+            notes.append("Liquidez floja.")
+        if not option_setup.get("quotes_reliable", False):
+            score -= 8
+            notes.append("Quotes aún no fiables.")
+
+    if phase == "opening_range":
+        score -= 4
+        notes.append("Primer tramo de sesión más inestable.")
+    elif phase == "regular":
+        score += 3
+        notes.append("Tramo regular más favorable.")
+    elif phase == "premarket":
+        score -= 12
+        notes.append("Premarket: contexto menos fiable.")
+
+    score = clamp(int(round(score)), 0, 100)
+
+    if earnings_block or score < 45:
+        decision = "No entraría"
+        risk = "Alto"
+    elif score < 65:
+        decision = "Esperar confirmación"
+        risk = "Medio"
+    else:
+        decision = "Entraría"
+        risk = "Controlado"
+
+    return score, decision, risk, notes
+
+
+def freshness_minutes(last_ts):
+    if not last_ts:
+        return None
+    try:
+        dt = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
+        diff = now_utc() - dt
+        return round(diff.total_seconds() / 60, 2)
+    except Exception:
+        return None
+
+
+def format_trade_setup(price, dynamic_buffer, option_setup):
+    short_strike = None
+    short_delta = None
+    short_oi = None
+    short_vol = None
+    if option_setup and option_setup.get("short_call"):
+        sc = option_setup["short_call"]
+        short_strike = safe_float(sc.get("strike"))
+        short_delta = safe_float(sc.get("delta"))
+        short_oi = safe_float(sc.get("openInterest"))
+        short_vol = safe_float(sc.get("volume"))
+
+    distance = None if price is None or short_strike is None else short_strike - price
+
+    return {
+        "buffer_base": BASE_BUFFER,
+        "buffer_dynamic": dynamic_buffer,
+        "buffer_reason": option_setup.get("buffer_reason") if option_setup else None,
+        "short_strike_target": option_setup.get("short_strike_target") if option_setup else None,
+        "short_strike_selected": short_strike,
+        "distance_to_short_strike": distance,
+        "short_delta": short_delta,
+        "short_open_interest": short_oi,
+        "short_volume": short_vol,
+        "spread_width": option_setup.get("spread_width") if option_setup else None,
+        "estimated_credit_mid": option_setup.get("net_credit_mid") if option_setup else None,
+    }
+
+
+def build_summary(decision, score, phase, fresh_mins, option_setup, trade_setup):
+    pieces = [f"{decision} ({score}/100).", f"Sesión: {session_name(phase)}."]
+    if fresh_mins is not None:
+        pieces.append(f"Frescura: {fresh_mins:.1f} min.")
+    if trade_setup.get("short_strike_selected") is not None and trade_setup.get("distance_to_short_strike") is not None:
+        pieces.append(
+            f"Short {trade_setup['short_strike_selected']:.2f}, distancia {trade_setup['distance_to_short_strike']:.2f}."
+        )
+    if option_setup and not option_setup.get("quotes_reliable", True):
+        pieces.append("Quotes de opciones aún no fiables.")
+    return " ".join(pieces)
+
+
+def load_history():
+    if not os.path.exists(HISTORY_FILE):
+        return []
+    try:
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
 
 
 def save_json(path, data):
@@ -64,1181 +694,129 @@ def save_json(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def flatten_columns(df):
-    if df is None or df.empty:
-        return df
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-    return df
+def main():
+    ny = now_ny()
+    phase = market_phase(ny)
 
+    quote = get_quote(SYMBOL)
+    price = quote["price"]
+    ticker = quote["ticker"]
+    hist_1m = quote["hist_1m"]
+    vwap = compute_vwap(hist_1m)
+    ranges = compute_ranges(hist_1m)
 
-def safe_float(value, default=None):
-    try:
-        if value is None or pd.isna(value):
-            return default
-        return float(value)
-    except Exception:
-        return default
+    expected_move = compute_expected_move(ticker, price)
+    macro_events = get_macro_events()
+    earnings = get_mag7_earnings()
+    macro_risk = nearest_macro_risk(macro_events)
+    earnings_block = earnings_veto(earnings)
 
-
-def normalize_date(value):
-    if value is None:
-        return None
-    try:
-        ts = pd.to_datetime(value)
-        if pd.isna(ts):
-            return None
-        try:
-            ts = ts.tz_localize(None)
-        except Exception:
-            pass
-        return ts.date()
-    except Exception:
-        return None
-
-
-def days_until(d, base_date=None):
-    if d is None:
-        return None
-    base = base_date or datetime.now(NY_TZ).date()
-    return (d - base).days
-
-
-def translate_earnings_moment(text):
-    if text is None:
-        return "Hora no especificada"
-    t = str(text).strip().lower()
-    if "before market open" in t or "before open" in t:
-        return "Antes de la apertura"
-    if "after market close" in t or "after close" in t:
-        return "Después del cierre"
-    if "during market" in t or "market hours" in t or t == "tas":
-        return "Durante la sesión"
-    if "time not supplied" in t:
-        return "Hora no especificada"
-    return str(text)
-
-
-def classify_session(now_ny):
-    minutes = now_ny.hour * 60 + now_ny.minute
-    open_m = 9 * 60 + 30
-    noon_m = 12 * 60
-    power_m = 15 * 60
-    close_m = 16 * 60
-
-    if minutes < 4 * 60:
-        return "overnight", "Overnight"
-    if 4 * 60 <= minutes < open_m:
-        return "premarket", "Premarket"
-    if open_m <= minutes < noon_m:
-        return "apertura", "Apertura"
-    if noon_m <= minutes < power_m:
-        return "media_sesion", "Media sesión"
-    if power_m <= minutes <= close_m:
-        return "power_hour", "Power hour"
-    if close_m < minutes <= 20 * 60:
-        return "after_hours", "After hours"
-    return "overnight", "Overnight"
-
-
-def classify_macro_moment(dt_ny):
-    mins = dt_ny.hour * 60 + dt_ny.minute
-    open_m = 9 * 60 + 30
-    close_m = 16 * 60
-    if mins < open_m:
-        return "Antes de la apertura"
-    if mins <= close_m:
-        return "Durante la sesión"
-    return "Después del cierre"
-
-
-def get_intraday_df():
-    df = yf.download(
-        tickers=TICKER,
-        period="2d",
-        interval="5m",
-        auto_adjust=True,
-        progress=False,
-        prepost=True,
-        threads=False,
-    )
-    df = flatten_columns(df)
-    if df is None or df.empty:
-        return None
-    return df
-
-
-def get_daily_df(period="3mo"):
-    df = yf.download(
-        tickers=TICKER,
-        period=period,
-        interval="1d",
-        auto_adjust=True,
-        progress=False,
-        prepost=False,
-        threads=False,
-    )
-    df = flatten_columns(df)
-    if df is None or df.empty:
-        return None
-    return df
-
-
-def get_price_snapshot():
-    intraday = get_intraday_df()
-    if intraday is not None and "Close" in intraday.columns:
-        closes = intraday["Close"].dropna()
-        if not closes.empty:
-            last_price = float(closes.iloc[-1])
-
-            daily_df = get_daily_df(period="5d")
-            prev_close = None
-            if daily_df is not None and "Close" in daily_df.columns:
-                daily_closes = daily_df["Close"].dropna()
-                if len(daily_closes) >= 2:
-                    prev_close = float(daily_closes.iloc[-2])
-                elif len(daily_closes) == 1:
-                    prev_close = float(daily_closes.iloc[-1])
-
-            return {
-                "price": last_price,
-                "prev_close": prev_close,
-                "source": "intraday_5m",
-                "intraday_df": intraday
-            }
-
-    daily_df = get_daily_df(period="5d")
-    if daily_df is not None and "Close" in daily_df.columns:
-        daily_closes = daily_df["Close"].dropna()
-        if not daily_closes.empty:
-            last_price = float(daily_closes.iloc[-1])
-            prev_close = float(daily_closes.iloc[-2]) if len(daily_closes) >= 2 else None
-            return {
-                "price": last_price,
-                "prev_close": prev_close,
-                "source": "daily_close",
-                "intraday_df": None
-            }
-
-    raise RuntimeError("No se pudo obtener el precio de QQQ.")
-
-
-def compute_change(price, prev_close):
-    if prev_close is None or prev_close == 0:
-        return None, None
-    chg = price - prev_close
-    chg_pct = (chg / prev_close) * 100
-    return chg, chg_pct
-
-
-def compute_vwap(intraday_df):
-    if intraday_df is None or intraday_df.empty:
-        return None, None, None, None, "VWAP no disponible"
-
-    needed = {"High", "Low", "Close", "Volume"}
-    if not needed.issubset(set(intraday_df.columns)):
-        return None, None, None, None, "VWAP no disponible"
-
-    df = intraday_df.copy().dropna(subset=["High", "Low", "Close", "Volume"])
-    if df.empty:
-        return None, None, None, None, "VWAP no disponible"
-
-    vol = df["Volume"].astype(float)
-    if vol.sum() <= 0:
-        return None, None, None, None, "VWAP no disponible"
-
-    typical_price = (df["High"] + df["Low"] + df["Close"]) / 3.0
-    df["tpv"] = typical_price * vol
-    df["cum_tpv"] = df["tpv"].cumsum()
-    df["cum_vol"] = vol.cumsum()
-    df["vwap"] = df["cum_tpv"] / df["cum_vol"]
-
-    vwap_value = float(df["vwap"].iloc[-1])
-    current_price = float(df["Close"].iloc[-1])
-    dist_pct = ((current_price - vwap_value) / vwap_value) * 100 if vwap_value else None
-
-    residuals = df["Close"] - df["vwap"]
-    sigma = float(residuals.std(ddof=0)) if len(residuals) > 1 else None
-    zscore = ((current_price - vwap_value) / sigma) if sigma and sigma > 0 else None
-
-    if dist_pct is None:
-        bias = "VWAP no disponible"
-    elif dist_pct >= 0.75:
-        bias = "Muy por encima"
-    elif dist_pct >= 0.30:
-        bias = "Por encima"
-    elif dist_pct <= -0.75:
-        bias = "Muy por debajo"
-    elif dist_pct <= -0.30:
-        bias = "Por debajo"
-    else:
-        bias = "Cerca del VWAP"
-
-    return (
-        round(vwap_value, 2),
-        round(dist_pct, 2) if dist_pct is not None else None,
-        round(zscore, 2) if zscore is not None else None,
-        round(sigma, 2) if sigma is not None else None,
-        bias
+    dynamic_buffer, buffer_reason = compute_dynamic_buffer(
+        price=price,
+        expected_move=expected_move,
+        opening_range=ranges.get("opening_range"),
+        phase=phase,
+        vwap=vwap,
+        macro_risk=macro_risk,
     )
 
-
-def compute_opening_range(intraday_df, now_ny, minutes=5):
-    if intraday_df is None or intraday_df.empty:
-        return {
-            "available": False,
-            "status": "Sin datos intradía",
-            "message": "No hay datos para calcular Opening Range"
-        }
-
-    session_open_dt = datetime.combine(now_ny.date(), datetime.strptime("09:30", "%H:%M").time()).replace(tzinfo=NY_TZ)
-    session_end_dt = session_open_dt + pd.Timedelta(minutes=minutes)
-
-    if now_ny < session_open_dt:
-        return {
-            "available": False,
-            "status": "Pendiente",
-            "message": f"Opening Range disponible a partir de {session_open_dt.strftime('%H:%M ET')}"
-        }
-
-    if now_ny < session_end_dt:
-        return {
-            "available": False,
-            "status": "En formación",
-            "message": f"Opening Range en formación hasta {session_end_dt.strftime('%H:%M ET')}"
-        }
-
-    needed = {"Open", "High", "Low", "Close", "Volume"}
-    if not needed.issubset(set(intraday_df.columns)):
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "Columnas insuficientes para OR"
-        }
-
-    df = intraday_df.copy().dropna(subset=["Open", "High", "Low", "Close"])
-    if df.empty:
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "Sin velas válidas para OR"
-        }
-
-    try:
-        if getattr(df.index, "tz", None) is not None:
-            df = df.tz_convert(NY_TZ)
-    except Exception:
-        pass
-
-    try:
-        df = df[df.index.date == now_ny.date()]
-    except Exception:
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "No se pudo filtrar OR del día"
-        }
-
-    if df.empty:
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "No hay velas del día para OR"
-        }
-
-    mask = (df.index >= pd.Timestamp(session_open_dt)) & (df.index < pd.Timestamp(session_end_dt))
-    or_df = df.loc[mask]
-    if or_df.empty:
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "No hay velas de 09:30 para OR"
-        }
-
-    or_high = float(or_df["High"].max())
-    or_low = float(or_df["Low"].min())
-    or_open = float(or_df["Open"].iloc[0])
-    or_close = float(or_df["Close"].iloc[-1])
-    or_size = or_high - or_low
-    or_mid = (or_high + or_low) / 2
-
-    ratio = (or_size / or_open) if or_open else None
-    if ratio is None:
-        state = "No disponible"
-    elif ratio <= 0.003:
-        state = "tight"
-    elif ratio <= 0.006:
-        state = "normal"
-    else:
-        state = "wide"
-
-    return {
-        "available": True,
-        "status": "OK",
-        "message": "Opening Range calculado",
-        "minutes": minutes,
-        "open": round(or_open, 2),
-        "high": round(or_high, 2),
-        "low": round(or_low, 2),
-        "close": round(or_close, 2),
-        "mid": round(or_mid, 2),
-        "size": round(or_size, 2),
-        "sizePct": round(ratio * 100, 2) if ratio is not None else None,
-        "state": state
-    }
-
-
-def compute_premarket_range(intraday_df, now_ny):
-    if intraday_df is None or intraday_df.empty:
-        return {
-            "available": False,
-            "status": "Sin datos intradía",
-            "message": "No hay datos para Premarket Range"
-        }
-
-    needed = {"High", "Low", "Close"}
-    if not needed.issubset(set(intraday_df.columns)):
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "Columnas insuficientes para Premarket Range"
-        }
-
-    df = intraday_df.copy().dropna(subset=["High", "Low", "Close"])
-    if df.empty:
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "Sin velas válidas para Premarket Range"
-        }
-
-    try:
-        if getattr(df.index, "tz", None) is not None:
-            df = df.tz_convert(NY_TZ)
-    except Exception:
-        pass
-
-    try:
-        df = df[df.index.date == now_ny.date()]
-    except Exception:
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "No se pudo filtrar Premarket Range"
-        }
-
-    if df.empty:
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "Sin velas del día"
-        }
-
-    start_dt = datetime.combine(now_ny.date(), datetime.strptime("04:00", "%H:%M").time()).replace(tzinfo=NY_TZ)
-    end_dt = datetime.combine(now_ny.date(), datetime.strptime("09:30", "%H:%M").time()).replace(tzinfo=NY_TZ)
-
-    pm_end = min(now_ny, end_dt)
-    if pm_end <= start_dt:
-        return {
-            "available": False,
-            "status": "Pendiente",
-            "message": "Premarket Range disponible desde 04:00 ET"
-        }
-
-    mask = (df.index >= pd.Timestamp(start_dt)) & (df.index < pd.Timestamp(pm_end))
-    pm_df = df.loc[mask]
-    if pm_df.empty:
-        return {
-            "available": False,
-            "status": "No disponible",
-            "message": "Sin velas suficientes en premarket"
-        }
-
-    high = float(pm_df["High"].max())
-    low = float(pm_df["Low"].min())
-    close = float(pm_df["Close"].iloc[-1])
-    size = high - low
-    size_pct = (size / close) * 100 if close else None
-
-    return {
-        "available": True,
-        "status": "OK",
-        "message": "Premarket Range calculado",
-        "high": round(high, 2),
-        "low": round(low, 2),
-        "close": round(close, 2),
-        "size": round(size, 2),
-        "sizePct": round(size_pct, 2) if size_pct is not None else None
-    }
-
-
-def compute_expected_move(price, intraday_df=None):
-    def build_result_from_returns(returns, label):
-        returns = returns.dropna()
-        if len(returns) < 10:
-            return None
-
-        vol_daily = float(returns.tail(20).std(ddof=0))
-        if vol_daily <= 0:
-            return None
-
-        move = price * vol_daily
-        return {
-            "method": label,
-            "dailyVolPct": round(vol_daily * 100, 2),
-            "move": round(move, 2),
-            "movePct": round(vol_daily * 100, 2),
-            "upper": round(price + move, 2),
-            "lower": round(price - move, 2),
-            "status": "OK"
-        }
-
-    for period in ["3mo", "1mo"]:
-        try:
-            daily_df = get_daily_df(period=period)
-            if daily_df is not None and not daily_df.empty and "Close" in daily_df.columns:
-                closes = daily_df["Close"].dropna()
-                if len(closes) >= 10:
-                    returns = closes.pct_change()
-                    result = build_result_from_returns(returns, f"historical_vol_{period}")
-                    if result:
-                        return result
-        except Exception:
-            pass
-
-    try:
-        if intraday_df is not None and not intraday_df.empty and "Close" in intraday_df.columns:
-            closes = intraday_df["Close"].dropna()
-            if len(closes) >= 10:
-                returns = closes.pct_change()
-                result = build_result_from_returns(returns, "intraday_fallback")
-                if result:
-                    return result
-    except Exception:
-        pass
-
-    return {
-        "method": "fallback_failed",
-        "dailyVolPct": None,
-        "move": None,
-        "movePct": None,
-        "upper": None,
-        "lower": None,
-        "status": "No disponible"
-    }
-
-
-def build_trade_levels(price):
-    projected_upside_price = price * (1 + MODEL_BUFFER_PCT)
-    short_strike = math.ceil(projected_upside_price)
-    long_strike = short_strike + SPREAD_WIDTH
-    breakeven = short_strike + NET_CREDIT
-    dist_to_short = short_strike - price
-
-    return {
-        "bufferPct": round(MODEL_BUFFER_PCT * 100, 2),
-        "shortStrike": short_strike,
-        "longStrike": long_strike,
-        "breakeven": round(breakeven, 2),
-        "spreadWidth": SPREAD_WIDTH,
-        "netCredit": NET_CREDIT,
-        "distToShort": round(dist_to_short, 2)
-    }
-
-
-def get_option_snapshot(price, session_code):
-    try:
-        ticker = yf.Ticker(TICKER)
-        expirations = list(ticker.options)
-        if not expirations:
-            return {
-                "expiration": None,
-                "shortCallBid": None,
-                "shortCallAsk": None,
-                "longCallBid": None,
-                "longCallAsk": None,
-                "shortCallDelta": None,
-                "longCallDelta": None,
-                "shortCallOI": None,
-                "longCallOI": None,
-                "shortCallVolume": None,
-                "longCallVolume": None,
-                "quotesUsable": False,
-                "notes": "Sin expiraciones disponibles"
-            }
-
-        expiry = expirations[0]
-        chain = ticker.option_chain(expiry)
-        calls = chain.calls.copy()
-
-        if calls.empty or "strike" not in calls.columns:
-            return {
-                "expiration": expiry,
-                "shortCallBid": None,
-                "shortCallAsk": None,
-                "longCallBid": None,
-                "longCallAsk": None,
-                "shortCallDelta": None,
-                "longCallDelta": None,
-                "shortCallOI": None,
-                "longCallOI": None,
-                "shortCallVolume": None,
-                "longCallVolume": None,
-                "quotesUsable": False,
-                "notes": "Sin calls disponibles"
-            }
-
-        levels = build_trade_levels(price)
-        short_strike = levels["shortStrike"]
-        long_strike = levels["longStrike"]
-
-        calls["strike_diff_short"] = (calls["strike"] - short_strike).abs()
-        calls["strike_diff_long"] = (calls["strike"] - long_strike).abs()
-
-        short_row = calls.sort_values("strike_diff_short").iloc[0]
-        long_row = calls.sort_values("strike_diff_long").iloc[0]
-
-        short_bid = safe_float(short_row.get("bid"))
-        short_ask = safe_float(short_row.get("ask"))
-        long_bid = safe_float(long_row.get("bid"))
-        long_ask = safe_float(long_row.get("ask"))
-
-        short_delta = safe_float(short_row.get("delta"))
-        long_delta = safe_float(long_row.get("delta"))
-        short_oi = safe_float(short_row.get("openInterest"))
-        long_oi = safe_float(long_row.get("openInterest"))
-        short_vol = safe_float(short_row.get("volume"))
-        long_vol = safe_float(long_row.get("volume"))
-
-        zero_quotes = (
-            (short_bid in [0, 0.0, None] and short_ask in [0, 0.0, None]) or
-            (long_bid in [0, 0.0, None] and long_ask in [0, 0.0, None])
-        )
-
-        quotes_usable = not zero_quotes
-
-        if zero_quotes and session_code == "premarket":
-            notes = "Premarket: quotes de opciones aún no fiables"
-        elif zero_quotes:
-            notes = "Quotes no útiles en este momento"
-        else:
-            notes = "OK"
-
-        return {
-            "expiration": expiry,
-            "shortCallBid": short_bid,
-            "shortCallAsk": short_ask,
-            "longCallBid": long_bid,
-            "longCallAsk": long_ask,
-            "shortCallDelta": short_delta,
-            "longCallDelta": long_delta,
-            "shortCallOI": short_oi,
-            "longCallOI": long_oi,
-            "shortCallVolume": short_vol,
-            "longCallVolume": long_vol,
-            "quotesUsable": quotes_usable,
-            "notes": notes
-        }
-    except Exception as e:
-        return {
-            "expiration": None,
-            "shortCallBid": None,
-            "shortCallAsk": None,
-            "longCallBid": None,
-            "longCallAsk": None,
-            "shortCallDelta": None,
-            "longCallDelta": None,
-            "shortCallOI": None,
-            "longCallOI": None,
-            "shortCallVolume": None,
-            "longCallVolume": None,
-            "quotesUsable": False,
-            "notes": f"Options no disponibles: {str(e)}"
-        }
-
-
-def get_next_earnings_for_ticker(ticker_symbol):
-    try:
-        t = yf.Ticker(ticker_symbol)
-        df = t.get_earnings_dates(limit=8)
-
-        if df is None or df.empty:
-            return {
-                "ticker": ticker_symbol,
-                "fecha": None,
-                "dias": None,
-                "momento": "No disponible",
-                "status": "Vacío en Yahoo"
-            }
-
-        df = df.copy()
-        if not isinstance(df.index, pd.RangeIndex):
-            df = df.reset_index()
-
-        cols_lower = {str(c).lower(): c for c in df.columns}
-        date_col = None
-        time_col = None
-
-        for candidate in ["earnings date", "date", "index"]:
-            if candidate in cols_lower:
-                date_col = cols_lower[candidate]
-                break
-
-        for candidate in ["earnings call time", "earnings time", "time"]:
-            if candidate in cols_lower:
-                time_col = cols_lower[candidate]
-                break
-
-        if date_col is None:
-            return {
-                "ticker": ticker_symbol,
-                "fecha": None,
-                "dias": None,
-                "momento": "No disponible",
-                "status": "Columna de fecha no encontrada"
-            }
-
-        df["_fecha"] = pd.to_datetime(df[date_col], errors="coerce")
-        df = df[df["_fecha"].notna()].copy()
-
-        try:
-            df["_fecha"] = df["_fecha"].dt.tz_localize(None)
-        except Exception:
-            pass
-
-        today = datetime.now(NY_TZ).date()
-        df["_fecha_date"] = df["_fecha"].dt.date
-        df = df[df["_fecha_date"] >= today].sort_values("_fecha")
-
-        if df.empty:
-            return {
-                "ticker": ticker_symbol,
-                "fecha": None,
-                "dias": None,
-                "momento": "No disponible",
-                "status": "Sin fechas futuras"
-            }
-
-        row = df.iloc[0]
-        fecha = normalize_date(row["_fecha"])
-        momento_raw = row[time_col] if time_col in df.columns else None
-
-        return {
-            "ticker": ticker_symbol,
-            "fecha": fecha.isoformat() if fecha else None,
-            "dias": days_until(fecha, today),
-            "momento": translate_earnings_moment(momento_raw),
-            "status": "OK"
-        }
-    except Exception as e:
-        return {
-            "ticker": ticker_symbol,
-            "fecha": None,
-            "dias": None,
-            "momento": "No disponible",
-            "status": f"Error Yahoo: {str(e)}"
-        }
-
-
-def get_mag7_earnings():
-    rows = []
-    ok_count = 0
-
-    for tk, nombre in MAG7.items():
-        item = get_next_earnings_for_ticker(tk)
-        row = {
-            "empresa": nombre,
-            "ticker": tk,
-            "fecha": item.get("fecha"),
-            "dias": item.get("dias"),
-            "momento": item.get("momento"),
-            "status": item.get("status", "No disponible")
-        }
-        if row["status"] == "OK":
-            ok_count += 1
-        rows.append(row)
-
-    rows.sort(key=lambda x: (
-        0 if x["dias"] is not None else 1,
-        9999 if x["dias"] is None else x["dias"]
-    ))
-
-    next_item = next((r for r in rows if r["status"] == "OK"), None)
-
-    status = "OK" if ok_count > 0 else "Yahoo no devolvió earnings"
-    return {
-        "status": status,
-        "next": next_item,
-        "items": rows[:7]
-    }
-
-
-def get_upcoming_macro():
-    now_ny = datetime.now(NY_TZ)
-    rows = []
-
-    for ev in MACRO_EVENTS:
-        try:
-            dt_ny = datetime.strptime(ev["datetime_ny"], "%Y-%m-%d %H:%M").replace(tzinfo=NY_TZ)
-            delta_h = (dt_ny - now_ny).total_seconds() / 3600
-
-            rows.append({
-                "evento": ev["evento"],
-                "impacto": ev["impacto"],
-                "datetimeNY": dt_ny.strftime("%Y-%m-%d %H:%M ET"),
-                "dateNY": dt_ny.strftime("%Y-%m-%d"),
-                "timeNY": dt_ny.strftime("%H:%M"),
-                "dias": int(delta_h // 24) if delta_h >= 0 else int(delta_h // 24),
-                "horas": int(abs(delta_h) % 24),
-                "totalHoras": round(delta_h, 2),
-                "momento": classify_macro_moment(dt_ny),
-                "status": "upcoming" if delta_h >= 0 else "past"
-            })
-        except Exception:
-            continue
-
-    rows.sort(key=lambda x: x["totalHoras"])
-
-    upcoming = [r for r in rows if r["totalHoras"] >= 0]
-    past = [r for r in rows if r["totalHoras"] < 0]
-
-    recent = None
-    recent_today = [r for r in past if r["dateNY"] == now_ny.strftime("%Y-%m-%d")]
-    if recent_today:
-        recent = sorted(recent_today, key=lambda x: x["totalHoras"], reverse=True)[0]
-    elif past:
-        recent = sorted(past, key=lambda x: x["totalHoras"], reverse=True)[0]
-
-    next_item = upcoming[0] if upcoming else None
-
-    if next_item and recent:
-        status = "OK | reciente + próximo"
-    elif next_item:
-        status = "OK | solo próximo"
-    elif recent:
-        status = "OK | solo reciente"
-    else:
-        status = "Sin macro en la lista manual"
-
-    return {
-        "status": status,
-        "next": next_item,
-        "recent": recent,
-        "items": upcoming[:5],
-        "all": rows[:12]
-    }
-
-
-def build_summary(price, trade_levels, expected_move, macro_block, earnings_block, session_label, freshness, option_snapshot):
-    parts = []
-
-    if freshness.get("isStale"):
-        parts.append(f"datos con {freshness.get('ageMinutes')} min de retraso")
-
-    next_macro = macro_block.get("next")
-    if next_macro:
-        parts.append(f"macro {next_macro['evento']} en {next_macro['dias']}d {next_macro['horas']}h")
-
-    em = expected_move.get("move")
-    if em is not None:
-        short_strike = trade_levels.get("shortStrike")
-        upper = expected_move.get("upper")
-        if short_strike is not None and upper is not None:
-            if short_strike > upper:
-                parts.append("short strike por encima del expected move")
-            else:
-                parts.append("short strike dentro o cerca del expected move")
-
-    if option_snapshot.get("quotesUsable") is False:
-        parts.append("quotes de opciones no fiables todavía")
-
-    next_er = earnings_block.get("next")
-    if next_er and next_er.get("dias") is not None:
-        parts.append(f"próximo earnings relevante: {next_er['empresa']} en {next_er['dias']}d")
-
-    parts.append(f"tramo actual: {session_label.lower()}")
-    return " · ".join(parts[:5])
-
-
-def calculate_score(change_pct, trade_levels, vwap_dist_pct, vwap_zscore, opening_range, option_snapshot, expected_move, freshness, session_code, macro_block, earnings_block):
-    score = 100
-    reasons = []
-    alerts = []
-
-    dist_to_short = trade_levels["distToShort"]
-    if dist_to_short <= 0:
-        score -= 45
-        reasons.append("Precio en o sobre short strike")
-    elif dist_to_short <= 1:
-        score -= 30
-        reasons.append("Short strike muy cerca")
-    elif dist_to_short <= 2:
-        score -= 18
-        reasons.append("Short strike algo cerca")
-    elif dist_to_short <= 3:
-        score -= 8
-        reasons.append("Margen limitado al short")
-    else:
-        reasons.append("Distancia razonable al short")
-
-    if change_pct is not None:
-        if change_pct >= 1.5:
-            score -= 15
-            reasons.append("Sesgo alcista fuerte hoy")
-        elif change_pct >= 0.75:
-            score -= 8
-            reasons.append("Sesgo alcista moderado")
-        elif change_pct <= -0.75:
-            score += 4
-            reasons.append("Sesgo bajista favorable")
-        else:
-            reasons.append("Cambio diario contenido")
-
-    if vwap_dist_pct is not None:
-        if vwap_dist_pct >= 1.0:
-            score -= 12
-            reasons.append("Muy por encima del VWAP")
-        elif vwap_dist_pct >= 0.5:
-            score -= 7
-            reasons.append("Por encima del VWAP")
-        elif vwap_dist_pct <= -0.5:
-            score += 3
-            reasons.append("Por debajo del VWAP")
-        else:
-            reasons.append("Cerca del VWAP")
-
-    if vwap_zscore is not None:
-        if abs(vwap_zscore) >= 2.0:
-            score -= 10
-            reasons.append("VWAP estirado a más de 2 sigma")
-        elif abs(vwap_zscore) >= 1.0:
-            score -= 5
-            reasons.append("VWAP algo estirado")
-        else:
-            reasons.append("VWAP dentro de rango razonable")
-
-    if opening_range and opening_range.get("available"):
-        or_pct = opening_range.get("sizePct")
-        if or_pct is not None:
-            if or_pct >= 0.60:
-                score -= 8
-                reasons.append("Opening range amplio")
-            elif or_pct <= 0.25:
-                score += 3
-                reasons.append("Opening range estrecho")
-            else:
-                reasons.append("Opening range normal")
-
-    em_move = expected_move.get("move")
-    em_upper = expected_move.get("upper")
-    short_strike = trade_levels.get("shortStrike")
-    if em_move is not None and em_upper is not None and short_strike is not None:
-        if short_strike > em_upper:
-            score += 6
-            reasons.append("Short strike fuera del expected move")
-        else:
-            score -= 8
-            reasons.append("Short strike dentro o cerca del expected move")
-
-    bid = option_snapshot.get("shortCallBid")
-    ask = option_snapshot.get("shortCallAsk")
-    notes = option_snapshot.get("notes", "")
-    short_delta = option_snapshot.get("shortCallDelta")
-    short_oi = option_snapshot.get("shortCallOI")
-    long_oi = option_snapshot.get("longCallOI")
-    short_vol = option_snapshot.get("shortCallVolume")
-
-    if option_snapshot.get("quotesUsable") is False:
-        if session_code == "premarket":
-            score -= 8
-            reasons.append("Premarket: quotes de opciones no fiables")
-        else:
-            score -= 10
-            reasons.append("Sin liquidez útil en options")
-    elif bid is None or ask is None:
-        score -= 6
-        reasons.append("Sin quote válida en short call")
-    else:
-        mid = (bid + ask) / 2 if bid is not None and ask is not None else None
-        spread_pct = ((ask - bid) / mid) * 100 if mid and mid > 0 else None
-        if spread_pct is not None and spread_pct > 20:
-            score -= 10
-            reasons.append("Bid/ask muy amplio")
-        elif spread_pct is not None and spread_pct > 12:
-            score -= 5
-            reasons.append("Bid/ask algo amplio")
-        else:
-            reasons.append("Bid/ask razonable")
-
-    if short_delta is not None:
-        abs_delta = abs(short_delta)
-        if abs_delta >= 0.30:
-            score -= 12
-            reasons.append("Delta demasiado alta en short call")
-        elif abs_delta >= 0.20:
-            score -= 6
-            reasons.append("Delta moderada en short call")
-        else:
-            score += 2
-            reasons.append("Delta contenida en short call")
-
-    if short_oi is not None and long_oi is not None:
-        if short_oi >= 800 and long_oi >= 800:
-            score += 4
-            reasons.append("Open interest sólido en strikes")
-        else:
-            score -= 6
-            reasons.append("Open interest flojo en strikes")
-
-    if short_vol is not None:
-        if short_vol >= 500:
-            reasons.append("Volumen decente en short call")
-        elif short_vol < 100:
-            score -= 4
-            reasons.append("Volumen bajo en short call")
-
-    if freshness.get("isStale"):
-        score -= 15
-        reasons.append(f"Datos con más de {STALE_MINUTES} min")
-        alerts.append(f"Datos antiguos: {freshness.get('ageMinutes')} min")
-
-    if session_code == "premarket":
-        score -= 8
-        reasons.append("Premarket: menor liquidez")
-    elif session_code == "apertura":
-        score -= 6
-        reasons.append("Apertura: más volatilidad")
-    elif session_code == "media_sesion":
-        score += 2
-        reasons.append("Media sesión más estable")
-    elif session_code == "power_hour":
-        score -= 8
-        reasons.append("Power hour: más agresiva")
-    elif session_code == "after_hours":
-        score -= 12
-        reasons.append("After hours: spreads peores")
-    elif session_code == "overnight":
-        score -= 15
-        reasons.append("Overnight: sin mercado regular")
-
-    for ev in macro_block.get("items", [])[:3]:
-        if ev["impacto"] != "alto":
-            continue
-        if ev["momento"] == "Durante la sesión" and ev["totalHoras"] <= 24:
-            score -= 25
-            reasons.append(f"Macro alta en <24h: {ev['evento']}")
-            alerts.append(f"{ev['evento']} en {ev['dias']}d {ev['horas']}h")
-        elif ev["momento"] == "Antes de la apertura" and ev["totalHoras"] <= 12:
-            score -= 12
-            reasons.append(f"Macro antes de apertura: {ev['evento']}")
-            alerts.append(f"{ev['evento']} antes de la apertura")
-        elif ev["totalHoras"] <= 48:
-            score -= 6
-            reasons.append(f"Macro próxima: {ev['evento']}")
-
-    ok_earnings = [e for e in earnings_block.get("items", []) if e.get("status") == "OK"]
-
-    for er in ok_earnings[:4]:
-        if er["dias"] is None:
-            continue
-        if er["dias"] == 0:
-            score -= 40
-            reasons.append(f"Earnings hoy: {er['empresa']}")
-            alerts.append(f"Earnings hoy de {er['empresa']}")
-        elif er["dias"] == 1:
-            score -= 10
-            reasons.append(f"Resultados mañana: {er['empresa']}")
-            alerts.append(f"Resultados mañana de {er['empresa']}")
-        elif er["dias"] == 2:
-            score -= 5
-            reasons.append(f"Resultados en 2 días: {er['empresa']}")
-
-    score = max(0, min(100, round(score, 2)))
-    return score, reasons[:12], alerts[:8]
-
-
-def make_decision(score, trade_levels, session_code, alerts, earnings_block, freshness):
-    dist_to_short = trade_levels["distToShort"]
-
-    if dist_to_short <= 0:
-        return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
-
-    if freshness.get("isStale"):
-        return "esperar actualización", "yellow", "🟡 Esperar actualización", "🟡 Riesgo medio"
-
-    if any("Earnings hoy" in a for a in alerts):
-        return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
-
-    next_er = earnings_block.get("next")
-    if next_er and next_er.get("dias") == 0:
-        return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
-
-    if session_code in ["after_hours", "overnight"]:
-        if score >= 75:
-            return "esperar confirmación", "yellow", "🟡 Esperar confirmación", "🟡 Riesgo medio"
-        return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
-
-    if session_code == "premarket" and score >= 75:
-        return "esperar confirmación", "yellow", "🟡 Esperar confirmación", "🟡 Riesgo medio"
-
-    if score >= 78:
-        return "entraría", "green", "🟢 Entraría", "🟢 Riesgo controlado"
-
-    if score >= 52:
-        return "esperar confirmación", "yellow", "🟡 Esperar confirmación", "🟡 Riesgo medio"
-
-    return "no entraría", "red", "🔴 No entraría", "🔴 Riesgo alto"
-
-
-def build_freshness(now_utc):
-    age_min = 0
-    return {
-        "ageMinutes": age_min,
-        "thresholdMinutes": STALE_MINUTES,
-        "isStale": age_min > STALE_MINUTES,
-        "status": "OK"
-    }
-
-
-def build_state():
-    now_utc = datetime.now(timezone.utc)
-    now_ny = now_utc.astimezone(NY_TZ)
-    session_code, session_label = classify_session(now_ny)
-
-    snapshot = get_price_snapshot()
-    price = snapshot["price"]
-    prev_close = snapshot["prev_close"]
-    source = snapshot["source"]
-    intraday_df = snapshot["intraday_df"]
-
-    change, change_pct = compute_change(price, prev_close)
-    levels = build_trade_levels(price)
-    option_snapshot = get_option_snapshot(price, session_code)
-
-    vwap_value, vwap_dist_pct, vwap_zscore, vwap_sigma, vwap_bias = compute_vwap(intraday_df)
-    opening_range = compute_opening_range(intraday_df, now_ny, minutes=5)
-    premarket_range = compute_premarket_range(intraday_df, now_ny)
-    expected_move = compute_expected_move(price, intraday_df)
-
-    macro_block = get_upcoming_macro()
-    earnings_block = get_mag7_earnings()
-    freshness = build_freshness(now_utc)
-
-    score, reasons, alerts = calculate_score(
-        change_pct,
-        levels,
-        vwap_dist_pct,
-        vwap_zscore,
-        opening_range,
-        option_snapshot,
-        expected_move,
-        freshness,
-        session_code,
-        macro_block,
-        earnings_block
-    )
-    decision, decision_tone, decision_label, risk_label = make_decision(
-        score, levels, session_code, alerts, earnings_block, freshness
+    option_setup = choose_option_setup(ticker, price, dynamic_buffer, phase)
+    option_setup["buffer_reason"] = buffer_reason
+
+    short_strike = None
+    if option_setup.get("short_call"):
+        short_strike = safe_float(option_setup["short_call"].get("strike"))
+    fresh_mins = 0.0
+
+    score, decision, risk, notes = score_trade(
+        price=price,
+        vwap=vwap,
+        dynamic_buffer=dynamic_buffer,
+        short_strike=short_strike,
+        expected_move=expected_move,
+        opening_range=ranges.get("opening_range"),
+        macro_risk=macro_risk,
+        earnings_block=earnings_block,
+        option_setup=option_setup,
+        phase=phase,
+        freshness_min=fresh_mins,
     )
 
-    tone = "flat"
-    if change is not None:
-        tone = "up" if change > 0 else "down" if change < 0 else "flat"
+    trade_setup = format_trade_setup(price, dynamic_buffer, option_setup)
+    summary = build_summary(decision, score, phase, fresh_mins, option_setup, trade_setup)
 
-    summary = build_summary(
-        price,
-        levels,
-        expected_move,
-        macro_block,
-        earnings_block,
-        session_label,
-        freshness,
-        option_snapshot
-    )
+    state = {
+        "symbol": SYMBOL,
+        "timestamp_utc": iso(now_utc()),
+        "timestamp_ny": now_ny().strftime("%Y-%m-%d %H:%M:%S ET"),
+        "session": session_name(phase),
+        "phase": phase,
+        "freshness_minutes": fresh_mins,
+        "freshness_alert": fresh_mins > DATA_STALE_MINUTES,
 
-    return {
-        "ticker": TICKER,
-        "price": round(price, 2),
-        "prevClose": round(prev_close, 2) if prev_close is not None else None,
-        "change": round(change, 2) if change is not None else None,
-        "changePct": round(change_pct, 2) if change_pct is not None else None,
-        "tone": tone,
-        "source": source,
-        "updatedAt": now_utc.isoformat(),
-        "updatedAtText": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
-        "updatedAtNY": now_ny.strftime("%Y-%m-%d %H:%M:%S ET"),
-        "session": {
-            "code": session_code,
-            "label": session_label
-        },
-        "summary": summary,
-        "trade": levels,
-        "options": option_snapshot,
-        "vwap": {
-            "value": vwap_value,
-            "distPct": vwap_dist_pct,
-            "zScore": vwap_zscore,
-            "sigma": vwap_sigma,
-            "bias": vwap_bias
-        },
-        "openingRange": opening_range,
-        "premarketRange": premarket_range,
-        "expectedMove": expected_move,
-        "freshness": freshness,
+        "price": price,
+        "change": quote["change"],
+        "change_pct": quote["change_pct"],
+        "open": quote["open"],
+        "day_high": quote["day_high"],
+        "day_low": quote["day_low"],
+        "volume": quote["volume"],
+        "vwap": vwap,
+
+        "expected_move": expected_move,
+        "premarket_range": ranges.get("premarket_range"),
+        "opening_range": ranges.get("opening_range"),
+
         "score": score,
         "decision": decision,
-        "decisionTone": decision_tone,
-        "decisionLabel": decision_label,
-        "riskLabel": risk_label,
-        "reasons": reasons,
-        "alerts": alerts,
-        "macro": macro_block,
-        "earnings": earnings_block
+        "risk": risk,
+        "summary": summary,
+        "notes": notes,
+
+        "buffer": {
+            "base": BASE_BUFFER,
+            "dynamic": dynamic_buffer,
+            "reason": buffer_reason,
+        },
+
+        "trade_setup": trade_setup,
+
+        "options_snapshot": {
+            "status": option_setup.get("status"),
+            "message": option_setup.get("message"),
+            "quotes_reliable": option_setup.get("quotes_reliable"),
+            "liquidity_score": option_setup.get("liquidity_score"),
+            "expiration": option_setup.get("expiration"),
+            "short_call": option_setup.get("short_call"),
+            "long_call": option_setup.get("long_call"),
+            "net_credit_mid": option_setup.get("net_credit_mid"),
+            "spread_width": option_setup.get("spread_width"),
+        },
+
+        "macro": {
+            "next_events": macro_events,
+            "risk_context": macro_risk,
+        },
+
+        "earnings": {
+            "mag7": earnings,
+            "earnings_veto": earnings_block,
+        },
     }
 
-
-def update_history(state):
-    history = load_json(HISTORY_FILE, [])
-
-    row = {
-        "updatedAt": state["updatedAt"],
-        "updatedAtText": state["updatedAtText"],
-        "updatedAtNY": state["updatedAtNY"],
-        "ticker": state["ticker"],
+    history = load_history()
+    history.append({
+        "timestamp_utc": state["timestamp_utc"],
         "price": state["price"],
-        "change": state["change"],
-        "changePct": state["changePct"],
-        "tone": state["tone"],
-        "source": state["source"],
         "score": state["score"],
-        "decisionLabel": state["decisionLabel"],
-        "sessionLabel": state["session"]["label"]
-    }
+        "decision": state["decision"],
+        "buffer_dynamic": dynamic_buffer,
+        "vwap": state["vwap"],
+    })
+    history = history[-HISTORY_LIMIT:]
 
-    if history and history[-1].get("updatedAt") == row["updatedAt"]:
-        history[-1] = row
-    else:
-        history.append(row)
-
-    history = history[-MAX_HISTORY_ITEMS:]
-    save_json(HISTORY_FILE, history)
-    return history
-
-
-def main():
-    ensure_dirs()
-    state = build_state()
     save_json(STATE_FILE, state)
-    history = update_history(state)
-
-    print(
-        f"OK | {state['ticker']} | price={state['price']} | "
-        f"macro_status={state['macro']['status']} | "
-        f"earnings_status={state['earnings']['status']} | "
-        f"em_status={state['expectedMove']['status']} | "
-        f"or_status={state['openingRange']['status']} | "
-        f"score={state['score']} | history={len(history)}"
-    )
+    save_json(HISTORY_FILE, history)
 
 
 if __name__ == "__main__":
