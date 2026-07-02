@@ -6,9 +6,9 @@
   "changePct": -1.63,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T07:30:40.501024+00:00",
-  "updatedAtText": "2026-07-02 07:30:40 UTC",
-  "updatedAtNY": "2026-07-02 03:30:40 ET",
+  "updatedAt": "2026-07-02T07:40:34.571779+00:00",
+  "updatedAtText": "2026-07-02 07:40:34 UTC",
+  "updatedAtNY": "2026-07-02 03:40:34 ET",
   "session": {
     "code": "overnight",
     "label": "Overnight"
@@ -99,7 +99,7 @@
       "timeNY": "08:30",
       "dias": 1,
       "horas": 4,
-      "totalHoras": 28.99,
+      "totalHoras": 28.82,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -111,7 +111,7 @@
       "timeNY": "10:00",
       "dias": -1,
       "horas": 17,
-      "totalHoras": -17.51,
+      "totalHoras": -17.68,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -124,7 +124,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 4,
-        "totalHoras": 28.99,
+        "totalHoras": 28.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -136,7 +136,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 4,
-        "totalHoras": 28.99,
+        "totalHoras": 28.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -148,7 +148,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 4,
-        "totalHoras": 316.99,
+        "totalHoras": 316.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -160,7 +160,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 4,
-        "totalHoras": 340.99,
+        "totalHoras": 340.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -172,7 +172,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 4,
-        "totalHoras": 340.99,
+        "totalHoras": 340.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -186,7 +186,7 @@
         "timeNY": "10:00",
         "dias": -1,
         "horas": 17,
-        "totalHoras": -17.51,
+        "totalHoras": -17.68,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -198,7 +198,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 4,
-        "totalHoras": 28.99,
+        "totalHoras": 28.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -210,7 +210,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 4,
-        "totalHoras": 28.99,
+        "totalHoras": 28.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -222,7 +222,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 4,
-        "totalHoras": 316.99,
+        "totalHoras": 316.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -234,7 +234,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 4,
-        "totalHoras": 340.99,
+        "totalHoras": 340.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -246,7 +246,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 4,
-        "totalHoras": 340.99,
+        "totalHoras": 340.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -258,7 +258,7 @@
         "timeNY": "14:00",
         "dias": 27,
         "horas": 10,
-        "totalHoras": 658.49,
+        "totalHoras": 658.32,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -270,7 +270,7 @@
         "timeNY": "08:30",
         "dias": 28,
         "horas": 4,
-        "totalHoras": 676.99,
+        "totalHoras": 676.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -282,7 +282,7 @@
         "timeNY": "08:30",
         "dias": 29,
         "horas": 4,
-        "totalHoras": 700.99,
+        "totalHoras": 700.82,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
