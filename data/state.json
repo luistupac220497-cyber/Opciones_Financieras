@@ -6,9 +6,9 @@
   "changePct": -1.63,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T01:40:33.828355+00:00",
-  "updatedAtText": "2026-07-02 01:40:33 UTC",
-  "updatedAtNY": "2026-07-01 21:40:33 ET",
+  "updatedAt": "2026-07-02T01:50:34.619806+00:00",
+  "updatedAtText": "2026-07-02 01:50:34 UTC",
+  "updatedAtNY": "2026-07-01 21:50:34 ET",
   "session": {
     "code": "overnight",
     "label": "Overnight"
@@ -114,7 +114,7 @@
       "timeNY": "08:30",
       "dias": 1,
       "horas": 10,
-      "totalHoras": 34.82,
+      "totalHoras": 34.66,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -126,7 +126,7 @@
       "timeNY": "10:00",
       "dias": -1,
       "horas": 11,
-      "totalHoras": -11.68,
+      "totalHoras": -11.84,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -139,7 +139,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 10,
-        "totalHoras": 34.82,
+        "totalHoras": 34.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -151,7 +151,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 10,
-        "totalHoras": 34.82,
+        "totalHoras": 34.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -163,7 +163,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 10,
-        "totalHoras": 322.82,
+        "totalHoras": 322.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -175,7 +175,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 10,
-        "totalHoras": 346.82,
+        "totalHoras": 346.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -187,7 +187,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 10,
-        "totalHoras": 346.82,
+        "totalHoras": 346.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -201,7 +201,7 @@
         "timeNY": "10:00",
         "dias": -1,
         "horas": 11,
-        "totalHoras": -11.68,
+        "totalHoras": -11.84,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -213,7 +213,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 10,
-        "totalHoras": 34.82,
+        "totalHoras": 34.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -225,7 +225,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 10,
-        "totalHoras": 34.82,
+        "totalHoras": 34.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -237,7 +237,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 10,
-        "totalHoras": 322.82,
+        "totalHoras": 322.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -249,7 +249,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 10,
-        "totalHoras": 346.82,
+        "totalHoras": 346.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -261,7 +261,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 10,
-        "totalHoras": 346.82,
+        "totalHoras": 346.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -273,7 +273,7 @@
         "timeNY": "14:00",
         "dias": 27,
         "horas": 16,
-        "totalHoras": 664.32,
+        "totalHoras": 664.16,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -285,7 +285,7 @@
         "timeNY": "08:30",
         "dias": 28,
         "horas": 10,
-        "totalHoras": 682.82,
+        "totalHoras": 682.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -297,7 +297,7 @@
         "timeNY": "08:30",
         "dias": 29,
         "horas": 10,
-        "totalHoras": 706.82,
+        "totalHoras": 706.66,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
