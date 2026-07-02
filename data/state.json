@@ -1,29 +1,29 @@
 {
   "ticker": "QQQ",
-  "price": 716.61,
+  "price": 718.87,
   "prevClose": 725.17,
-  "change": -8.56,
-  "changePct": -1.18,
+  "change": -6.3,
+  "changePct": -0.87,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T15:30:54.472990+00:00",
-  "updatedAtText": "2026-07-02 15:30:54 UTC",
-  "updatedAtNY": "2026-07-02 11:30:53 ET",
+  "updatedAt": "2026-07-02T15:40:34.369930+00:00",
+  "updatedAtText": "2026-07-02 15:40:34 UTC",
+  "updatedAtNY": "2026-07-02 11:40:33 ET",
   "session": {
     "code": "regular",
     "label": "Regular"
   },
-  "summary": "buffer 2.60% (base 1.85%) · short 736 · quotes de opciones cargadas · Tesla en 20d · tramo regular",
+  "summary": "buffer 2.60% (base 1.85%) · short 738 · quotes de opciones cargadas · Tesla en 20d · tramo regular",
   "trade": {
     "bufferBasePct": 1.85,
     "bufferDynamicPct": 2.6,
     "bufferReason": "base 1.85% | exp move +0.27% | pm range +0.36% | macro +0.12%",
-    "shortStrike": 736.0,
-    "longStrike": 737.0,
-    "breakeven": 736.0,
+    "shortStrike": 738.0,
+    "longStrike": 739.0,
+    "breakeven": 738.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 19.39
+    "distToShort": 19.13
   },
   "bufferDebug": {
     "base": 1.85,
@@ -38,25 +38,25 @@
   },
   "options": {
     "expiration": "2026-07-02",
-    "shortCallBid": 0.02,
-    "shortCallAsk": 0.03,
-    "longCallBid": 0.02,
-    "longCallAsk": 0.03,
+    "shortCallBid": 0.01,
+    "shortCallAsk": 0.02,
+    "longCallBid": 0.01,
+    "longCallAsk": 0.02,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 3876.0,
-    "longCallOI": 4741.0,
-    "shortCallVolume": 15497.0,
-    "longCallVolume": 13728.0,
+    "shortCallOI": 3846.0,
+    "longCallOI": 2000.0,
+    "shortCallVolume": 18642.0,
+    "longCallVolume": 6428.0,
     "quotesUsable": true,
     "notes": "Quotes de opciones cargadas"
   },
   "vwap": {
-    "value": 722.98,
-    "distPct": -0.88,
-    "zScore": -1.82,
-    "sigma": 3.51,
-    "bias": "Muy por debajo"
+    "value": 722.57,
+    "distPct": -0.51,
+    "zScore": -1.05,
+    "sigma": 3.53,
+    "bias": "Por debajo"
   },
   "openingRange": {
     "available": false,
@@ -78,8 +78,8 @@
     "dailyVolPct": 1.49,
     "move": 10.68,
     "movePct": 1.49,
-    "upper": 727.29,
-    "lower": 705.93,
+    "upper": 729.55,
+    "lower": 708.19,
     "status": "OK"
   },
   "freshness": {
