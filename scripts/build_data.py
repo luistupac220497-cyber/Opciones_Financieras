@@ -7,7 +7,8 @@ import pandas as pd
 import yfinance as yf
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-STATE_FILE = ROOT_DIR / "state.json"
+DATA_DIR = ROOT_DIR / "data"
+STATE_FILE = DATA_DIR / "state.json"
 
 TICKER = "QQQ"
 BASE_BUFFER_PCT = 1.85
@@ -380,8 +381,8 @@ def get_options_trade(tk, price, buffer_pct):
                 ])
 
                 notes = "Premarket: quotes de opciones aún no fiables" if not quotes_usable else "Quotes de opciones cargadas"
-    except Exception:
-        pass
+    except Exception as e:
+        notes = f"Error options: {str(e)}"
 
     payload = {
         "trade": {
@@ -443,85 +444,162 @@ def compute_score(state):
     return score, decision, decision_tone, decision_label, risk_label, reasons
 
 
-def main():
+def build_error_state(msg):
     ny = now_ny()
-    tk, hist_5m, px = get_price_data(TICKER)
-    session = get_session_label(ny)
-
-    vwap = compute_vwap(hist_5m)
-    opening_range = compute_opening_range(hist_5m)
-    pm_range = compute_premarket_range(hist_5m)
-    expected_move = compute_expected_move(tk, px["price"])
-    macro = get_macro_block()
-    earnings = get_earnings_block()
-
-    dyn_buffer_pct, buffer_reason = compute_dynamic_buffer_pct(
-        expected_move,
-        pm_range,
-        session["code"],
-        macro
-    )
-
-    opt = get_options_trade(tk, px["price"], dyn_buffer_pct)
-    opt["trade"]["bufferReason"] = buffer_reason
-
-    freshness = {
-        "ageMinutes": 0,
-        "thresholdMinutes": 3,
-        "isStale": False,
-        "status": "OK"
-    }
-
-    state = {
+    return {
         "ticker": TICKER,
-        **px,
+        "price": None,
+        "prevClose": None,
+        "change": None,
+        "changePct": None,
+        "tone": "flat",
+        "source": "error",
         "updatedAt": now_utc().isoformat(),
         "updatedAtText": now_utc().strftime("%Y-%m-%d %H:%M:%S UTC"),
         "updatedAtNY": ny.strftime("%Y-%m-%d %H:%M:%S ET"),
-        "session": session,
-        "summary": "",
-        "trade": opt["trade"],
-        "options": opt["options"],
-        "vwap": vwap,
-        "openingRange": opening_range,
-        "premarketRange": pm_range,
-        "expectedMove": expected_move,
-        "freshness": freshness,
+        "session": {"code": "error", "label": "Error"},
+        "summary": f"Error generando estado: {msg}",
+        "trade": {
+            "bufferBasePct": round2(BASE_BUFFER_PCT),
+            "bufferDynamicPct": round2(BASE_BUFFER_PCT),
+            "bufferReason": "error",
+            "shortStrike": None,
+            "longStrike": None,
+            "breakeven": None,
+            "spreadWidth": round2(SPREAD_WIDTH),
+            "netCredit": None,
+            "distToShort": None
+        },
+        "options": {
+            "expiration": None,
+            "shortCallBid": None,
+            "shortCallAsk": None,
+            "longCallBid": None,
+            "longCallAsk": None,
+            "shortCallDelta": None,
+            "longCallDelta": None,
+            "shortCallOI": None,
+            "longCallOI": None,
+            "shortCallVolume": None,
+            "longCallVolume": None,
+            "quotesUsable": False,
+            "notes": msg
+        },
+        "vwap": {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No disponible"},
+        "openingRange": {"available": False, "status": "Error", "message": "Opening Range no disponible"},
+        "premarketRange": {"available": False, "status": "Error", "message": "Premarket Range no disponible"},
+        "expectedMove": {
+            "method": "unavailable",
+            "dailyVolPct": None,
+            "move": None,
+            "movePct": None,
+            "upper": None,
+            "lower": None,
+            "status": "No disponible"
+        },
+        "freshness": {
+            "ageMinutes": None,
+            "thresholdMinutes": 3,
+            "isStale": True,
+            "status": "Error"
+        },
         "score": 0,
-        "decision": "",
-        "decisionTone": "",
-        "decisionLabel": "",
-        "riskLabel": "",
-        "reasons": [],
+        "decision": "no operar",
+        "decisionTone": "red",
+        "decisionLabel": "no operar",
+        "riskLabel": "Riesgo alto",
+        "reasons": [msg],
         "alerts": [],
-        "macro": macro,
-        "earnings": earnings
+        "macro": get_macro_block(),
+        "earnings": get_earnings_block()
     }
 
-    short_strike_txt = f"{int(state['trade']['shortStrike'])}" if state["trade"]["shortStrike"] is not None else "--"
-    earnings_txt = (
-        f"{state['earnings']['next']['empresa']} en {state['earnings']['next']['dias']}d"
-        if state["earnings"].get("next") else "sin earnings cercanos"
-    )
 
-    state["summary"] = (
-        f"buffer dinámico {state['trade']['bufferDynamicPct']:.2f}% "
-        f"(base {state['trade']['bufferBasePct']:.2f}%) · "
-        f"short strike {short_strike_txt} · "
-        f"{state['options']['notes'].lower()} · "
-        f"próximo earnings relevante: {earnings_txt} · "
-        f"tramo actual: {state['session']['code']}"
-    )
+def main():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    score, decision, decision_tone, decision_label, risk_label, reasons = compute_score(state)
-    state["score"] = score
-    state["decision"] = decision
-    state["decisionTone"] = decision_tone
-    state["decisionLabel"] = decision_label
-    state["riskLabel"] = risk_label
-    state["reasons"] = reasons
+    try:
+        ny = now_ny()
+        tk, hist_5m, px = get_price_data(TICKER)
+        session = get_session_label(ny)
 
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        vwap = compute_vwap(hist_5m)
+        opening_range = compute_opening_range(hist_5m)
+        pm_range = compute_premarket_range(hist_5m)
+        expected_move = compute_expected_move(tk, px["price"])
+        macro = get_macro_block()
+        earnings = get_earnings_block()
+
+        dyn_buffer_pct, buffer_reason = compute_dynamic_buffer_pct(
+            expected_move,
+            pm_range,
+            session["code"],
+            macro
+        )
+
+        opt = get_options_trade(tk, px["price"], dyn_buffer_pct)
+        opt["trade"]["bufferReason"] = buffer_reason
+
+        freshness = {
+            "ageMinutes": 0,
+            "thresholdMinutes": 3,
+            "isStale": False,
+            "status": "OK"
+        }
+
+        state = {
+            "ticker": TICKER,
+            **px,
+            "updatedAt": now_utc().isoformat(),
+            "updatedAtText": now_utc().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "updatedAtNY": ny.strftime("%Y-%m-%d %H:%M:%S ET"),
+            "session": session,
+            "summary": "",
+            "trade": opt["trade"],
+            "options": opt["options"],
+            "vwap": vwap,
+            "openingRange": opening_range,
+            "premarketRange": pm_range,
+            "expectedMove": expected_move,
+            "freshness": freshness,
+            "score": 0,
+            "decision": "",
+            "decisionTone": "",
+            "decisionLabel": "",
+            "riskLabel": "",
+            "reasons": [],
+            "alerts": [],
+            "macro": macro,
+            "earnings": earnings
+        }
+
+        short_strike_txt = f"{int(state['trade']['shortStrike'])}" if state["trade"]["shortStrike"] is not None else "--"
+        earnings_txt = (
+            f"{state['earnings']['next']['empresa']} en {state['earnings']['next']['dias']}d"
+            if state["earnings"].get("next") else "sin earnings cercanos"
+        )
+
+        state["summary"] = (
+            f"buffer dinámico {state['trade']['bufferDynamicPct']:.2f}% "
+            f"(base {state['trade']['bufferBasePct']:.2f}%) · "
+            f"short strike {short_strike_txt} · "
+            f"{state['options']['notes'].lower()} · "
+            f"próximo earnings relevante: {earnings_txt} · "
+            f"tramo actual: {state['session']['code']}"
+        )
+
+        score, decision, decision_tone, decision_label, risk_label, reasons = compute_score(state)
+        state["score"] = score
+        state["decision"] = decision
+        state["decisionTone"] = decision_tone
+        state["decisionLabel"] = decision_label
+        state["riskLabel"] = risk_label
+        state["reasons"] = reasons
+
+    except Exception as e:
+        state = build_error_state(str(e))
+
+    with STATE_FILE.open("w", encoding="utf-8") as f:
         json.dump(json_safe(state), f, ensure_ascii=False, indent=2)
 
 
