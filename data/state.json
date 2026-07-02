@@ -1,14 +1,14 @@
 {
   "ticker": "QQQ",
-  "price": 727.64,
+  "price": 727.22,
   "prevClose": 736.4,
-  "change": -8.76,
-  "changePct": -1.19,
+  "change": -9.18,
+  "changePct": -1.25,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T13:00:53.012735+00:00",
-  "updatedAtText": "2026-07-02 13:00:53 UTC",
-  "updatedAtNY": "2026-07-02 09:00:52 ET",
+  "updatedAt": "2026-07-02T13:10:36.957449+00:00",
+  "updatedAtText": "2026-07-02 13:10:36 UTC",
+  "updatedAtNY": "2026-07-02 09:10:35 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
@@ -23,7 +23,7 @@
     "breakeven": 748.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 20.36
+    "distToShort": 20.78
   },
   "bufferDebug": {
     "base": 1.85,
@@ -69,17 +69,17 @@
     "message": "Premarket Range calculado",
     "high": 731.33,
     "low": 719.46,
-    "close": 727.64,
+    "close": 727.22,
     "size": 11.87,
     "sizePct": 1.63
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 1.49,
-    "move": 10.84,
+    "move": 10.83,
     "movePct": 1.49,
-    "upper": 738.48,
-    "lower": 716.8,
+    "upper": 738.05,
+    "lower": 716.39,
     "status": "OK"
   },
   "freshness": {
