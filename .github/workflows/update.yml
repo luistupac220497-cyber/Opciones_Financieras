@@ -38,15 +38,15 @@ jobs:
           ls -la
           echo "DATA:"
           ls -la data || true
-          echo "STATE:"
-          cat data/state.json || true
-          echo "HISTORY:"
-          cat data/history.json || true
+          echo "STATE HEAD:"
+          head -n 80 data/state.json || true
+          echo "HISTORY HEAD:"
+          head -n 80 data/history.json || true
 
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/state.json data/history.json
-          git diff --cached --quiet || git commit -m "Update dashboard data"
+          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update dashboard data"
           git push
