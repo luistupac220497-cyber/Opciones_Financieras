@@ -1,104 +1,144 @@
 {
-  "symbol": "QQQ",
-  "timestamp_utc": "2026-07-02T11:11:33+00:00",
-  "timestamp_ny": "2026-07-02 07:11:33 ET",
-  "session": "Error",
-  "phase": "error",
-  "freshness_minutes": null,
-  "freshness_alert": true,
-  "price": null,
-  "change": null,
-  "change_pct": null,
-  "open": null,
-  "day_high": null,
-  "day_low": null,
-  "volume": null,
-  "vwap": null,
-  "expected_move": {
-    "method": "unavailable",
-    "daily_vol_pct": null,
-    "expected_move_dollar": null,
-    "upper": null,
-    "lower": null
+  "ticker": "QQQ",
+  "price": 723.82,
+  "prevClose": 736.4,
+  "change": -12.58,
+  "changePct": -1.71,
+  "tone": "down",
+  "source": "intraday_5m",
+  "updatedAt": "2026-07-02T11:30:44.221756+00:00",
+  "updatedAtText": "2026-07-02 11:30:44 UTC",
+  "updatedAtNY": "2026-07-02 07:30:43 ET",
+  "session": {
+    "code": "premarket",
+    "label": "Premarket"
   },
-  "premarket_range": null,
-  "opening_range": null,
-  "score": 0,
-  "decision": "No entraría",
-  "risk": "Alto",
-  "summary": "Error generando estado: Object of type Timestamp is not JSON serializable",
-  "notes": [
-    "Object of type Timestamp is not JSON serializable"
+  "summary": "buffer dinámico 2.20% (base 1.85%) · short strike 740 · premarket: quotes de opciones aún no fiables · próximo earnings relevante: Tesla en 20d · tramo actual: premarket",
+  "trade": {
+    "bufferBasePct": 1.85,
+    "bufferDynamicPct": 2.2,
+    "bufferReason": "base 1.85% | expected move factor 1.27% | premarket range factor 1.30% | premarket multiplier x1.08 | high impact macro <=36h x1.10",
+    "shortStrike": 740.0,
+    "longStrike": 741.0,
+    "breakeven": 740.0,
+    "spreadWidth": 1.0,
+    "netCredit": 0.0,
+    "distToShort": 16.18
+  },
+  "options": {
+    "expiration": "2026-07-02",
+    "shortCallBid": 0.0,
+    "shortCallAsk": 0.0,
+    "longCallBid": 0.0,
+    "longCallAsk": 0.0,
+    "shortCallDelta": null,
+    "longCallDelta": null,
+    "shortCallOI": 10512.0,
+    "longCallOI": 2699.0,
+    "shortCallVolume": 25615.0,
+    "longCallVolume": 6004.0,
+    "quotesUsable": false,
+    "notes": "Premarket: quotes de opciones aún no fiables"
+  },
+  "vwap": {
+    "value": null,
+    "distPct": null,
+    "zScore": null,
+    "sigma": null,
+    "bias": "No disponible"
+  },
+  "openingRange": {
+    "available": false,
+    "status": "Pendiente",
+    "message": "Opening Range disponible a partir de 09:30 ET"
+  },
+  "premarketRange": {
+    "available": true,
+    "status": "OK",
+    "message": "Premarket Range calculado",
+    "high": 728.04,
+    "low": 719.46,
+    "close": 723.82,
+    "size": 8.58,
+    "sizePct": 1.18
+  },
+  "expectedMove": {
+    "method": "historical_vol_3mo",
+    "dailyVolPct": 1.49,
+    "move": 10.78,
+    "movePct": 1.49,
+    "upper": 734.6,
+    "lower": 713.04,
+    "status": "OK"
+  },
+  "freshness": {
+    "ageMinutes": 0,
+    "thresholdMinutes": 3,
+    "isStale": false,
+    "status": "OK"
+  },
+  "score": 55,
+  "decision": "esperar confirmación",
+  "decisionTone": "yellow",
+  "decisionLabel": "esperar confirmación",
+  "riskLabel": "Riesgo medio",
+  "reasons": [
+    "Buffer base: 1.85%",
+    "Buffer dinámico aplicado: 2.20%",
+    "Sesgo bajista favorable",
+    "Premarket: quotes de opciones no fiables",
+    "Macro próxima: Nóminas no agrícolas (NFP)"
   ],
-  "buffer": {
-    "base": 1.85,
-    "dynamic": 1.85,
-    "reason_short": "error"
-  },
-  "trade_setup": {
-    "buffer_dynamic": 1.85
-  },
-  "options_snapshot": {
-    "status": "error",
-    "message": "Error generando snapshot",
-    "quotes_reliable": false
-  },
+  "alerts": [],
   "macro": {
-    "next_events": [
+    "status": "OK | reciente + próximo",
+    "next": {
+      "evento": "Nóminas no agrícolas (NFP)",
+      "impacto": "alto",
+      "datetimeNY": "2026-07-03 08:30 ET",
+      "dateNY": "2026-07-03",
+      "timeNY": "08:30",
+      "dias": 1,
+      "horas": 4,
+      "totalHoras": 28.32,
+      "momento": "Antes de la apertura",
+      "status": "upcoming"
+    },
+    "items": [
       {
-        "time_et": "08:30",
-        "title": "Macro placeholder",
-        "impact": "medium",
-        "date": "2026-07-02"
+        "evento": "Nóminas no agrícolas (NFP)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-03 08:30 ET",
+        "dateNY": "2026-07-03",
+        "timeNY": "08:30",
+        "dias": 1,
+        "horas": 4,
+        "totalHoras": 28.32,
+        "momento": "Antes de la apertura",
+        "status": "upcoming"
       }
     ],
-    "risk_context": null
+    "all": []
   },
   "earnings": {
-    "mag7": [
+    "status": "OK",
+    "next": {
+      "empresa": "Tesla",
+      "ticker": "TSLA",
+      "fecha": "2026-07-22",
+      "dias": 20,
+      "momento": "Hora no especificada",
+      "status": "OK"
+    },
+    "items": [
       {
-        "symbol": "AAPL",
-        "date": null,
-        "status": "No cercano",
-        "source": null
-      },
-      {
-        "symbol": "MSFT",
-        "date": null,
-        "status": "No cercano",
-        "source": null
-      },
-      {
-        "symbol": "NVDA",
-        "date": null,
-        "status": "No cercano",
-        "source": null
-      },
-      {
-        "symbol": "AMZN",
-        "date": null,
-        "status": "No cercano",
-        "source": null
-      },
-      {
-        "symbol": "META",
-        "date": null,
-        "status": "No cercano",
-        "source": null
-      },
-      {
-        "symbol": "GOOGL",
-        "date": null,
-        "status": "No cercano",
-        "source": null
-      },
-      {
-        "symbol": "TSLA",
-        "date": null,
-        "status": "No cercano",
-        "source": null
+        "empresa": "Tesla",
+        "ticker": "TSLA",
+        "fecha": "2026-07-22",
+        "dias": 20,
+        "momento": "Hora no especificada",
+        "status": "OK"
       }
-    ],
-    "earnings_veto": false
+    ]
   }
 }
