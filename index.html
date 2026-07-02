@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QQQ 0DTE Desk</title>
+  <title>QQQ 0DTE Dashboard</title>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
   <style>
@@ -37,7 +37,6 @@
       --color-text-muted: #73716b;
       --color-text-faint: #aaa8a1;
       --color-primary: #01696f;
-      --color-primary-hover: #0c4e54;
       --color-primary-soft: #dbe7e5;
       --color-success: #437a22;
       --color-success-soft: #dbe7d4;
@@ -46,7 +45,6 @@
       --color-error: #a12c7b;
       --color-error-soft: #ecd7e3;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
-      --shadow-md: 0 8px 24px rgba(0,0,0,.07);
       --radius-sm: 10px;
       --radius-md: 14px;
       --radius-lg: 18px;
@@ -64,7 +62,6 @@
       --color-text-muted: #a09d97;
       --color-text-faint: #6e6b66;
       --color-primary: #4f98a3;
-      --color-primary-hover: #62a8b2;
       --color-primary-soft: #223437;
       --color-success: #7fb25b;
       --color-success-soft: #273425;
@@ -73,11 +70,14 @@
       --color-error: #d163a7;
       --color-error-soft: #352532;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
-      --shadow-md: 0 10px 28px rgba(0,0,0,.28);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       font-family: var(--font-body);
       background: var(--color-bg);
@@ -89,6 +89,7 @@
     }
 
     button, a, input { font: inherit; color: inherit; }
+
     button {
       border: 0;
       background: none;
@@ -102,115 +103,49 @@
       border-radius: var(--radius-sm);
     }
 
-    .app {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      grid-template-rows: auto 1fr;
-      height: 100dvh;
-    }
-
-    .sidebar {
-      grid-row: 1 / -1;
-      background: var(--color-surface);
-      border-right: 1px solid var(--color-border);
-      padding: var(--space-6);
-      overflow-y: auto;
-      overscroll-behavior: contain;
+    .shell {
+      min-height: 100dvh;
     }
 
     .header {
-      grid-column: 2;
+      position: sticky;
+      top: 0;
+      z-index: 20;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--space-4);
       padding: var(--space-4) var(--space-6);
       border-bottom: 1px solid var(--color-border);
-      background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+      background: color-mix(in srgb, var(--color-surface) 92%, transparent);
       backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
-      z-index: 20;
-    }
-
-    .main {
-      grid-column: 2;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      padding: var(--space-6);
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: var(--space-3);
-      margin-bottom: var(--space-8);
+      min-width: 0;
     }
 
     .logo {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       color: var(--color-primary);
       flex: 0 0 auto;
     }
 
-    .brand-title {
-      font-size: var(--text-sm);
-      font-weight: 800;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-
-    .brand-subtitle {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      margin-top: 2px;
-    }
-
-    .nav-block + .nav-block {
-      margin-top: var(--space-6);
-      padding-top: var(--space-6);
-      border-top: 1px solid var(--color-divider);
-    }
-
-    .nav-label {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: var(--space-3);
-    }
-
-    .nav-list {
-      display: grid;
-      gap: var(--space-2);
-    }
-
-    .nav-item {
-      display: block;
-      text-decoration: none;
-      background: var(--color-surface-2);
-      border: 1px solid var(--color-border);
-      padding: 0.8rem 0.9rem;
-      border-radius: var(--radius-md);
-      font-size: var(--text-sm);
-    }
-
-    .nav-item:hover {
-      border-color: var(--color-primary);
-      background: var(--color-primary-soft);
-    }
-
-    .header-left h1 {
+    .brand-copy h1 {
       font-size: var(--text-xl);
       font-weight: 900;
       letter-spacing: -.03em;
+      line-height: 1.05;
     }
 
-    .header-left p {
+    .brand-copy p {
       font-size: var(--text-sm);
       color: var(--color-text-muted);
-      margin-top: 0.15rem;
+      margin-top: 0.2rem;
     }
 
     .header-actions {
@@ -218,6 +153,7 @@
       align-items: center;
       gap: var(--space-3);
       flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .chip {
@@ -249,13 +185,19 @@
       justify-content: center;
     }
 
+    .container {
+      width: min(1280px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: var(--space-6) 0 var(--space-10);
+    }
+
     .grid {
       display: grid;
       gap: var(--space-4);
     }
 
     .hero-grid {
-      grid-template-columns: 1.3fr .9fr;
+      grid-template-columns: 1.2fr .95fr;
       margin-bottom: var(--space-4);
     }
 
@@ -274,8 +216,6 @@
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
       padding: var(--space-5);
-      content-visibility: auto;
-      contain-intrinsic-size: 0 260px;
     }
 
     .card-header {
@@ -324,22 +264,12 @@
       font-size: var(--text-sm);
       font-weight: 800;
       border: 1px solid transparent;
+      text-transform: capitalize;
     }
 
-    .decision-enter {
-      color: var(--color-success);
-      background: var(--color-success-soft);
-    }
-
-    .decision-wait {
-      color: var(--color-warning);
-      background: var(--color-warning-soft);
-    }
-
-    .decision-no {
-      color: var(--color-error);
-      background: var(--color-error-soft);
-    }
+    .decision-enter { color: var(--color-success); background: var(--color-success-soft); }
+    .decision-wait { color: var(--color-warning); background: var(--color-warning-soft); }
+    .decision-no { color: var(--color-error); background: var(--color-error-soft); }
 
     .decision-score {
       font-size: clamp(2.2rem, 2rem + 2vw, 4rem);
@@ -360,22 +290,25 @@
       gap: var(--space-3);
     }
 
-    .mini-box {
+    .mini-box,
+    .stat {
       background: var(--color-surface-2);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       padding: .95rem;
     }
 
-    .mini-label {
+    .mini-label,
+    .stat-label {
       font-size: var(--text-xs);
       color: var(--color-text-muted);
       text-transform: uppercase;
       letter-spacing: .08em;
-      margin-bottom: .4rem;
+      margin-bottom: .35rem;
     }
 
-    .mini-value {
+    .mini-value,
+    .stat-value {
       font-size: var(--text-lg);
       font-weight: 800;
       font-variant-numeric: tabular-nums lining-nums;
@@ -405,27 +338,6 @@
       gap: var(--space-3);
     }
 
-    .stat {
-      padding: .95rem;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      background: var(--color-surface-2);
-    }
-
-    .stat-label {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: .35rem;
-    }
-
-    .stat-value {
-      font-size: var(--text-base);
-      font-weight: 800;
-      font-variant-numeric: tabular-nums lining-nums;
-    }
-
     .list {
       display: grid;
       gap: .85rem;
@@ -445,9 +357,7 @@
       padding-bottom: 0;
     }
 
-    .list-left {
-      min-width: 0;
-    }
+    .list-left { min-width: 0; }
 
     .list-title {
       font-size: var(--text-sm);
@@ -467,13 +377,7 @@
       font-variant-numeric: tabular-nums lining-nums;
     }
 
-    .muted {
-      color: var(--color-text-muted);
-    }
-
-    .faint {
-      color: var(--color-text-faint);
-    }
+    .muted { color: var(--color-text-muted); }
 
     .alert {
       padding: .9rem 1rem;
@@ -515,8 +419,6 @@
       font-size: var(--text-xs);
       text-transform: uppercase;
       letter-spacing: .08em;
-      position: sticky;
-      top: 0;
       background: var(--color-surface);
     }
 
@@ -535,22 +437,6 @@
     .hide-mobile { display: inline; }
 
     @media (max-width: 1180px) {
-      .app {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto 1fr;
-      }
-
-      .sidebar {
-        grid-row: auto;
-        border-right: 0;
-        border-bottom: 1px solid var(--color-border);
-        padding: var(--space-4);
-      }
-
-      .header, .main {
-        grid-column: 1;
-      }
-
       .hero-grid,
       .content-grid,
       .kpi-grid {
@@ -559,27 +445,29 @@
     }
 
     @media (max-width: 760px) {
-      html, body { overflow: auto; }
-      .app { display: block; height: auto; }
-      .sidebar, .main { overflow: visible; }
       .header {
-        position: static;
         padding: var(--space-4);
+        align-items: flex-start;
+        flex-direction: column;
       }
-      .main {
-        padding: var(--space-4);
+
+      .container {
+        width: min(100% - 1rem, 1280px);
+        padding-top: var(--space-4);
       }
+
       .decision-mini,
       .stats-row {
         grid-template-columns: 1fr;
       }
+
       .hide-mobile { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
+  <div class="shell">
+    <header class="header">
       <div class="brand">
         <svg class="logo" viewBox="0 0 48 48" fill="none" aria-label="QQQ dashboard logo">
           <rect x="5" y="7" width="24" height="24" rx="7" stroke="currentColor" stroke-width="3"></rect>
@@ -587,52 +475,12 @@
           <path d="M33 29c0 5.5 4.5 10 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
           <path d="M28 28l8 8" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
         </svg>
-        <div>
-          <div class="brand-title">QQQ 0DTE Desk</div>
-          <div class="brand-subtitle">Bear call spread dashboard</div>
+        <div class="brand-copy">
+          <h1>QQQ 0DTE Dashboard</h1>
+          <p id="headerMeta">Cargando estado…</p>
         </div>
       </div>
 
-      <div class="nav-block">
-        <div class="nav-label">Bloques</div>
-        <div class="nav-list">
-          <a class="nav-item" href="#decision">Decisión</a>
-          <a class="nav-item" href="#setup">Trade setup</a>
-          <a class="nav-item" href="#expected">Expected move</a>
-          <a class="nav-item" href="#macro">Macro</a>
-          <a class="nav-item" href="#earnings">Earnings</a>
-          <a class="nav-item" href="#history">Historial</a>
-        </div>
-      </div>
-
-      <div class="nav-block">
-        <div class="nav-label">Lógica activa</div>
-        <div class="list">
-          <div>
-            <div class="list-title">Short delta objetivo</div>
-            <div class="list-meta">Entorno 0.15</div>
-          </div>
-          <div>
-            <div class="list-title">Spread width</div>
-            <div class="list-meta">$1 entre strikes</div>
-          </div>
-          <div>
-            <div class="list-title">Buffer</div>
-            <div class="list-meta">Base 1.85 + ajuste dinámico</div>
-          </div>
-          <div>
-            <div class="list-title">Filtro</div>
-            <div class="list-meta">Macro + earnings + frescura</div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <header class="header">
-      <div class="header-left">
-        <h1>QQQ 0DTE Dashboard</h1>
-        <p id="headerMeta">Cargando estado…</p>
-      </div>
       <div class="header-actions">
         <div id="freshChip" class="chip chip-fresh">
           <span class="chip-dot"></span>
@@ -643,7 +491,7 @@
       </div>
     </header>
 
-    <main id="main" class="main">
+    <main class="container">
       <section class="grid hero-grid">
         <article id="decision" class="card decision">
           <div class="decision-top">
@@ -849,7 +697,21 @@
     const intFmt = (v) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : new Intl.NumberFormat("es-ES").format(Number(v));
     const money = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `$${Number(v).toFixed(d)}`;
     const pct = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `${Number(v).toFixed(d)}%`;
-    const text = (v) => (v === null || v === undefined || v === "") ? "--" : String(v);
+
+    const text = (v) => {
+      if (v === null || v === undefined || v === "") return "--";
+      if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") return String(v);
+      if (Array.isArray(v)) return v.map(text).join(", ");
+      if (typeof v === "object") {
+        if (v.label !== undefined) return String(v.label);
+        if (v.name !== undefined) return String(v.name);
+        if (v.title !== undefined) return String(v.title);
+        if (v.message !== undefined) return String(v.message);
+        if (v.status !== undefined) return String(v.status);
+        return JSON.stringify(v);
+      }
+      return String(v);
+    };
 
     function qs(id) {
       return document.getElementById(id);
@@ -857,15 +719,12 @@
 
     function setDecisionBadge(decision) {
       const el = qs("decisionBadge");
-      el.textContent = decision || "--";
+      el.textContent = text(decision);
       el.className = "decision-badge";
-      if ((decision || "").toLowerCase().includes("no")) {
-        el.classList.add("decision-no");
-      } else if ((decision || "").toLowerCase().includes("esper")) {
-        el.classList.add("decision-wait");
-      } else {
-        el.classList.add("decision-enter");
-      }
+      const value = String(decision || "").toLowerCase();
+      if (value.includes("no")) el.classList.add("decision-no");
+      else if (value.includes("esper")) el.classList.add("decision-wait");
+      else el.classList.add("decision-enter");
     }
 
     function renderRange(boxId, obj) {
@@ -875,7 +734,7 @@
         return;
       }
       if (obj.status === "pending" || obj.status === "forming" || obj.status === "missing") {
-        el.textContent = obj.message || "--";
+        el.textContent = text(obj.message);
         return;
       }
       el.innerHTML = `
@@ -945,6 +804,11 @@
       }
 
       const rows = (earnings && earnings.mag7) || [];
+      if (!rows.length) {
+        list.innerHTML = `<div class="muted">Sin earnings cargados.</div>`;
+        return;
+      }
+
       rows.forEach(ev => {
         const row = document.createElement("div");
         row.className = "list-row";
@@ -1038,7 +902,11 @@
 
         qs("headerMeta").textContent = `${text(state.timestamp_ny)} · ${text(state.timestamp_utc)}`;
         qs("scoreValue").textContent = text(state.score);
-        qs("summaryText").textContent = text(state.summary);
+
+        qs("summaryText").textContent = typeof state.summary === "object"
+          ? (state.summary.message || state.summary.title || JSON.stringify(state.summary))
+          : text(state.summary);
+
         setDecisionBadge(state.decision);
 
         qs("riskChip").textContent = `Risk ${text(state.risk)}`;
@@ -1054,7 +922,11 @@
         qs("changeValue").className = ch > 0 ? "delta-up" : (ch < 0 ? "delta-down" : "delta-flat");
 
         qs("vwapValue").textContent = money(state.vwap);
-        qs("sessionValue").textContent = text(state.session);
+
+        qs("sessionValue").textContent = typeof state.session === "object"
+          ? (state.session.label || state.session.name || state.session.title || state.session.message || "--")
+          : text(state.session);
+
         qs("openValue").textContent = money(state.open);
         qs("volumeValue").textContent = intFmt(state.volume);
 
