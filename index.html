@@ -74,9 +74,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: var(--font-body);
@@ -103,9 +101,7 @@
       border-radius: var(--radius-sm);
     }
 
-    .shell {
-      min-height: 100dvh;
-    }
+    .shell { min-height: 100dvh; }
 
     .header {
       position: sticky;
@@ -191,24 +187,10 @@
       padding: var(--space-6) 0 var(--space-10);
     }
 
-    .grid {
-      display: grid;
-      gap: var(--space-4);
-    }
-
-    .hero-grid {
-      grid-template-columns: 1.2fr .95fr;
-      margin-bottom: var(--space-4);
-    }
-
-    .kpi-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      margin-bottom: var(--space-4);
-    }
-
-    .content-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+    .grid { display: grid; gap: var(--space-4); }
+    .hero-grid { grid-template-columns: 1.2fr .95fr; margin-bottom: var(--space-4); }
+    .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: var(--space-4); }
+    .content-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
     .card {
       background: var(--color-surface);
@@ -290,16 +272,14 @@
       gap: var(--space-3);
     }
 
-    .mini-box,
-    .stat {
+    .mini-box, .stat {
       background: var(--color-surface-2);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       padding: .95rem;
     }
 
-    .mini-label,
-    .stat-label {
+    .mini-label, .stat-label {
       font-size: var(--text-xs);
       color: var(--color-text-muted);
       text-transform: uppercase;
@@ -307,8 +287,7 @@
       margin-bottom: .35rem;
     }
 
-    .mini-value,
-    .stat-value {
+    .mini-value, .stat-value {
       font-size: var(--text-lg);
       font-weight: 800;
       font-variant-numeric: tabular-nums lining-nums;
@@ -338,10 +317,7 @@
       gap: var(--space-3);
     }
 
-    .list {
-      display: grid;
-      gap: .85rem;
-    }
+    .list { display: grid; gap: .85rem; }
 
     .list-row {
       display: flex;
@@ -396,9 +372,7 @@
       background: var(--color-error-soft);
     }
 
-    .table-wrap {
-      overflow-x: auto;
-    }
+    .table-wrap { overflow-x: auto; }
 
     table {
       width: 100%;
@@ -437,9 +411,7 @@
     .hide-mobile { display: inline; }
 
     @media (max-width: 1180px) {
-      .hero-grid,
-      .content-grid,
-      .kpi-grid {
+      .hero-grid, .content-grid, .kpi-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -456,8 +428,7 @@
         padding-top: var(--space-4);
       }
 
-      .decision-mini,
-      .stats-row {
+      .decision-mini, .stats-row {
         grid-template-columns: 1fr;
       }
 
@@ -486,7 +457,7 @@
           <span class="chip-dot"></span>
           <span>Fresh</span>
         </div>
-        <div id="riskChip" class="chip chip-risk">Risk</div>
+        <div id="riskChip" class="chip chip-risk">Risk --</div>
         <button class="chip chip-theme" data-theme-toggle aria-label="Cambiar tema">◐</button>
       </div>
     </header>
@@ -686,11 +657,14 @@
       const toggle = document.querySelector("[data-theme-toggle]");
       let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       root.setAttribute("data-theme", theme);
-      toggle.addEventListener("click", () => {
-        theme = theme === "dark" ? "light" : "dark";
-        root.setAttribute("data-theme", theme);
+      if (toggle) {
         toggle.textContent = theme === "dark" ? "☀" : "◐";
-      });
+        toggle.addEventListener("click", () => {
+          theme = theme === "dark" ? "light" : "dark";
+          root.setAttribute("data-theme", theme);
+          toggle.textContent = theme === "dark" ? "☀" : "◐";
+        });
+      }
     })();
 
     const fmt = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : Number(v).toFixed(d);
@@ -717,14 +691,32 @@
       return document.getElementById(id);
     }
 
+    function pick(...values) {
+      for (const v of values) {
+        if (v !== undefined && v !== null && v !== "") return v;
+      }
+      return null;
+    }
+
     function setDecisionBadge(decision) {
       const el = qs("decisionBadge");
-      el.textContent = text(decision);
+      const val = text(decision);
+      el.textContent = val;
       el.className = "decision-badge";
-      const value = String(decision || "").toLowerCase();
-      if (value.includes("no")) el.classList.add("decision-no");
-      else if (value.includes("esper")) el.classList.add("decision-wait");
+      const lower = String(val).toLowerCase();
+      if (lower.includes("no")) el.classList.add("decision-no");
+      else if (lower.includes("esper")) el.classList.add("decision-wait");
+      else if (lower === "--") el.classList.add("decision-wait");
       else el.classList.add("decision-enter");
+    }
+
+    function normalizeDecision(value) {
+      const raw = text(value);
+      const lower = raw.toLowerCase();
+      if (lower.includes("entrar")) return "Entraría";
+      if (lower.includes("esper")) return "Esperar confirmación";
+      if (lower.includes("no")) return "No entraría";
+      return raw;
     }
 
     function renderRange(boxId, obj) {
@@ -734,6 +726,10 @@
         return;
       }
       if (obj.status === "pending" || obj.status === "forming" || obj.status === "missing") {
+        el.textContent = text(obj.message || obj.status);
+        return;
+      }
+      if (obj.high == null && obj.low == null && obj.width == null && obj.message) {
         el.textContent = text(obj.message);
         return;
       }
@@ -763,8 +759,8 @@
     function renderMacro(macro) {
       const alert = qs("macroAlert");
       const list = qs("macroList");
-      list.innerHTML = "";
       alert.innerHTML = "";
+      list.innerHTML = "";
 
       if (macro && macro.risk_context) {
         const cls = macro.risk_context.impact === "high" ? "alert alert-error" : "alert alert-warning";
@@ -833,14 +829,18 @@
       }
 
       history.slice().reverse().slice(0, 20).forEach(row => {
+        const ts = pick(row.timestamp_utc, row.updatedAtText, row.updatedAtNY, row.updatedAt);
+        const decision = pick(row.decision, row.decisionLabel);
+        const bufferDyn = pick(row.buffer_dynamic, row.bufferDynamicPct);
+        const vwap = pick(row.vwap);
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${text(row.timestamp_utc)}</td>
+          <td>${text(ts)}</td>
           <td class="num">${money(row.price)}</td>
           <td class="num">${text(row.score)}</td>
-          <td>${text(row.decision)}</td>
-          <td class="num">${money(row.buffer_dynamic)}</td>
-          <td class="num hide-mobile">${money(row.vwap)}</td>
+          <td>${normalizeDecision(decision)}</td>
+          <td class="num">${bufferDyn == null ? "--" : pct(bufferDyn)}</td>
+          <td class="num hide-mobile">${money(vwap)}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -869,16 +869,20 @@
       `;
     }
 
-    function renderTradeSetup(ts, buffer) {
-      qs("bufferValue").textContent = money(buffer?.dynamic);
-      qs("shortStrikeValue").textContent = money(ts?.short_strike_selected);
-      qs("distanceValue").textContent = money(ts?.distance_to_short_strike);
+    function renderTradeSetup(ts, buffer, latestHistory) {
+      const dynBuffer = pick(buffer?.dynamic, latestHistory?.bufferDynamicPct);
+      const shortStrike = pick(ts?.short_strike_selected, latestHistory?.shortStrike);
+      const distance = pick(ts?.distance_to_short_strike);
 
-      qs("tsBufferBase").textContent = money(ts?.buffer_base);
-      qs("tsBufferDyn").textContent = money(ts?.buffer_dynamic);
+      qs("bufferValue").textContent = dynBuffer == null ? "--" : pct(dynBuffer);
+      qs("shortStrikeValue").textContent = shortStrike == null ? "--" : money(shortStrike);
+      qs("distanceValue").textContent = distance == null ? "--" : money(distance);
+
+      qs("tsBufferBase").textContent = ts?.buffer_base == null ? "--" : pct(ts.buffer_base);
+      qs("tsBufferDyn").textContent = ts?.buffer_dynamic == null ? (dynBuffer == null ? "--" : pct(dynBuffer)) : pct(ts.buffer_dynamic);
       qs("tsBufferReason").textContent = text(ts?.buffer_reason);
       qs("tsShortTarget").textContent = money(ts?.short_strike_target);
-      qs("tsShortSel").textContent = money(ts?.short_strike_selected);
+      qs("tsShortSel").textContent = shortStrike == null ? "--" : money(shortStrike);
       qs("tsDelta").textContent = fmt(ts?.short_delta, 3);
       qs("tsOI").textContent = intFmt(ts?.short_open_interest);
       qs("tsVol").textContent = intFmt(ts?.short_volume);
@@ -899,33 +903,41 @@
 
         const state = await stateRes.json();
         const history = await historyRes.json();
+        const latestHistory = Array.isArray(history) && history.length ? history[history.length - 1] : {};
 
-        qs("headerMeta").textContent = `${text(state.timestamp_ny)} · ${text(state.timestamp_utc)}`;
-        qs("scoreValue").textContent = text(state.score);
+        qs("headerMeta").textContent =
+          `${text(pick(state.timestamp_ny, latestHistory.updatedAtNY, latestHistory.sessionLabel))} · ${text(pick(state.timestamp_utc, latestHistory.updatedAtText, latestHistory.updatedAt))}`;
 
-        qs("summaryText").textContent = typeof state.summary === "object"
-          ? (state.summary.message || state.summary.title || JSON.stringify(state.summary))
-          : text(state.summary);
+        qs("scoreValue").textContent = text(pick(state.score, latestHistory.score));
 
-        setDecisionBadge(state.decision);
+        const summaryValue = pick(
+          typeof state.summary === "object" ? (state.summary?.message || state.summary?.title) : state.summary,
+          latestHistory.decision,
+          latestHistory.decisionLabel
+        );
+        qs("summaryText").textContent = text(summaryValue);
+
+        setDecisionBadge(pick(state.decision, latestHistory.decision, latestHistory.decisionLabel));
 
         qs("riskChip").textContent = `Risk ${text(state.risk)}`;
         const freshChip = qs("freshChip");
         const stale = !!state.freshness_alert;
         freshChip.className = `chip ${stale ? "chip-stale" : "chip-fresh"}`;
-        freshChip.innerHTML = `<span class="chip-dot"></span><span>${stale ? "Stale" : "Fresh"} · ${fmt(state.freshness_minutes,1)}m</span>`;
+        const freshness = state.freshness_minutes != null ? `${fmt(state.freshness_minutes,1)}m` : "--m";
+        freshChip.innerHTML = `<span class="chip-dot"></span><span>${stale ? "Stale" : "Fresh"} · ${freshness}</span>`;
 
-        qs("priceValue").textContent = money(state.price);
-        const ch = Number(state.change || 0);
-        const chPct = Number(state.change_pct || 0);
+        qs("priceValue").textContent = money(pick(state.price, latestHistory.price));
+        const ch = Number(pick(state.change, latestHistory.change, 0) || 0);
+        const chPct = Number(pick(state.change_pct, state.changePct, latestHistory.changePct, 0) || 0);
         qs("changeValue").textContent = `${ch >= 0 ? "+" : ""}${money(ch)} · ${chPct >= 0 ? "+" : ""}${pct(chPct)}`;
         qs("changeValue").className = ch > 0 ? "delta-up" : (ch < 0 ? "delta-down" : "delta-flat");
 
-        qs("vwapValue").textContent = money(state.vwap);
+        qs("vwapValue").textContent = money(pick(state.vwap, latestHistory.vwap));
 
-        qs("sessionValue").textContent = typeof state.session === "object"
-          ? (state.session.label || state.session.name || state.session.title || state.session.message || "--")
-          : text(state.session);
+        const sessionVal = typeof state.session === "object"
+          ? pick(state.session?.label, state.session?.name, state.session?.title, state.session?.message, latestHistory.sessionLabel)
+          : pick(state.session, latestHistory.sessionLabel);
+        qs("sessionValue").textContent = text(sessionVal);
 
         qs("openValue").textContent = money(state.open);
         qs("volumeValue").textContent = intFmt(state.volume);
@@ -936,7 +948,7 @@
         renderOptions(state.options_snapshot);
         renderMacro(state.macro);
         renderEarnings(state.earnings);
-        renderTradeSetup(state.trade_setup, state.buffer);
+        renderTradeSetup(state.trade_setup, state.buffer, latestHistory);
         renderHistory(history);
       } catch (err) {
         qs("summaryText").textContent = `No se pudo cargar el JSON: ${err.message}`;
