@@ -1928,5 +1928,13 @@
     "score": 55,
     "decisionLabel": "🟡 Esperar confirmación",
     "sessionLabel": "Premarket"
+  },
+  {
+    "updatedAt": "2026-07-02T09:15:57.913740+00:00",
+    "price": 720.5,
+    "score": 55,
+    "decision": "esperar confirmación",
+    "bufferDynamicPct": 2.2,
+    "shortStrike": 737.0
   }
 ]

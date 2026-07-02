@@ -6,22 +6,24 @@
   "changePct": -2.16,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T08:10:39.075168+00:00",
-  "updatedAtText": "2026-07-02 08:10:39 UTC",
-  "updatedAtNY": "2026-07-02 04:10:39 ET",
+  "updatedAt": "2026-07-02T09:15:57.913740+00:00",
+  "updatedAtText": "2026-07-02 09:15:57 UTC",
+  "updatedAtNY": "2026-07-02 05:15:57 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
   },
-  "summary": "macro Nóminas no agrícolas (NFP) en 1d 4h · short strike dentro o cerca del expected move · quotes de opciones no fiables todavía · próximo earnings relevante: Tesla en 20d · tramo actual: premarket",
+  "summary": "buffer dinámico 2.20% (base 1.85%) · short strike 737 · quotes de opciones no fiables todavía · próximo earnings relevante: Tesla en 20d · tramo actual: premarket",
   "trade": {
-    "bufferPct": 1.85,
-    "shortStrike": 734,
-    "longStrike": 735.0,
-    "breakeven": 734.1,
+    "bufferBasePct": 1.85,
+    "bufferDynamicPct": 2.2,
+    "bufferReason": "base 1.85% | expected move factor 1.78% | premarket range factor 1.31% | premarket multiplier x1.08 | high impact macro <=36h x1.10",
+    "shortStrike": 737.0,
+    "longStrike": 738.0,
+    "breakeven": 737.1,
     "spreadWidth": 1.0,
     "netCredit": 0.1,
-    "distToShort": 13.5
+    "distToShort": 16.5
   },
   "options": {
     "expiration": "2026-07-02",
@@ -81,17 +83,12 @@
   "decisionLabel": "🟡 Esperar confirmación",
   "riskLabel": "🟡 Riesgo medio",
   "reasons": [
-    "Distancia razonable al short",
+    "Buffer base: 1.85%",
+    "Buffer dinámico aplicado: 2.20%",
     "Sesgo bajista favorable",
     "Por debajo del VWAP",
-    "VWAP estirado a más de 2 sigma",
-    "Short strike dentro o cerca del expected move",
     "Premarket: quotes de opciones no fiables",
-    "Open interest flojo en strikes",
-    "Volumen decente en short call",
-    "Premarket: menor liquidez",
-    "Macro próxima: Nóminas no agrícolas (NFP)",
-    "Macro próxima: Tasa de desempleo"
+    "Macro próxima: Nóminas no agrícolas (NFP)"
   ],
   "alerts": [],
   "macro": {
@@ -108,18 +105,6 @@
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
-    "recent": {
-      "evento": "ISM Manufacturero",
-      "impacto": "alto",
-      "datetimeNY": "2026-07-01 10:00 ET",
-      "dateNY": "2026-07-01",
-      "timeNY": "10:00",
-      "dias": -1,
-      "horas": 18,
-      "totalHoras": -18.18,
-      "momento": "Durante la sesión",
-      "status": "past"
-    },
     "items": [
       {
         "evento": "Nóminas no agrícolas (NFP)",
@@ -132,166 +117,9 @@
         "totalHoras": 28.32,
         "momento": "Antes de la apertura",
         "status": "upcoming"
-      },
-      {
-        "evento": "Tasa de desempleo",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-03 08:30 ET",
-        "dateNY": "2026-07-03",
-        "timeNY": "08:30",
-        "dias": 1,
-        "horas": 4,
-        "totalHoras": 28.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "IPC (CPI)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-15 08:30 ET",
-        "dateNY": "2026-07-15",
-        "timeNY": "08:30",
-        "dias": 13,
-        "horas": 4,
-        "totalHoras": 316.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "IPP (PPI)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-16 08:30 ET",
-        "dateNY": "2026-07-16",
-        "timeNY": "08:30",
-        "dias": 14,
-        "horas": 4,
-        "totalHoras": 340.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "Ventas minoristas",
-        "impacto": "medio",
-        "datetimeNY": "2026-07-16 08:30 ET",
-        "dateNY": "2026-07-16",
-        "timeNY": "08:30",
-        "dias": 14,
-        "horas": 4,
-        "totalHoras": 340.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
       }
     ],
-    "all": [
-      {
-        "evento": "ISM Manufacturero",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-01 10:00 ET",
-        "dateNY": "2026-07-01",
-        "timeNY": "10:00",
-        "dias": -1,
-        "horas": 18,
-        "totalHoras": -18.18,
-        "momento": "Durante la sesión",
-        "status": "past"
-      },
-      {
-        "evento": "Nóminas no agrícolas (NFP)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-03 08:30 ET",
-        "dateNY": "2026-07-03",
-        "timeNY": "08:30",
-        "dias": 1,
-        "horas": 4,
-        "totalHoras": 28.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "Tasa de desempleo",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-03 08:30 ET",
-        "dateNY": "2026-07-03",
-        "timeNY": "08:30",
-        "dias": 1,
-        "horas": 4,
-        "totalHoras": 28.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "IPC (CPI)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-15 08:30 ET",
-        "dateNY": "2026-07-15",
-        "timeNY": "08:30",
-        "dias": 13,
-        "horas": 4,
-        "totalHoras": 316.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "IPP (PPI)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-16 08:30 ET",
-        "dateNY": "2026-07-16",
-        "timeNY": "08:30",
-        "dias": 14,
-        "horas": 4,
-        "totalHoras": 340.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "Ventas minoristas",
-        "impacto": "medio",
-        "datetimeNY": "2026-07-16 08:30 ET",
-        "dateNY": "2026-07-16",
-        "timeNY": "08:30",
-        "dias": 14,
-        "horas": 4,
-        "totalHoras": 340.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "Decisión FOMC / tipos",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-29 14:00 ET",
-        "dateNY": "2026-07-29",
-        "timeNY": "14:00",
-        "dias": 27,
-        "horas": 9,
-        "totalHoras": 657.82,
-        "momento": "Durante la sesión",
-        "status": "upcoming"
-      },
-      {
-        "evento": "PIB",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-30 08:30 ET",
-        "dateNY": "2026-07-30",
-        "timeNY": "08:30",
-        "dias": 28,
-        "horas": 4,
-        "totalHoras": 676.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      },
-      {
-        "evento": "PCE subyacente",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-31 08:30 ET",
-        "dateNY": "2026-07-31",
-        "timeNY": "08:30",
-        "dias": 29,
-        "horas": 4,
-        "totalHoras": 700.32,
-        "momento": "Antes de la apertura",
-        "status": "upcoming"
-      }
-    ]
+    "all": []
   },
   "earnings": {
     "status": "OK",
@@ -309,54 +137,6 @@
         "ticker": "TSLA",
         "fecha": "2026-07-22",
         "dias": 20,
-        "momento": "Hora no especificada",
-        "status": "OK"
-      },
-      {
-        "empresa": "Alphabet",
-        "ticker": "GOOGL",
-        "fecha": "2026-07-23",
-        "dias": 21,
-        "momento": "Hora no especificada",
-        "status": "OK"
-      },
-      {
-        "empresa": "Microsoft",
-        "ticker": "MSFT",
-        "fecha": "2026-07-29",
-        "dias": 27,
-        "momento": "Hora no especificada",
-        "status": "OK"
-      },
-      {
-        "empresa": "Meta",
-        "ticker": "META",
-        "fecha": "2026-07-29",
-        "dias": 27,
-        "momento": "Hora no especificada",
-        "status": "OK"
-      },
-      {
-        "empresa": "Apple",
-        "ticker": "AAPL",
-        "fecha": "2026-07-30",
-        "dias": 28,
-        "momento": "Hora no especificada",
-        "status": "OK"
-      },
-      {
-        "empresa": "Amazon",
-        "ticker": "AMZN",
-        "fecha": "2026-07-30",
-        "dias": 28,
-        "momento": "Hora no especificada",
-        "status": "OK"
-      },
-      {
-        "empresa": "Nvidia",
-        "ticker": "NVDA",
-        "fecha": "2026-08-26",
-        "dias": 55,
         "momento": "Hora no especificada",
         "status": "OK"
       }
