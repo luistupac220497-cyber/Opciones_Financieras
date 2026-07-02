@@ -1,29 +1,29 @@
 {
   "ticker": "QQQ",
-  "price": 713.4,
+  "price": 713.57,
   "prevClose": 725.17,
-  "change": -11.77,
-  "changePct": -1.62,
+  "change": -11.6,
+  "changePct": -1.6,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T21:50:36.188851+00:00",
-  "updatedAtText": "2026-07-02 21:50:36 UTC",
-  "updatedAtNY": "2026-07-02 17:50:35 ET",
+  "updatedAt": "2026-07-02T22:00:52.629011+00:00",
+  "updatedAtText": "2026-07-02 22:00:52 UTC",
+  "updatedAtNY": "2026-07-02 18:00:51 ET",
   "session": {
     "code": "afterhours",
     "label": "After hours"
   },
-  "summary": "buffer 2.60% (base 1.85%) · short 732 · quotes de opciones cargadas · Tesla en 20d · tramo afterhours",
+  "summary": "buffer 2.60% (base 1.85%) · short 733 · quotes de opciones cargadas · Tesla en 20d · tramo afterhours",
   "trade": {
     "bufferBasePct": 1.85,
     "bufferDynamicPct": 2.6,
     "bufferReason": "base 1.85% | exp move +0.27% | pm range +0.36% | macro +0.12%",
-    "shortStrike": 732.0,
-    "longStrike": 733.0,
-    "breakeven": 732.0,
+    "shortStrike": 733.0,
+    "longStrike": 734.0,
+    "breakeven": 733.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 18.6
+    "distToShort": 19.43
   },
   "bufferDebug": {
     "base": 1.85,
@@ -44,18 +44,18 @@
     "longCallAsk": 0.01,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 4839.0,
-    "longCallOI": 5482.0,
-    "shortCallVolume": 89933.0,
-    "longCallVolume": 77426.0,
+    "shortCallOI": 5482.0,
+    "longCallOI": 3074.0,
+    "shortCallVolume": 77426.0,
+    "longCallVolume": 51747.0,
     "quotesUsable": true,
     "notes": "Quotes de opciones cargadas"
   },
   "vwap": {
     "value": 716.5,
-    "distPct": -0.43,
-    "zScore": -0.47,
-    "sigma": 6.64,
+    "distPct": -0.41,
+    "zScore": -0.44,
+    "sigma": 6.62,
     "bias": "Por debajo"
   },
   "openingRange": {
@@ -78,8 +78,8 @@
     "dailyVolPct": 1.51,
     "move": 10.8,
     "movePct": 1.51,
-    "upper": 724.2,
-    "lower": 702.6,
+    "upper": 724.37,
+    "lower": 702.77,
     "status": "OK"
   },
   "freshness": {
