@@ -6,14 +6,14 @@
   "changePct": -1.63,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T03:50:29.875431+00:00",
-  "updatedAtText": "2026-07-02 03:50:29 UTC",
-  "updatedAtNY": "2026-07-01 23:50:29 ET",
+  "updatedAt": "2026-07-02T04:00:50.444835+00:00",
+  "updatedAtText": "2026-07-02 04:00:50 UTC",
+  "updatedAtNY": "2026-07-02 00:00:50 ET",
   "session": {
     "code": "overnight",
     "label": "Overnight"
   },
-  "summary": "macro Nóminas no agrícolas (NFP) en 1d 8h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 21d · tramo actual: overnight",
+  "summary": "macro Nóminas no agrícolas (NFP) en 1d 8h · short strike dentro o cerca del expected move · próximo earnings relevante: Tesla en 20d · tramo actual: overnight",
   "trade": {
     "bufferPct": 1.85,
     "shortStrike": 738,
@@ -46,28 +46,14 @@
     "bias": "Muy por debajo"
   },
   "openingRange": {
-    "available": true,
-    "status": "OK",
-    "message": "Opening Range calculado",
-    "minutes": 5,
-    "open": 729.16,
-    "high": 729.7,
-    "low": 725.98,
-    "close": 726.23,
-    "mid": 727.84,
-    "size": 3.72,
-    "sizePct": 0.51,
-    "state": "normal"
+    "available": false,
+    "status": "Pendiente",
+    "message": "Opening Range disponible a partir de 09:30 ET"
   },
   "premarketRange": {
-    "available": true,
-    "status": "OK",
-    "message": "Premarket Range calculado",
-    "high": 736.95,
-    "low": 728.67,
-    "close": 729.18,
-    "size": 8.28,
-    "sizePct": 1.14
+    "available": false,
+    "status": "No disponible",
+    "message": "Sin velas del día"
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
@@ -94,7 +80,6 @@
     "Sesgo bajista favorable",
     "Por debajo del VWAP",
     "VWAP algo estirado",
-    "Opening range normal",
     "Short strike dentro o cerca del expected move",
     "Bid/ask razonable",
     "Open interest sólido en strikes",
@@ -114,7 +99,7 @@
       "timeNY": "08:30",
       "dias": 1,
       "horas": 8,
-      "totalHoras": 32.66,
+      "totalHoras": 32.49,
       "momento": "Antes de la apertura",
       "status": "upcoming"
     },
@@ -125,8 +110,8 @@
       "dateNY": "2026-07-01",
       "timeNY": "10:00",
       "dias": -1,
-      "horas": 13,
-      "totalHoras": -13.84,
+      "horas": 14,
+      "totalHoras": -14.01,
       "momento": "Durante la sesión",
       "status": "past"
     },
@@ -139,7 +124,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 8,
-        "totalHoras": 32.66,
+        "totalHoras": 32.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -151,7 +136,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 8,
-        "totalHoras": 32.66,
+        "totalHoras": 32.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -163,7 +148,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 8,
-        "totalHoras": 320.66,
+        "totalHoras": 320.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -175,7 +160,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 8,
-        "totalHoras": 344.66,
+        "totalHoras": 344.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -187,7 +172,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 8,
-        "totalHoras": 344.66,
+        "totalHoras": 344.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -200,8 +185,8 @@
         "dateNY": "2026-07-01",
         "timeNY": "10:00",
         "dias": -1,
-        "horas": 13,
-        "totalHoras": -13.84,
+        "horas": 14,
+        "totalHoras": -14.01,
         "momento": "Durante la sesión",
         "status": "past"
       },
@@ -213,7 +198,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 8,
-        "totalHoras": 32.66,
+        "totalHoras": 32.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -225,7 +210,7 @@
         "timeNY": "08:30",
         "dias": 1,
         "horas": 8,
-        "totalHoras": 32.66,
+        "totalHoras": 32.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -237,7 +222,7 @@
         "timeNY": "08:30",
         "dias": 13,
         "horas": 8,
-        "totalHoras": 320.66,
+        "totalHoras": 320.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -249,7 +234,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 8,
-        "totalHoras": 344.66,
+        "totalHoras": 344.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -261,7 +246,7 @@
         "timeNY": "08:30",
         "dias": 14,
         "horas": 8,
-        "totalHoras": 344.66,
+        "totalHoras": 344.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -272,8 +257,8 @@
         "dateNY": "2026-07-29",
         "timeNY": "14:00",
         "dias": 27,
-        "horas": 14,
-        "totalHoras": 662.16,
+        "horas": 13,
+        "totalHoras": 661.99,
         "momento": "Durante la sesión",
         "status": "upcoming"
       },
@@ -285,7 +270,7 @@
         "timeNY": "08:30",
         "dias": 28,
         "horas": 8,
-        "totalHoras": 680.66,
+        "totalHoras": 680.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       },
@@ -297,7 +282,7 @@
         "timeNY": "08:30",
         "dias": 29,
         "horas": 8,
-        "totalHoras": 704.66,
+        "totalHoras": 704.49,
         "momento": "Antes de la apertura",
         "status": "upcoming"
       }
@@ -309,7 +294,7 @@
       "empresa": "Tesla",
       "ticker": "TSLA",
       "fecha": "2026-07-22",
-      "dias": 21,
+      "dias": 20,
       "momento": "Hora no especificada",
       "status": "OK"
     },
@@ -318,7 +303,7 @@
         "empresa": "Tesla",
         "ticker": "TSLA",
         "fecha": "2026-07-22",
-        "dias": 21,
+        "dias": 20,
         "momento": "Hora no especificada",
         "status": "OK"
       },
@@ -326,7 +311,7 @@
         "empresa": "Alphabet",
         "ticker": "GOOGL",
         "fecha": "2026-07-23",
-        "dias": 22,
+        "dias": 21,
         "momento": "Hora no especificada",
         "status": "OK"
       },
@@ -334,7 +319,7 @@
         "empresa": "Microsoft",
         "ticker": "MSFT",
         "fecha": "2026-07-29",
-        "dias": 28,
+        "dias": 27,
         "momento": "Hora no especificada",
         "status": "OK"
       },
@@ -342,7 +327,7 @@
         "empresa": "Meta",
         "ticker": "META",
         "fecha": "2026-07-29",
-        "dias": 28,
+        "dias": 27,
         "momento": "Hora no especificada",
         "status": "OK"
       },
@@ -350,7 +335,7 @@
         "empresa": "Apple",
         "ticker": "AAPL",
         "fecha": "2026-07-30",
-        "dias": 29,
+        "dias": 28,
         "momento": "Hora no especificada",
         "status": "OK"
       },
@@ -358,7 +343,7 @@
         "empresa": "Amazon",
         "ticker": "AMZN",
         "fecha": "2026-07-30",
-        "dias": 29,
+        "dias": 28,
         "momento": "Hora no especificada",
         "status": "OK"
       },
@@ -366,7 +351,7 @@
         "empresa": "Nvidia",
         "ticker": "NVDA",
         "fecha": "2026-08-26",
-        "dias": 56,
+        "dias": 55,
         "momento": "Hora no especificada",
         "status": "OK"
       }
