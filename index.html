@@ -41,7 +41,6 @@
       --radius-md: 14px;
       --radius-lg: 18px;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
-      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     [data-theme="dark"] {
@@ -64,6 +63,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { min-height: 100%; }
+
     body {
       font-family: var(--font-body);
       background: var(--color-bg);
@@ -73,27 +73,75 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
-    .app { max-width: 1380px; margin: 0 auto; padding: var(--space-6); }
-    .topbar {
-      display: flex; justify-content: space-between; align-items: center; gap: var(--space-4);
-      margin-bottom: var(--space-6); flex-wrap: wrap;
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: 0;
+      background: none;
+      color: inherit;
     }
-    .title h1 { font-size: var(--text-xl); font-weight: 900; letter-spacing: -.04em; }
-    .title p { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: .2rem; }
 
-    .chip-row { display: flex; gap: .75rem; flex-wrap: wrap; }
-    .chip {
-      display: inline-flex; align-items: center; gap: .45rem;
-      padding: .55rem .8rem; border-radius: 999px; font-size: var(--text-xs);
-      font-weight: 700; border: 1px solid var(--color-border); background: var(--color-surface-2);
+    .app {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: var(--space-6);
     }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+
+    .title h1 {
+      font-size: var(--text-xl);
+      font-weight: 900;
+      letter-spacing: -.04em;
+    }
+
+    .title p {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-top: .2rem;
+    }
+
+    .header-meta {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-top: .75rem;
+    }
+
+    .chip-row {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .chip, .reason-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .55rem .8rem;
+      border-radius: 999px;
+      font-size: var(--text-xs);
+      font-weight: 700;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+    }
+
     .chip-fresh { color: var(--color-success); background: var(--color-success-soft); border-color: transparent; }
     .chip-stale { color: var(--color-warning); background: var(--color-warning-soft); border-color: transparent; }
+    .chip-low { color: var(--color-success); background: var(--color-success-soft); border-color: transparent; }
+    .chip-medium { color: var(--color-warning); background: var(--color-warning-soft); border-color: transparent; }
+    .chip-high { color: var(--color-error); background: var(--color-error-soft); border-color: transparent; }
 
     .grid { display: grid; gap: var(--space-4); }
-    .hero { grid-template-columns: 1.25fr .9fr; margin-bottom: var(--space-4); }
-    .mid { grid-template-columns: repeat(4, 1fr); margin-bottom: var(--space-4); }
+    .hero { grid-template-columns: 1.15fr .85fr; margin-bottom: var(--space-4); }
+    .mid { grid-template-columns: repeat(3, 1fr); margin-bottom: var(--space-4); }
     .bottom { grid-template-columns: repeat(2, 1fr); }
 
     .card {
@@ -104,31 +152,58 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .card-title { font-size: var(--text-lg); font-weight: 800; letter-spacing: -.02em; }
+    .card-title {
+      font-size: var(--text-lg);
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
     .card-subtitle {
-      margin-top: .2rem; font-size: var(--text-xs);
-      color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .08em;
+      margin-top: .2rem;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
     }
 
     .decision-badge {
-      display: inline-flex; margin-top: 1rem; padding: .75rem 1rem; border-radius: 999px;
-      font-size: var(--text-sm); font-weight: 800;
+      display: inline-flex;
+      margin-top: 1rem;
+      padding: .75rem 1rem;
+      border-radius: 999px;
+      font-size: var(--text-sm);
+      font-weight: 800;
     }
+
     .decision-enter { color: var(--color-success); background: var(--color-success-soft); }
     .decision-wait { color: var(--color-warning); background: var(--color-warning-soft); }
     .decision-no { color: var(--color-error); background: var(--color-error-soft); }
 
     .score {
       font-size: clamp(2.3rem, 2rem + 2vw, 4rem);
-      font-weight: 900; line-height: 1; letter-spacing: -.06em; margin-top: 1rem;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.06em;
+      margin-top: 1rem;
     }
 
     .summary {
-      margin-top: 1rem; color: var(--color-text-muted);
+      margin-top: 1rem;
+      color: var(--color-text-muted);
+    }
+
+    .chips-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: 1rem;
     }
 
     .mini-grid {
-      margin-top: 1rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem;
+      margin-top: 1rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .75rem;
     }
 
     .mini-box, .stat {
@@ -139,18 +214,24 @@
     }
 
     .mini-label, .stat-label {
-      font-size: var(--text-xs); color: var(--color-text-muted);
-      text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .35rem;
     }
 
     .mini-value, .stat-value {
-      font-size: var(--text-lg); font-weight: 800;
+      font-size: var(--text-lg);
+      font-weight: 800;
       font-variant-numeric: tabular-nums lining-nums;
     }
 
     .price-main {
       font-size: clamp(2rem, 1.8rem + 1.7vw, 3.4rem);
-      line-height: 1; font-weight: 900; letter-spacing: -.05em;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -.05em;
       font-variant-numeric: tabular-nums lining-nums;
       margin-top: 1rem;
     }
@@ -159,30 +240,80 @@
     .delta-down { color: var(--color-error); }
     .delta-flat { color: var(--color-text-muted); }
 
-    .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-top: 1rem; }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .75rem;
+      margin-top: 1rem;
+    }
 
     .alert {
-      margin-top: 1rem; padding: .9rem 1rem; border-radius: var(--radius-md);
+      margin-top: 1rem;
+      padding: .9rem 1rem;
+      border-radius: var(--radius-md);
       font-size: var(--text-sm);
     }
+
     .alert-warning { color: var(--color-warning); background: var(--color-warning-soft); }
     .alert-error { color: var(--color-error); background: var(--color-error-soft); }
 
-    .list { display: grid; gap: .85rem; margin-top: 1rem; }
+    .list {
+      display: grid;
+      gap: .85rem;
+      margin-top: 1rem;
+    }
+
     .list-row {
-      display: flex; justify-content: space-between; gap: 1rem; padding-bottom: .85rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-bottom: .85rem;
       border-bottom: 1px solid var(--color-divider);
     }
-    .list-row:last-child { border-bottom: 0; padding-bottom: 0; }
-    .list-title { font-size: var(--text-sm); font-weight: 700; }
-    .list-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: .2rem; }
-    .list-value { text-align: right; font-size: var(--text-sm); font-weight: 800; }
 
-    .table-wrap { overflow-x: auto; margin-top: 1rem; }
-    table { width: 100%; border-collapse: collapse; }
-    td, th { padding: .8rem .4rem; border-bottom: 1px solid var(--color-divider); font-size: var(--text-sm); }
-    td.num { text-align: right; font-variant-numeric: tabular-nums lining-nums; font-weight: 700; }
-    th { text-align: left; font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .08em; }
+    .list-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .list-title {
+      font-size: var(--text-sm);
+      font-weight: 700;
+    }
+
+    .list-meta {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: .2rem;
+    }
+
+    .list-value {
+      text-align: right;
+      font-size: var(--text-sm);
+      font-weight: 800;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    td, th {
+      padding: .8rem .4rem;
+      border-bottom: 1px solid var(--color-divider);
+      font-size: var(--text-sm);
+    }
+
+    td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums lining-nums;
+      font-weight: 700;
+    }
 
     .muted { color: var(--color-text-muted); }
 
@@ -202,6 +333,7 @@
       <div class="title">
         <h1>QQQ 0DTE Dashboard</h1>
         <p id="headerMeta">Cargando estado…</p>
+        <div id="headerChips" class="header-meta"></div>
       </div>
       <div class="chip-row">
         <div id="freshChip" class="chip chip-fresh">Fresh</div>
@@ -213,10 +345,11 @@
     <section class="grid hero">
       <article class="card">
         <div class="card-title">Decisión operativa</div>
-        <div class="card-subtitle">Score y resumen</div>
+        <div class="card-subtitle">Lectura final del setup</div>
         <div id="decisionBadge" class="decision-badge decision-wait">Esperando</div>
         <div id="scoreValue" class="score">--</div>
-        <div id="summaryText" class="summary">Sin datos.</div>
+        <div id="summaryText" class="summary">Sin datos todavía.</div>
+        <div id="reasonChips" class="chips-inline"></div>
 
         <div class="mini-grid">
           <div class="mini-box">
@@ -236,7 +369,7 @@
 
       <article class="card">
         <div class="card-title">Precio y sesión</div>
-        <div class="card-subtitle">Spot, VWAP y tono</div>
+        <div class="card-subtitle">Spot, VWAP y contexto</div>
         <div id="priceValue" class="price-main">--</div>
         <div id="changeValue" class="muted" style="margin-top:.5rem;">--</div>
 
@@ -250,7 +383,7 @@
             <div id="sessionValue" class="stat-value">--</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Prev close</div>
+            <div class="stat-label">Cierre previo</div>
             <div id="openValue" class="stat-value">--</div>
           </div>
           <div class="stat">
@@ -263,34 +396,60 @@
 
     <section class="grid mid">
       <article class="card">
-        <div class="card-title">Premarket range</div>
-        <div class="card-subtitle">Antes del cash open</div>
-        <div id="premarketBox" class="summary">--</div>
+        <div class="card-title">Contexto</div>
+        <div class="card-subtitle">Premarket, OR y movimiento esperado</div>
+        <div id="contextBox" class="summary">--</div>
       </article>
 
       <article class="card">
-        <div class="card-title">Opening range</div>
-        <div class="card-subtitle">09:30 ET en adelante</div>
-        <div id="openingBox" class="summary">--</div>
-      </article>
-
-      <article class="card">
-        <div class="card-title">Expected move</div>
-        <div class="card-subtitle">Referencia diaria</div>
-        <div id="expectedBox" class="summary">--</div>
-      </article>
-
-      <article class="card">
-        <div class="card-title">Liquidity snapshot</div>
-        <div class="card-subtitle">Estado de options</div>
+        <div class="card-title">Liquidez</div>
+        <div class="card-subtitle">Calidad de quotes y cadena</div>
         <div id="liquidityBox" class="summary">--</div>
+      </article>
+
+      <article class="card">
+        <div class="card-title">Setup</div>
+        <div class="card-subtitle">Distancia, buffer y breakeven</div>
+        <div id="setupBox" class="summary">--</div>
       </article>
     </section>
 
     <section class="grid bottom">
       <article class="card">
+        <div class="card-title">Options snapshot</div>
+        <div class="card-subtitle">Estado de ejecución</div>
+        <div id="optionsAlert"></div>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td>Expiración</td><td id="osExpiry" class="num">--</td></tr>
+              <tr><td>Short bid/ask</td><td id="osBidAsk" class="num">--</td></tr>
+              <tr><td>Long bid/ask</td><td id="osLongBidAsk" class="num">--</td></tr>
+              <tr><td>Quotes válidas</td><td id="osReliable">--</td></tr>
+              <tr><td>Short OI</td><td id="osOI" class="num">--</td></tr>
+              <tr><td>Short volume</td><td id="osVol" class="num">--</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-title">Macro</div>
+        <div class="card-subtitle">Eventos que pueden vetar entrada</div>
+        <div id="macroAlert"></div>
+        <div id="macroList" class="list"></div>
+      </article>
+
+      <article class="card">
+        <div class="card-title">Earnings</div>
+        <div class="card-subtitle">Riesgo cercano en Mag 7</div>
+        <div id="earningsAlert"></div>
+        <div id="earningsList" class="list"></div>
+      </article>
+
+      <article class="card">
         <div class="card-title">Trade setup</div>
-        <div class="card-subtitle">Buffer, strike y crédito</div>
+        <div class="card-subtitle">Detalle rápido del spread</div>
         <div class="table-wrap">
           <table>
             <tbody>
@@ -306,38 +465,6 @@
             </tbody>
           </table>
         </div>
-      </article>
-
-      <article class="card">
-        <div class="card-title">Options snapshot</div>
-        <div class="card-subtitle">Estado operativo</div>
-        <div id="optionsAlert"></div>
-        <div class="table-wrap">
-          <table>
-            <tbody>
-              <tr><td>Expiración</td><td id="osExpiry" class="num">--</td></tr>
-              <tr><td>Short bid/ask</td><td id="osBidAsk" class="num">--</td></tr>
-              <tr><td>Long bid/ask</td><td id="osLongBidAsk" class="num">--</td></tr>
-              <tr><td>Quotes fiables</td><td id="osReliable">--</td></tr>
-              <tr><td>Short OI</td><td id="osOI" class="num">--</td></tr>
-              <tr><td>Short volume</td><td id="osVol" class="num">--</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </article>
-
-      <article class="card">
-        <div class="card-title">Macro</div>
-        <div class="card-subtitle">Próximos eventos</div>
-        <div id="macroAlert"></div>
-        <div id="macroList" class="list"></div>
-      </article>
-
-      <article class="card">
-        <div class="card-title">Earnings</div>
-        <div class="card-subtitle">Mag 7 / veto</div>
-        <div id="earningsAlert"></div>
-        <div id="earningsList" class="list"></div>
       </article>
     </section>
   </div>
@@ -366,47 +493,132 @@
       const el = qs("decisionBadge");
       el.textContent = label || "--";
       el.className = "decision-badge";
-      if (tone === "red") el.classList.add("decision-no");
-      else if (tone === "yellow") el.classList.add("decision-wait");
-      else el.classList.add("decision-enter");
+      el.classList.add(
+        tone === "red" ? "decision-no" :
+        tone === "yellow" ? "decision-wait" :
+        "decision-enter"
+      );
     }
 
-    function renderRange(boxId, obj, kind = "simple") {
-      const el = qs(boxId);
-      if (!obj) {
-        el.textContent = "--";
-        return;
-      }
-      if (!obj.available) {
-        el.innerHTML = `<div class="muted">${text(obj.message || obj.status)}</div>`;
-        return;
-      }
-      if (kind === "premarket") {
-        el.innerHTML = `
-          <div><strong>High:</strong> ${money(obj.high)}</div>
-          <div><strong>Low:</strong> ${money(obj.low)}</div>
-          <div><strong>Close:</strong> ${money(obj.close)}</div>
-          <div><strong>Size:</strong> ${money(obj.size)} · ${pct(obj.sizePct)}</div>
-          <div class="muted" style="margin-top:.35rem;">${text(obj.message)}</div>
-        `;
-        return;
-      }
-      el.innerHTML = `<div class="muted">${text(obj.message || obj.status)}</div>`;
+    function setRiskChip(risk) {
+      const el = qs("riskChip");
+      el.textContent = text(risk || "Risk");
+      el.className = "chip " + (
+        String(risk || "").toLowerCase().includes("alto") ? "chip-high" :
+        String(risk || "").toLowerCase().includes("medio") ? "chip-medium" :
+        "chip-low"
+      );
     }
 
-    function renderExpectedMove(em) {
-      const el = qs("expectedBox");
-      if (!em || em.status !== "OK") {
-        el.textContent = "Expected move no disponible.";
-        return;
+    function setFreshChip(freshness) {
+      const stale = !!freshness?.isStale;
+      const el = qs("freshChip");
+      el.className = `chip ${stale ? "chip-stale" : "chip-fresh"}`;
+      el.textContent = `${stale ? "Desactualizado" : "Fresco"} · ${text(freshness?.ageMinutes)}m`;
+    }
+
+    function compactReason(s) {
+      const raw = String(s || "").toLowerCase();
+      if (!raw) return "--";
+      if (raw.includes("quotes")) return "quotes débiles";
+      if (raw.includes("premarket")) return "premarket";
+      if (raw.includes("macro")) return "macro cercana";
+      if (raw.includes("vwap")) return "debajo de VWAP";
+      if (raw.includes("buffer")) return "buffer ampliado";
+      return s;
+    }
+
+    function renderChips(items) {
+      const box = qs("reasonChips");
+      box.innerHTML = "";
+      (items || []).slice(0, 4).forEach(t => {
+        const s = document.createElement("span");
+        s.className = "reason-chip";
+        s.textContent = compactReason(t);
+        box.appendChild(s);
+      });
+    }
+
+    function safeLine(label, value) {
+      return `<div><strong>${label}:</strong> ${value}</div>`;
+    }
+
+    function renderContext(state) {
+      const el = qs("contextBox");
+      const parts = [];
+
+      if (state.premarketRange?.available) {
+        parts.push(safeLine("Premarket range", `${money(state.premarketRange.high)} / ${money(state.premarketRange.low)} · ${pct(state.premarketRange.sizePct)}`));
+      } else {
+        parts.push(safeLine("Premarket range", text(state.premarketRange?.message || "Pendiente")));
       }
-      el.innerHTML = `
-        <div><strong>Method:</strong> ${text(em.method)}</div>
-        <div><strong>Vol diaria:</strong> ${pct(em.dailyVolPct)}</div>
-        <div><strong>Expected move:</strong> ${money(em.move)}</div>
-        <div><strong>Upper:</strong> ${money(em.upper)}</div>
-        <div><strong>Lower:</strong> ${money(em.lower)}</div>
+
+      if (state.openingRange?.available) {
+        parts.push(safeLine("Opening range", `${money(state.openingRange.high)} / ${money(state.openingRange.low)}`));
+      } else {
+        parts.push(safeLine("Opening range", text(state.openingRange?.message || "Disponible tras 09:30 ET")));
+      }
+
+      if (state.expectedMove?.status === "OK") {
+        parts.push(safeLine("Expected move", `${money(state.expectedMove.move)} (${pct(state.expectedMove.movePct)})`));
+      } else {
+        parts.push(safeLine("Expected move", "No calculable con el feed actual"));
+      }
+
+      el.innerHTML = parts.join("");
+    }
+
+    function renderLiquidity(state) {
+      const os = state.options || {};
+      const reliable = os.quotesUsable ? "Sí" : "No";
+      const deltaText = os.shortCallDelta == null ? "Pendiente" : fmt(os.shortCallDelta, 3);
+
+      qs("liquidityBox").innerHTML = `
+        ${safeLine("Quotes válidas", reliable)}
+        ${safeLine("Short OI", intFmt(os.shortCallOI))}
+        ${safeLine("Short volume", intFmt(os.shortCallVolume))}
+        ${safeLine("Delta short", deltaText)}
       `;
+
+      qs("osExpiry").textContent = text(os.expiration);
+      qs("osBidAsk").textContent = `${money(os.shortCallBid)} / ${money(os.shortCallAsk)}`;
+      qs("osLongBidAsk").textContent = `${money(os.longCallBid)} / ${money(os.longCallAsk)}`;
+      qs("osReliable").textContent = reliable;
+      qs("osOI").textContent = intFmt(os.shortCallOI);
+      qs("osVol").textContent = intFmt(os.shortCallVolume);
+
+      let note = text(os.notes);
+      if (!os.quotesUsable && note !== "--") {
+        note = `Sin validación operativa todavía · ${note}`;
+      }
+
+      qs("optionsAlert").innerHTML = note !== "--"
+        ? `<div class="alert ${os.quotesUsable ? "alert-warning" : "alert-error"}">${note}</div>`
+        : "";
+    }
+
+    function renderSetup(state) {
+      const t = state.trade || {};
+
+      qs("setupBox").innerHTML = `
+        ${safeLine("Buffer activo", `${pct(t.bufferDynamicPct)} · base ${pct(t.bufferBasePct)}`)}
+        ${safeLine("Short strike", money(t.shortStrike))}
+        ${safeLine("Breakeven", money(t.breakeven))}
+      `;
+
+      qs("bufferValue").textContent = pct(t.bufferDynamicPct);
+      qs("shortStrikeValue").textContent = money(t.shortStrike);
+      qs("distanceValue").textContent = money(t.distToShort);
+
+      qs("tsBufferBase").textContent = pct(t.bufferBasePct);
+      qs("tsBufferDyn").textContent = pct(t.bufferDynamicPct);
+      qs("tsBufferReason").textContent = text(t.bufferReason);
+      qs("tsShortSel").textContent = money(t.shortStrike);
+      qs("tsLongSel").textContent = money(t.longStrike);
+      qs("tsBreakeven").textContent = money(t.breakeven);
+      qs("tsWidth").textContent = money(t.spreadWidth);
+      qs("tsCredit").textContent = money(t.netCredit);
+      qs("tsDistance").textContent = money(t.distToShort);
     }
 
     function renderMacro(macro) {
@@ -417,7 +629,9 @@
 
       if (macro?.next) {
         const cls = macro.next.impacto === "alto" ? "alert alert-error" : "alert alert-warning";
-        alert.innerHTML = `<div class="${cls}">${text(macro.next.evento)} · impacto ${text(macro.next.impacto)} · ${text(macro.next.totalHoras)}h</div>`;
+        alert.innerHTML = `<div class="${cls}">${text(macro.next.evento)} · impacto ${text(macro.next.impacto)} · faltan ${text(macro.next.totalHoras)}h</div>`;
+      } else {
+        alert.innerHTML = `<div class="alert alert-warning">Sin eventos macro cargados.</div>`;
       }
 
       (macro?.items || []).forEach(ev => {
@@ -460,42 +674,6 @@
       });
     }
 
-    function renderOptions(os) {
-      qs("osExpiry").textContent = text(os?.expiration);
-      qs("osBidAsk").textContent = `${money(os?.shortCallBid)} / ${money(os?.shortCallAsk)}`;
-      qs("osLongBidAsk").textContent = `${money(os?.longCallBid)} / ${money(os?.longCallAsk)}`;
-      qs("osReliable").textContent = os?.quotesUsable ? "Sí" : "No";
-      qs("osOI").textContent = intFmt(os?.shortCallOI);
-      qs("osVol").textContent = intFmt(os?.shortCallVolume);
-
-      qs("optionsAlert").innerHTML = os?.notes
-        ? `<div class="alert alert-warning">${text(os.notes)}</div>`
-        : "";
-
-      qs("liquidityBox").innerHTML = `
-        <div><strong>Quotes fiables:</strong> ${os?.quotesUsable ? "Sí" : "No"}</div>
-        <div><strong>Short OI:</strong> ${intFmt(os?.shortCallOI)}</div>
-        <div><strong>Short volume:</strong> ${intFmt(os?.shortCallVolume)}</div>
-        <div><strong>Delta:</strong> ${os?.shortCallDelta == null ? "No disponible" : fmt(os.shortCallDelta, 3)}</div>
-      `;
-    }
-
-    function renderTrade(trade) {
-      qs("bufferValue").textContent = pct(trade?.bufferDynamicPct);
-      qs("shortStrikeValue").textContent = money(trade?.shortStrike);
-      qs("distanceValue").textContent = money(trade?.distToShort);
-
-      qs("tsBufferBase").textContent = pct(trade?.bufferBasePct);
-      qs("tsBufferDyn").textContent = pct(trade?.bufferDynamicPct);
-      qs("tsBufferReason").textContent = text(trade?.bufferReason);
-      qs("tsShortSel").textContent = money(trade?.shortStrike);
-      qs("tsLongSel").textContent = money(trade?.longStrike);
-      qs("tsBreakeven").textContent = money(trade?.breakeven);
-      qs("tsWidth").textContent = money(trade?.spreadWidth);
-      qs("tsCredit").textContent = money(trade?.netCredit);
-      qs("tsDistance").textContent = money(trade?.distToShort);
-    }
-
     async function loadDashboard() {
       try {
         const res = await fetch(`data/state.json?ts=${Date.now()}`, { cache: "no-store" });
@@ -505,13 +683,11 @@
 
         qs("headerMeta").textContent = `${text(state.updatedAtNY)} · ${text(state.updatedAtText)}`;
         qs("scoreValue").textContent = text(state.score);
-        qs("summaryText").textContent = text(state.summary);
-        setDecisionBadge(state.decisionLabel || state.decision, state.decisionTone);
+        qs("summaryText").textContent = text(state.summary || "Sin lectura operativa disponible.");
 
-        qs("riskChip").textContent = text(state.riskLabel || "Risk");
-        const stale = !!state.freshness?.isStale;
-        qs("freshChip").className = `chip ${stale ? "chip-stale" : "chip-fresh"}`;
-        qs("freshChip").textContent = `${stale ? "Stale" : "Fresh"} · ${text(state.freshness?.ageMinutes)}m`;
+        setDecisionBadge(state.decisionLabel || state.decision, state.decisionTone);
+        setRiskChip(state.riskLabel || "Risk");
+        setFreshChip(state.freshness);
 
         qs("priceValue").textContent = money(state.price);
         const ch = Number(state.change || 0);
@@ -524,16 +700,15 @@
         qs("openValue").textContent = money(state.prevClose);
         qs("volumeValue").textContent = intFmt(state.options?.shortCallVolume);
 
-        renderRange("premarketBox", state.premarketRange, "premarket");
-        renderRange("openingBox", state.openingRange);
-        renderExpectedMove(state.expectedMove);
-        renderOptions(state.options);
+        renderContext(state);
+        renderLiquidity(state);
+        renderSetup(state);
         renderMacro(state.macro);
         renderEarnings(state.earnings);
-        renderTrade(state.trade);
+        renderChips(state.reasons || []);
       } catch (err) {
         qs("headerMeta").textContent = "Error cargando data/state.json";
-        qs("summaryText").textContent = "No se pudo cargar data/state.json.";
+        qs("summaryText").textContent = "No se pudo cargar el estado operativo.";
         console.error(err);
       }
     }
