@@ -206,7 +206,7 @@
       <div class="chip-row">
         <div id="freshChip" class="chip chip-fresh">Fresh</div>
         <div id="riskChip" class="chip">Risk</div>
-        <button id="themeToggle" class="chip">◐</button>
+        <button id="themeToggle" class="chip" aria-label="Cambiar tema">◐</button>
       </div>
     </div>
 
@@ -347,6 +347,8 @@
     const themeToggle = document.getElementById("themeToggle");
     let theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     root.setAttribute("data-theme", theme);
+    themeToggle.textContent = theme === "dark" ? "☀" : "◐";
+
     themeToggle.addEventListener("click", () => {
       theme = theme === "dark" ? "light" : "dark";
       root.setAttribute("data-theme", theme);
@@ -496,7 +498,9 @@
 
     async function loadDashboard() {
       try {
-        const res = await fetch(`./state.json?ts=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(`data/state.json?ts=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
         const state = await res.json();
 
         qs("headerMeta").textContent = `${text(state.updatedAtNY)} · ${text(state.updatedAtText)}`;
@@ -528,7 +532,8 @@
         renderEarnings(state.earnings);
         renderTrade(state.trade);
       } catch (err) {
-        qs("summaryText").textContent = "No se pudo cargar state.json.";
+        qs("headerMeta").textContent = "Error cargando data/state.json";
+        qs("summaryText").textContent = "No se pudo cargar data/state.json.";
         console.error(err);
       }
     }
