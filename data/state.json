@@ -1,14 +1,14 @@
 {
   "ticker": "QQQ",
-  "price": 712.95,
+  "price": 712.88,
   "prevClose": 725.17,
-  "change": -12.22,
+  "change": -12.29,
   "changePct": -1.69,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-02T20:40:35.335205+00:00",
-  "updatedAtText": "2026-07-02 20:40:35 UTC",
-  "updatedAtNY": "2026-07-02 16:40:33 ET",
+  "updatedAt": "2026-07-02T20:46:19.015825+00:00",
+  "updatedAtText": "2026-07-02 20:46:19 UTC",
+  "updatedAtNY": "2026-07-02 16:46:17 ET",
   "session": {
     "code": "afterhours",
     "label": "After hours"
@@ -23,7 +23,7 @@
     "breakeven": 732.0,
     "spreadWidth": 1.0,
     "netCredit": 0.0,
-    "distToShort": 19.05
+    "distToShort": 19.12
   },
   "bufferDebug": {
     "base": 1.85,
@@ -47,15 +47,15 @@
     "shortCallOI": 4839.0,
     "longCallOI": 5482.0,
     "shortCallVolume": 89932.0,
-    "longCallVolume": 77425.0,
+    "longCallVolume": 77426.0,
     "quotesUsable": true,
     "notes": "Quotes de opciones cargadas"
   },
   "vwap": {
     "value": 716.5,
-    "distPct": -0.5,
-    "zScore": -0.53,
-    "sigma": 6.73,
+    "distPct": -0.51,
+    "zScore": -0.54,
+    "sigma": 6.72,
     "bias": "Por debajo"
   },
   "openingRange": {
@@ -78,8 +78,8 @@
     "dailyVolPct": 1.51,
     "move": 10.79,
     "movePct": 1.51,
-    "upper": 723.74,
-    "lower": 702.16,
+    "upper": 723.67,
+    "lower": 702.09,
     "status": "OK"
   },
   "freshness": {
