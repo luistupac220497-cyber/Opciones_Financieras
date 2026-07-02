@@ -3,18 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QQQ 0DTE Bear Call Dashboard</title>
+  <title>QQQ 0DTE Desk</title>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
   <style>
     :root, [data-theme="light"] {
       --font-body: "Satoshi", system-ui, sans-serif;
       --font-display: "Satoshi", system-ui, sans-serif;
+
       --text-xs: clamp(0.75rem, 0.72rem + 0.2vw, 0.875rem);
       --text-sm: clamp(0.875rem, 0.82rem + 0.28vw, 1rem);
       --text-base: clamp(1rem, 0.96rem + 0.22vw, 1.08rem);
       --text-lg: clamp(1.125rem, 1.02rem + 0.5vw, 1.35rem);
       --text-xl: clamp(1.5rem, 1.24rem + 1vw, 2rem);
+
       --space-1: 0.25rem;
       --space-2: 0.5rem;
       --space-3: 0.75rem;
@@ -24,6 +26,7 @@
       --space-8: 2rem;
       --space-10: 2.5rem;
       --space-12: 3rem;
+
       --color-bg: #f7f6f2;
       --color-surface: #f9f8f5;
       --color-surface-2: #fbfbf9;
@@ -34,6 +37,7 @@
       --color-text-muted: #73716b;
       --color-text-faint: #aaa8a1;
       --color-primary: #01696f;
+      --color-primary-hover: #0c4e54;
       --color-primary-soft: #dbe7e5;
       --color-success: #437a22;
       --color-success-soft: #dbe7d4;
@@ -42,11 +46,13 @@
       --color-error: #a12c7b;
       --color-error-soft: #ecd7e3;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md: 0 8px 24px rgba(0,0,0,.07);
       --radius-sm: 10px;
       --radius-md: 14px;
       --radius-lg: 18px;
       --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
     }
+
     [data-theme="dark"] {
       --color-bg: #171614;
       --color-surface: #1c1b19;
@@ -58,6 +64,7 @@
       --color-text-muted: #a09d97;
       --color-text-faint: #6e6b66;
       --color-primary: #4f98a3;
+      --color-primary-hover: #62a8b2;
       --color-primary-soft: #223437;
       --color-success: #7fb25b;
       --color-success-soft: #273425;
@@ -65,81 +72,508 @@
       --color-warning-soft: #352a24;
       --color-error: #d163a7;
       --color-error-soft: #352532;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
+      --shadow-md: 0 10px 28px rgba(0,0,0,.28);
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); line-height: 1.5; }
-    button { font: inherit; }
-    :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
-    .app { display: grid; grid-template-columns: 280px 1fr; min-height: 100dvh; }
-    .sidebar { background: var(--color-surface); border-right: 1px solid var(--color-border); padding: var(--space-6); position: sticky; top: 0; height: 100dvh; overflow-y: auto; }
-    .main-shell { min-width: 0; }
-    .header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface) 88%, transparent); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 20; }
-    .main { padding: var(--space-6); display: grid; gap: var(--space-4); }
-    .brand { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-8); }
-    .logo { width: 36px; height: 36px; color: var(--color-primary); }
-    .brand-title { font-size: var(--text-sm); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
-    .brand-subtitle { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
-    .nav-block + .nav-block { margin-top: var(--space-6); padding-top: var(--space-6); border-top: 1px solid var(--color-divider); }
-    .nav-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: var(--space-3); }
-    .nav-list { display: grid; gap: var(--space-2); }
-    .nav-item { display: block; text-decoration: none; background: var(--color-surface-2); border: 1px solid var(--color-border); padding: 0.8rem 0.9rem; border-radius: var(--radius-md); font-size: var(--text-sm); }
-    .nav-item:hover { border-color: var(--color-primary); background: var(--color-primary-soft); }
-    .header-left h1 { font-size: var(--text-xl); font-weight: 900; letter-spacing: -.03em; }
-    .header-left p { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: 0.15rem; }
-    .header-actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-    .chip { display: inline-flex; align-items: center; gap: .45rem; padding: .55rem .8rem; border-radius: 999px; font-size: var(--text-xs); font-weight: 700; border: 1px solid var(--color-border); background: var(--color-surface-2); white-space: nowrap; }
-    .chip-dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font-body);
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-size: var(--text-base);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button, a, input { font: inherit; color: inherit; }
+    button {
+      border: 0;
+      background: none;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition), border-color var(--transition), transform var(--transition);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+      border-radius: var(--radius-sm);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: auto 1fr;
+      height: 100dvh;
+    }
+
+    .sidebar {
+      grid-row: 1 / -1;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      padding: var(--space-6);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .header {
+      grid-column: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-6);
+      border-bottom: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .main {
+      grid-column: 2;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: var(--space-6);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-8);
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      color: var(--color-primary);
+      flex: 0 0 auto;
+    }
+
+    .brand-title {
+      font-size: var(--text-sm);
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .brand-subtitle {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .nav-block + .nav-block {
+      margin-top: var(--space-6);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--color-divider);
+    }
+
+    .nav-label {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: var(--space-3);
+    }
+
+    .nav-list {
+      display: grid;
+      gap: var(--space-2);
+    }
+
+    .nav-item {
+      display: block;
+      text-decoration: none;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      padding: 0.8rem 0.9rem;
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+    }
+
+    .nav-item:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft);
+    }
+
+    .header-left h1 {
+      font-size: var(--text-xl);
+      font-weight: 900;
+      letter-spacing: -.03em;
+    }
+
+    .header-left p {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .55rem .8rem;
+      border-radius: 999px;
+      font-size: var(--text-xs);
+      font-weight: 700;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+      white-space: nowrap;
+    }
+
+    .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
     .chip-fresh { color: var(--color-success); background: var(--color-success-soft); border-color: transparent; }
     .chip-stale { color: var(--color-warning); background: var(--color-warning-soft); border-color: transparent; }
-    .chip-theme { min-width: 44px; min-height: 44px; justify-content: center; }
-    .grid { display: grid; gap: var(--space-4); }
-    .hero-grid { grid-template-columns: 1.35fr .95fr; }
-    .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .content-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: var(--space-5); }
-    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
-    .card-title { font-size: var(--text-lg); font-weight: 800; letter-spacing: -.02em; }
-    .card-subtitle { margin-top: .2rem; font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .08em; }
-    .decision { padding: var(--space-6); display: grid; gap: var(--space-5); min-height: 270px; }
-    .decision-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
-    .decision-badge { display: inline-flex; align-items: center; gap: .55rem; padding: .75rem 1rem; border-radius: 999px; font-size: var(--text-sm); font-weight: 800; border: 1px solid transparent; }
-    .decision-enter { color: var(--color-success); background: var(--color-success-soft); }
-    .decision-wait { color: var(--color-warning); background: var(--color-warning-soft); }
-    .decision-no { color: var(--color-error); background: var(--color-error-soft); }
-    .decision-score { font-size: clamp(2.2rem, 2rem + 2vw, 4rem); font-weight: 900; letter-spacing: -.06em; line-height: 1; font-variant-numeric: tabular-nums lining-nums; }
-    .decision-text { color: var(--color-text-muted); max-width: 72ch; }
-    .decision-mini { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--space-3); }
-    .mini-box, .stat { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: .95rem; }
-    .mini-label, .stat-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
-    .mini-value, .stat-value { font-size: var(--text-lg); font-weight: 800; font-variant-numeric: tabular-nums lining-nums; }
-    .price-block { display: grid; gap: var(--space-4); align-content: start; }
-    .price-main { font-size: clamp(2rem, 1.8rem + 1.7vw, 3.4rem); line-height: 1; font-weight: 900; letter-spacing: -.05em; font-variant-numeric: tabular-nums lining-nums; }
-    .stats-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--space-3); }
-    .list { display: grid; gap: .85rem; }
-    .list-row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); padding-bottom: .85rem; border-bottom: 1px solid var(--color-divider); }
-    .list-row:last-child { border-bottom: 0; padding-bottom: 0; }
-    .list-title { font-size: var(--text-sm); font-weight: 700; }
-    .list-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: .2rem; }
-    .list-value { text-align: right; font-size: var(--text-sm); font-weight: 800; font-variant-numeric: tabular-nums lining-nums; }
-    .muted { color: var(--color-text-muted); }
-    .alert { padding: .9rem 1rem; border-radius: var(--radius-md); font-size: var(--text-sm); border: 1px solid transparent; }
-    .alert-warning { color: var(--color-warning); background: var(--color-warning-soft); }
-    .alert-error { color: var(--color-error); background: var(--color-error-soft); }
-    .clean-setup { display: grid; gap: .9rem; }
-    .clean-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-bottom: .9rem; border-bottom: 1px solid var(--color-divider); }
-    .clean-row:last-child { padding-bottom: 0; border-bottom: 0; }
-    .clean-label { color: var(--color-text-muted); font-size: var(--text-sm); }
-    .clean-value { font-weight: 800; font-size: var(--text-base); text-align: right; font-variant-numeric: tabular-nums lining-nums; }
-    @media (max-width: 1180px) {
-      .app { grid-template-columns: 1fr; }
-      .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--color-border); }
-      .hero-grid, .content-grid, .kpi-grid { grid-template-columns: 1fr; }
+    .chip-risk { color: var(--color-warning); }
+    .chip-theme {
+      min-width: 44px;
+      min-height: 44px;
+      justify-content: center;
     }
+
+    .grid {
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    .hero-grid {
+      grid-template-columns: 1.3fr .9fr;
+      margin-bottom: var(--space-4);
+    }
+
+    .kpi-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: var(--space-4);
+    }
+
+    .content-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: var(--space-5);
+      content-visibility: auto;
+      contain-intrinsic-size: 0 260px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .card-title {
+      font-size: var(--text-lg);
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
+    .card-subtitle {
+      margin-top: .2rem;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .decision {
+      padding: var(--space-6);
+      display: grid;
+      gap: var(--space-5);
+      min-height: 270px;
+    }
+
+    .decision-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .decision-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      padding: .75rem 1rem;
+      border-radius: 999px;
+      font-size: var(--text-sm);
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .decision-enter {
+      color: var(--color-success);
+      background: var(--color-success-soft);
+    }
+
+    .decision-wait {
+      color: var(--color-warning);
+      background: var(--color-warning-soft);
+    }
+
+    .decision-no {
+      color: var(--color-error);
+      background: var(--color-error-soft);
+    }
+
+    .decision-score {
+      font-size: clamp(2.2rem, 2rem + 2vw, 4rem);
+      font-weight: 900;
+      letter-spacing: -.06em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .decision-text {
+      color: var(--color-text-muted);
+      max-width: 72ch;
+    }
+
+    .decision-mini {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: var(--space-3);
+    }
+
+    .mini-box {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: .95rem;
+    }
+
+    .mini-label {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .4rem;
+    }
+
+    .mini-value {
+      font-size: var(--text-lg);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .price-block {
+      display: grid;
+      gap: var(--space-4);
+      align-content: start;
+    }
+
+    .price-main {
+      font-size: clamp(2rem, 1.8rem + 1.7vw, 3.4rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -.05em;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .delta-up { color: var(--color-success); }
+    .delta-down { color: var(--color-error); }
+    .delta-flat { color: var(--color-text-muted); }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: var(--space-3);
+    }
+
+    .stat {
+      padding: .95rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+    }
+
+    .stat-label {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .35rem;
+    }
+
+    .stat-value {
+      font-size: var(--text-base);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .list {
+      display: grid;
+      gap: .85rem;
+    }
+
+    .list-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding-bottom: .85rem;
+      border-bottom: 1px solid var(--color-divider);
+    }
+
+    .list-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .list-left {
+      min-width: 0;
+    }
+
+    .list-title {
+      font-size: var(--text-sm);
+      font-weight: 700;
+    }
+
+    .list-meta {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: .2rem;
+    }
+
+    .list-value {
+      text-align: right;
+      font-size: var(--text-sm);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .muted {
+      color: var(--color-text-muted);
+    }
+
+    .faint {
+      color: var(--color-text-faint);
+    }
+
+    .alert {
+      padding: .9rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      border: 1px solid transparent;
+    }
+
+    .alert-warning {
+      color: var(--color-warning);
+      background: var(--color-warning-soft);
+    }
+
+    .alert-error {
+      color: var(--color-error);
+      background: var(--color-error-soft);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 540px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: .8rem .4rem;
+      border-bottom: 1px solid var(--color-divider);
+      font-size: var(--text-sm);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--color-text-muted);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      position: sticky;
+      top: 0;
+      background: var(--color-surface);
+    }
+
+    td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums lining-nums;
+      font-weight: 700;
+    }
+
+    .footer-note {
+      margin-top: var(--space-4);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    .hide-mobile { display: inline; }
+
+    @media (max-width: 1180px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+      }
+
+      .sidebar {
+        grid-row: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--color-border);
+        padding: var(--space-4);
+      }
+
+      .header, .main {
+        grid-column: 1;
+      }
+
+      .hero-grid,
+      .content-grid,
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 760px) {
-      .header { padding: var(--space-4); }
-      .main { padding: var(--space-4); }
-      .decision-mini, .stats-row { grid-template-columns: 1fr; }
-      .clean-row, .list-row { align-items: flex-start; }
+      html, body { overflow: auto; }
+      .app { display: block; height: auto; }
+      .sidebar, .main { overflow: visible; }
+      .header {
+        position: static;
+        padding: var(--space-4);
+      }
+      .main {
+        padding: var(--space-4);
+      }
+      .decision-mini,
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+      .hide-mobile { display: none; }
     }
   </style>
 </head>
@@ -167,6 +601,7 @@
           <a class="nav-item" href="#expected">Expected move</a>
           <a class="nav-item" href="#macro">Macro</a>
           <a class="nav-item" href="#earnings">Earnings</a>
+          <a class="nav-item" href="#history">Historial</a>
         </div>
       </div>
 
@@ -193,141 +628,208 @@
       </div>
     </aside>
 
-    <div class="main-shell">
-      <header class="header">
-        <div class="header-left">
-          <h1>QQQ 0DTE Dashboard</h1>
-          <p id="headerMeta">Cargando estado…</p>
+    <header class="header">
+      <div class="header-left">
+        <h1>QQQ 0DTE Dashboard</h1>
+        <p id="headerMeta">Cargando estado…</p>
+      </div>
+      <div class="header-actions">
+        <div id="freshChip" class="chip chip-fresh">
+          <span class="chip-dot"></span>
+          <span>Fresh</span>
         </div>
-        <div class="header-actions">
-          <div id="freshChip" class="chip chip-fresh"><span class="chip-dot"></span><span>Fresh</span></div>
-          <div id="riskChip" class="chip">Risk</div>
-          <button class="chip chip-theme" data-theme-toggle aria-label="Cambiar tema">◐</button>
-        </div>
-      </header>
+        <div id="riskChip" class="chip chip-risk">Risk</div>
+        <button class="chip chip-theme" data-theme-toggle aria-label="Cambiar tema">◐</button>
+      </div>
+    </header>
 
-      <main class="main">
-        <section class="grid hero-grid">
-          <article id="decision" class="card decision">
-            <div class="decision-top">
-              <div>
-                <div class="card-subtitle">Decisión operativa</div>
-                <div id="decisionBadge" class="decision-badge decision-wait">Esperando datos</div>
-              </div>
-              <div style="text-align:right;">
-                <div class="card-subtitle">Score</div>
-                <div id="scoreValue" class="decision-score">--</div>
-              </div>
+    <main id="main" class="main">
+      <section class="grid hero-grid">
+        <article id="decision" class="card decision">
+          <div class="decision-top">
+            <div>
+              <div class="card-subtitle">Decisión operativa</div>
+              <div id="decisionBadge" class="decision-badge decision-wait">Esperando datos</div>
             </div>
+            <div style="text-align:right;">
+              <div class="card-subtitle">Score</div>
+              <div id="scoreValue" class="decision-score">--</div>
+            </div>
+          </div>
+
+          <div>
             <div id="summaryText" class="decision-text">Sin datos aún.</div>
-            <div class="decision-mini">
-              <div class="mini-box"><div class="mini-label">Buffer dinámico</div><div id="bufferValue" class="mini-value">--</div></div>
-              <div class="mini-box"><div class="mini-label">Short strike</div><div id="shortStrikeValue" class="mini-value">--</div></div>
-              <div class="mini-box"><div class="mini-label">Distancia</div><div id="distanceValue" class="mini-value">--</div></div>
-            </div>
-          </article>
+          </div>
 
-          <article class="card price-block">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Precio y sesión</div>
-                <div class="card-subtitle">Spot, VWAP y tramo del día</div>
-              </div>
+          <div class="decision-mini">
+            <div class="mini-box">
+              <div class="mini-label">Buffer dinámico</div>
+              <div id="bufferValue" class="mini-value">--</div>
             </div>
-            <div id="priceValue" class="price-main">--</div>
-            <div id="changeValue" class="muted">--</div>
-            <div class="stats-row">
-              <div class="stat"><div class="stat-label">VWAP</div><div id="vwapValue" class="stat-value">--</div></div>
-              <div class="stat"><div class="stat-label">Sesión</div><div id="sessionValue" class="stat-value">--</div></div>
-              <div class="stat"><div class="stat-label">Open</div><div id="openValue" class="stat-value">--</div></div>
-              <div class="stat"><div class="stat-label">Volumen</div><div id="volumeValue" class="stat-value">--</div></div>
+            <div class="mini-box">
+              <div class="mini-label">Short strike</div>
+              <div id="shortStrikeValue" class="mini-value">--</div>
             </div>
-          </article>
-        </section>
+            <div class="mini-box">
+              <div class="mini-label">Distancia</div>
+              <div id="distanceValue" class="mini-value">--</div>
+            </div>
+          </div>
+        </article>
 
-        <section class="grid kpi-grid">
-          <article class="card">
-            <div class="card-title">Premarket range</div>
-            <div class="card-subtitle">Lectura previa a cash open</div>
-            <div id="premarketBox" class="muted" style="margin-top:1rem;">--</div>
-          </article>
-          <article class="card">
-            <div class="card-title">Opening range</div>
-            <div class="card-subtitle">Ventana 09:30–10:30 ET</div>
-            <div id="openingBox" class="muted" style="margin-top:1rem;">--</div>
-          </article>
-          <article id="expected" class="card">
-            <div class="card-title">Expected move</div>
-            <div class="card-subtitle">Referencia diaria</div>
-            <div id="expectedBox" class="muted" style="margin-top:1rem;">--</div>
-          </article>
-          <article class="card">
-            <div class="card-title">Buffer logic</div>
-            <div class="card-subtitle">Resumen corto</div>
-            <div id="bufferReasonBox" class="muted" style="margin-top:1rem;">--</div>
-          </article>
-        </section>
+        <article class="card price-block">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Precio y sesión</div>
+              <div class="card-subtitle">Spot, VWAP y tramo del día</div>
+            </div>
+          </div>
 
-        <section class="grid content-grid">
-          <article id="setup" class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Trade setup</div>
-                <div class="card-subtitle">Limpio y operativo</div>
-              </div>
-            </div>
-            <div class="clean-setup">
-              <div class="clean-row"><div class="clean-label">Buffer dinámico</div><div id="tsBufferDyn" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Short strike</div><div id="tsShortSel" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Long strike</div><div id="tsLongSel" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Net credit</div><div id="tsCredit" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Distancia al short</div><div id="tsDistance" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Delta short</div><div id="tsDelta" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Liquidity score</div><div id="tsLiq" class="clean-value">--</div></div>
-            </div>
-          </article>
+          <div id="priceValue" class="price-main">--</div>
+          <div id="changeValue" class="muted">--</div>
 
-          <article class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Options snapshot</div>
-                <div class="card-subtitle">Estado operativo</div>
-              </div>
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-label">VWAP</div>
+              <div id="vwapValue" class="stat-value">--</div>
             </div>
-            <div id="optionsAlert"></div>
-            <div class="clean-setup" style="margin-top:1rem;">
-              <div class="clean-row"><div class="clean-label">Expiración</div><div id="osExpiry" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Short bid/ask</div><div id="osBidAsk" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Long bid/ask</div><div id="osLongBidAsk" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Spread width</div><div id="osWidth" class="clean-value">--</div></div>
-              <div class="clean-row"><div class="clean-label">Quotes fiables</div><div id="osReliable" class="clean-value">--</div></div>
+            <div class="stat">
+              <div class="stat-label">Sesión</div>
+              <div id="sessionValue" class="stat-value">--</div>
             </div>
-          </article>
+            <div class="stat">
+              <div class="stat-label">Open</div>
+              <div id="openValue" class="stat-value">--</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Volumen</div>
+              <div id="volumeValue" class="stat-value">--</div>
+            </div>
+          </div>
+        </article>
+      </section>
 
-          <article id="macro" class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Macro</div>
-                <div class="card-subtitle">Próximos eventos</div>
-              </div>
-            </div>
-            <div id="macroAlert"></div>
-            <div id="macroList" class="list" style="margin-top:1rem;"></div>
-          </article>
+      <section class="grid kpi-grid">
+        <article class="card">
+          <div class="card-title">Premarket range</div>
+          <div class="card-subtitle">Lectura previa a cash open</div>
+          <div id="premarketBox" class="footer-note">--</div>
+        </article>
 
-          <article id="earnings" class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Mag 7 earnings</div>
-                <div class="card-subtitle">Siempre visibles</div>
-              </div>
+        <article class="card">
+          <div class="card-title">Opening range</div>
+          <div class="card-subtitle">Ventana 09:30–10:30 ET</div>
+          <div id="openingBox" class="footer-note">--</div>
+        </article>
+
+        <article id="expected" class="card">
+          <div class="card-title">Expected move</div>
+          <div class="card-subtitle">Referencia diaria</div>
+          <div id="expectedBox" class="footer-note">--</div>
+        </article>
+
+        <article id="setup" class="card">
+          <div class="card-title">Liquidity snapshot</div>
+          <div class="card-subtitle">Cadena de opciones</div>
+          <div id="liquidityBox" class="footer-note">--</div>
+        </article>
+      </section>
+
+      <section class="grid content-grid">
+        <article class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Trade setup</div>
+              <div class="card-subtitle">Strike, delta y crédito</div>
             </div>
-            <div id="earningsAlert"></div>
-            <div id="earningsList" class="list" style="margin-top:1rem;"></div>
-          </article>
-        </section>
-      </main>
-    </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr><td>Buffer base</td><td id="tsBufferBase" class="num">--</td></tr>
+                <tr><td>Buffer dinámico</td><td id="tsBufferDyn" class="num">--</td></tr>
+                <tr><td>Motivo del buffer</td><td id="tsBufferReason">--</td></tr>
+                <tr><td>Short target</td><td id="tsShortTarget" class="num">--</td></tr>
+                <tr><td>Short elegido</td><td id="tsShortSel" class="num">--</td></tr>
+                <tr><td>Delta short</td><td id="tsDelta" class="num">--</td></tr>
+                <tr><td>Open interest</td><td id="tsOI" class="num">--</td></tr>
+                <tr><td>Volumen</td><td id="tsVol" class="num">--</td></tr>
+                <tr><td>Crédito mid</td><td id="tsCredit" class="num">--</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Options snapshot</div>
+              <div class="card-subtitle">Estado operativo</div>
+            </div>
+          </div>
+          <div id="optionsAlert"></div>
+          <div class="table-wrap" style="margin-top:1rem;">
+            <table>
+              <tbody>
+                <tr><td>Expiración</td><td id="osExpiry" class="num">--</td></tr>
+                <tr><td>Short bid/ask</td><td id="osBidAsk" class="num">--</td></tr>
+                <tr><td>Long bid/ask</td><td id="osLongBidAsk" class="num">--</td></tr>
+                <tr><td>Spread width</td><td id="osWidth" class="num">--</td></tr>
+                <tr><td>Quotes fiables</td><td id="osReliable">--</td></tr>
+                <tr><td>Liquidity score</td><td id="osLiq" class="num">--</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article id="macro" class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Macro</div>
+              <div class="card-subtitle">Próximos eventos</div>
+            </div>
+          </div>
+          <div id="macroAlert"></div>
+          <div id="macroList" class="list" style="margin-top:1rem;"></div>
+        </article>
+
+        <article id="earnings" class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Mag 7 earnings</div>
+              <div class="card-subtitle">Siempre visibles</div>
+            </div>
+          </div>
+          <div id="earningsAlert"></div>
+          <div id="earningsList" class="list" style="margin-top:1rem;"></div>
+        </article>
+
+        <article id="history" class="card" style="grid-column: 1 / -1;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Historial reciente</div>
+              <div class="card-subtitle">Últimas actualizaciones</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>UTC</th>
+                  <th>Precio</th>
+                  <th>Score</th>
+                  <th>Decision</th>
+                  <th>Buffer</th>
+                  <th class="hide-mobile">VWAP</th>
+                </tr>
+              </thead>
+              <tbody id="historyTable"></tbody>
+            </table>
+          </div>
+          <div class="footer-note">La tabla muestra las últimas muestras guardadas en <code>data/history.json</code>.</div>
+        </article>
+      </section>
+    </main>
   </div>
 
   <script>
@@ -348,20 +850,30 @@
     const money = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `$${Number(v).toFixed(d)}`;
     const pct = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `${Number(v).toFixed(d)}%`;
     const text = (v) => (v === null || v === undefined || v === "") ? "--" : String(v);
-    const qs = (id) => document.getElementById(id);
+
+    function qs(id) {
+      return document.getElementById(id);
+    }
 
     function setDecisionBadge(decision) {
       const el = qs("decisionBadge");
       el.textContent = decision || "--";
       el.className = "decision-badge";
-      if ((decision || "").toLowerCase().includes("no")) el.classList.add("decision-no");
-      else if ((decision || "").toLowerCase().includes("esper")) el.classList.add("decision-wait");
-      else el.classList.add("decision-enter");
+      if ((decision || "").toLowerCase().includes("no")) {
+        el.classList.add("decision-no");
+      } else if ((decision || "").toLowerCase().includes("esper")) {
+        el.classList.add("decision-wait");
+      } else {
+        el.classList.add("decision-enter");
+      }
     }
 
     function renderRange(boxId, obj) {
       const el = qs(boxId);
-      if (!obj) { el.textContent = "--"; return; }
+      if (!obj) {
+        el.textContent = "--";
+        return;
+      }
       if (obj.status === "pending" || obj.status === "forming" || obj.status === "missing") {
         el.textContent = obj.message || "--";
         return;
@@ -410,7 +922,7 @@
         const row = document.createElement("div");
         row.className = "list-row";
         row.innerHTML = `
-          <div>
+          <div class="list-left">
             <div class="list-title">${text(ev.title)}</div>
             <div class="list-meta">${text(ev.date)} · ${text(ev.time_et)} ET</div>
           </div>
@@ -429,26 +941,44 @@
       if (earnings && earnings.earnings_veto) {
         alert.innerHTML = `<div class="alert alert-error">Veto activo por earnings cercanos.</div>`;
       } else {
-        alert.innerHTML = `<div class="alert alert-warning">Sin veto activo por earnings cercanos.</div>`;
+        alert.innerHTML = `<div class="alert alert-warning">Sin veto activo por earnings.</div>`;
       }
 
       const rows = (earnings && earnings.mag7) || [];
-      if (!rows.length) {
-        list.innerHTML = `<div class="muted">No se pudieron cargar earnings.</div>`;
-        return;
-      }
-
       rows.forEach(ev => {
         const row = document.createElement("div");
         row.className = "list-row";
         row.innerHTML = `
-          <div>
+          <div class="list-left">
             <div class="list-title">${text(ev.symbol)}</div>
-            <div class="list-meta">${text(ev.date)} · ${text(ev.source)}</div>
+            <div class="list-meta">${text(ev.date)}</div>
           </div>
           <div class="list-value">${text(ev.status)}</div>
         `;
         list.appendChild(row);
+      });
+    }
+
+    function renderHistory(history) {
+      const tbody = qs("historyTable");
+      tbody.innerHTML = "";
+
+      if (!Array.isArray(history) || !history.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="muted">Sin historial todavía.</td></tr>`;
+        return;
+      }
+
+      history.slice().reverse().slice(0, 20).forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${text(row.timestamp_utc)}</td>
+          <td class="num">${money(row.price)}</td>
+          <td class="num">${text(row.score)}</td>
+          <td>${text(row.decision)}</td>
+          <td class="num">${money(row.buffer_dynamic)}</td>
+          <td class="num hide-mobile">${money(row.vwap)}</td>
+        `;
+        tbody.appendChild(tr);
       });
     }
 
@@ -460,12 +990,19 @@
       qs("osLongBidAsk").textContent = `${money(lc.bid)} / ${money(lc.ask)}`;
       qs("osWidth").textContent = money(os?.spread_width);
       qs("osReliable").textContent = os?.quotes_reliable ? "Sí" : "No";
+      qs("osLiq").textContent = text(os?.liquidity_score);
 
       const optionsAlert = qs("optionsAlert");
       optionsAlert.innerHTML = "";
       if (os?.message) {
         optionsAlert.innerHTML = `<div class="alert alert-warning">${text(os.message)}</div>`;
       }
+
+      qs("liquidityBox").innerHTML = `
+        <div><strong>Liquidity score:</strong> ${text(os?.liquidity_score)}</div>
+        <div><strong>Quotes fiables:</strong> ${os?.quotes_reliable ? "Sí" : "No"}</div>
+        <div><strong>Crédito mid:</strong> ${money(os?.net_credit_mid)}</div>
+      `;
     }
 
     function renderTradeSetup(ts, buffer) {
@@ -473,21 +1010,31 @@
       qs("shortStrikeValue").textContent = money(ts?.short_strike_selected);
       qs("distanceValue").textContent = money(ts?.distance_to_short_strike);
 
+      qs("tsBufferBase").textContent = money(ts?.buffer_base);
       qs("tsBufferDyn").textContent = money(ts?.buffer_dynamic);
+      qs("tsBufferReason").textContent = text(ts?.buffer_reason);
+      qs("tsShortTarget").textContent = money(ts?.short_strike_target);
       qs("tsShortSel").textContent = money(ts?.short_strike_selected);
-      qs("tsLongSel").textContent = money(ts?.long_strike_selected);
-      qs("tsCredit").textContent = money(ts?.estimated_credit_mid);
-      qs("tsDistance").textContent = money(ts?.distance_to_short_strike);
       qs("tsDelta").textContent = fmt(ts?.short_delta, 3);
-      qs("tsLiq").textContent = text(ts?.liquidity_score);
-      qs("bufferReasonBox").textContent = text(buffer?.reason_short);
+      qs("tsOI").textContent = intFmt(ts?.short_open_interest);
+      qs("tsVol").textContent = intFmt(ts?.short_volume);
+      qs("tsCredit").textContent = money(ts?.estimated_credit_mid);
     }
 
     async function loadDashboard() {
       try {
         const b = `?t=${Date.now()}`;
-        const r = await fetch(`./state.json${b}`);
-        const state = await r.json();
+
+        const [stateRes, historyRes] = await Promise.all([
+          fetch(`data/state.json${b}`),
+          fetch(`data/history.json${b}`)
+        ]);
+
+        if (!stateRes.ok) throw new Error(`data/state.json HTTP ${stateRes.status}`);
+        if (!historyRes.ok) throw new Error(`data/history.json HTTP ${historyRes.status}`);
+
+        const state = await stateRes.json();
+        const history = await historyRes.json();
 
         qs("headerMeta").textContent = `${text(state.timestamp_ny)} · ${text(state.timestamp_utc)}`;
         qs("scoreValue").textContent = text(state.score);
@@ -504,6 +1051,7 @@
         const ch = Number(state.change || 0);
         const chPct = Number(state.change_pct || 0);
         qs("changeValue").textContent = `${ch >= 0 ? "+" : ""}${money(ch)} · ${chPct >= 0 ? "+" : ""}${pct(chPct)}`;
+        qs("changeValue").className = ch > 0 ? "delta-up" : (ch < 0 ? "delta-down" : "delta-flat");
 
         qs("vwapValue").textContent = money(state.vwap);
         qs("sessionValue").textContent = text(state.session);
@@ -517,8 +1065,9 @@
         renderMacro(state.macro);
         renderEarnings(state.earnings);
         renderTradeSetup(state.trade_setup, state.buffer);
+        renderHistory(history);
       } catch (err) {
-        qs("summaryText").textContent = "No se pudo cargar state.json.";
+        qs("summaryText").textContent = `No se pudo cargar el JSON: ${err.message}`;
         console.error(err);
       }
     }
