@@ -96,5 +96,16 @@
     "shortStrike": null,
     "netCredit": null,
     "freshness": "Prev session close"
+  },
+  {
+    "updatedAt": "2026-07-03T09:10:34.763910+00:00",
+    "updatedAtNY": "2026-07-03 05:10:34 ET",
+    "price": 714.18,
+    "score": 5,
+    "decision": "no entrar",
+    "session": "Premarket",
+    "shortStrike": null,
+    "netCredit": null,
+    "freshness": "Prev session close"
   }
 ]
