@@ -38,6 +38,7 @@
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:var(--font);
@@ -108,7 +109,10 @@
       box-shadow:var(--shadow);
     }
 
-    .hero-main{padding:22px}
+    .hero-main{
+      padding:22px;
+    }
+
     .eyebrow{
       color:var(--muted);
       font-size:.8rem;
@@ -181,7 +185,10 @@
       margin-bottom:18px;
     }
 
-    .panel{padding:18px}
+    .panel{
+      padding:18px;
+    }
+
     .panel h3{
       margin:0 0 14px;
       font-size:1rem;
@@ -203,7 +210,10 @@
       padding-top:0;
     }
 
-    .k{color:var(--muted)}
+    .k{
+      color:var(--muted);
+    }
+
     .v{
       font-weight:700;
       text-align:right;
@@ -225,13 +235,22 @@
     }
 
     @media (max-width:980px){
-      .hero,.grid3{grid-template-columns:1fr}
-      .grid4{grid-template-columns:repeat(2,1fr)}
+      .hero,.grid3{
+        grid-template-columns:1fr;
+      }
+      .grid4{
+        grid-template-columns:repeat(2,1fr);
+      }
     }
 
     @media (max-width:560px){
-      .grid4{grid-template-columns:1fr}
-      .top{align-items:flex-start;flex-direction:column}
+      .grid4{
+        grid-template-columns:1fr;
+      }
+      .top{
+        align-items:flex-start;
+        flex-direction:column;
+      }
     }
   </style>
 </head>
@@ -242,6 +261,7 @@
         <h1 class="title">QQQ 0DTE Dashboard</h1>
         <div class="meta" id="headerMeta">Cargando...</div>
       </div>
+
       <div class="toolbar">
         <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema">◐</button>
         <button class="iconbtn" id="refreshBtn" aria-label="Actualizar">↻</button>
@@ -262,17 +282,20 @@
             <div class="mini-label">Precio</div>
             <div class="mini-value" id="priceValue">--</div>
           </div>
+
           <div class="mini">
             <div class="mini-label">Short strike</div>
             <div class="mini-value" id="shortStrikeValue">--</div>
           </div>
+
           <div class="mini">
             <div class="mini-label">Net credit</div>
             <div class="mini-value" id="creditValueTop">--</div>
           </div>
+
           <div class="mini">
             <div class="mini-label">Macro</div>
-            <div class="mini-value" id="macroCountdown">--</div>
+            <div class="mini-value" id="macroCountdownTop">--</div>
           </div>
         </div>
       </article>
@@ -282,18 +305,22 @@
           <div class="side-label">Riesgo</div>
           <div class="side-value" id="riskValue">--</div>
         </div>
+
         <div class="sidebox">
           <div class="side-label">Sesión</div>
           <div class="side-value" id="sessionValueTop">--</div>
         </div>
+
         <div class="sidebox">
           <div class="side-label">Freshness</div>
           <div class="side-value"><span id="freshnessStatus">--</span> · <span id="freshnessValue">--</span></div>
         </div>
+
         <div class="sidebox">
           <div class="side-label">Fuente spot</div>
           <div class="side-value" id="sourceValue">--</div>
         </div>
+
         <div class="sidebox">
           <div class="side-label">Fuente options</div>
           <div class="side-value" id="optionsSourceValue">--</div>
@@ -327,6 +354,35 @@
         <div class="kv"><div class="k">Liquidez</div><div class="v" id="liquidityValue">--</div></div>
         <div class="kv"><div class="k">Delta short</div><div class="v" id="deltaValue">--</div></div>
         <div class="kv"><div class="k">Notas</div><div class="v" id="notesValue">--</div></div>
+      </article>
+    </section>
+
+    <section class="grid3">
+      <article class="card panel">
+        <h3>Macro</h3>
+        <div class="kv"><div class="k">Evento</div><div class="v" id="macroEventValue">--</div></div>
+        <div class="kv"><div class="k">Impacto</div><div class="v" id="macroImpactValue">--</div></div>
+        <div class="kv"><div class="k">Fecha ET</div><div class="v" id="macroDateValue">--</div></div>
+        <div class="kv"><div class="k">Countdown</div><div class="v" id="macroCountdownValue">--</div></div>
+        <div class="kv"><div class="k">Veto</div><div class="v" id="macroVetoValue">--</div></div>
+      </article>
+
+      <article class="card panel">
+        <h3>Earnings</h3>
+        <div class="kv"><div class="k">Empresa</div><div class="v" id="earningsCompanyValue">--</div></div>
+        <div class="kv"><div class="k">Ticker</div><div class="v" id="earningsTickerValue">--</div></div>
+        <div class="kv"><div class="k">Fecha</div><div class="v" id="earningsDateValue">--</div></div>
+        <div class="kv"><div class="k">Días</div><div class="v" id="earningsDaysValue">--</div></div>
+        <div class="kv"><div class="k">Momento</div><div class="v" id="earningsMomentValue">--</div></div>
+      </article>
+
+      <article class="card panel">
+        <h3>Mercado</h3>
+        <div class="kv"><div class="k">Estado</div><div class="v" id="marketStatusValue">--</div></div>
+        <div class="kv"><div class="k">Motivo</div><div class="v" id="marketNameValue">--</div></div>
+        <div class="kv"><div class="k">Fecha</div><div class="v" id="marketDateValue">--</div></div>
+        <div class="kv"><div class="k">Fuente</div><div class="v" id="marketSourceValue">--</div></div>
+        <div class="kv"><div class="k">Sesión</div><div class="v" id="marketSessionValue">--</div></div>
       </article>
     </section>
 
@@ -396,7 +452,7 @@
         $("priceValue").textContent = fmtMoney(state.price);
         $("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
         $("creditValueTop").textContent = fmtMoney(state.trade?.netCredit);
-        $("macroCountdown").textContent = fmtText(state.macro?.next?.countdown);
+        $("macroCountdownTop").textContent = fmtText(state.macro?.next?.countdown);
 
         $("freshnessStatus").textContent = fmtText(state.freshness?.status);
         $("freshnessValue").textContent = state.freshness?.ageMinutes != null ? `${state.freshness.ageMinutes}m` : "--";
@@ -419,6 +475,24 @@
         $("deltaValue").textContent = fmtDelta(state.options?.shortCallDelta);
         $("notesValue").textContent = fmtText(state.options?.notes);
 
+        $("macroEventValue").textContent = fmtText(state.macro?.next?.evento);
+        $("macroImpactValue").textContent = fmtText(state.macro?.next?.impacto);
+        $("macroDateValue").textContent = fmtText(state.macro?.next?.datetimeNY);
+        $("macroCountdownValue").textContent = fmtText(state.macro?.next?.countdown);
+        $("macroVetoValue").textContent = yesNo(state.macro?.next?.isVeto);
+
+        $("earningsCompanyValue").textContent = fmtText(state.earnings?.next?.empresa);
+        $("earningsTickerValue").textContent = fmtText(state.earnings?.next?.ticker);
+        $("earningsDateValue").textContent = fmtText(state.earnings?.next?.fecha);
+        $("earningsDaysValue").textContent = fmtText(state.earnings?.next?.dias);
+        $("earningsMomentValue").textContent = fmtText(state.earnings?.next?.momento);
+
+        $("marketStatusValue").textContent = state.market?.isHoliday ? "Cerrado" : "Abierto";
+        $("marketNameValue").textContent = fmtText(state.market?.name, "Sesión normal");
+        $("marketDateValue").textContent = fmtText(state.market?.date);
+        $("marketSourceValue").textContent = fmtText(state.market?.source);
+        $("marketSessionValue").textContent = fmtText(state.session?.label);
+
         renderReasons(state.reasons);
 
         const alertBox = $("marketAlert");
@@ -429,6 +503,7 @@
           alertBox.style.display = "none";
           alertBox.textContent = "";
         }
+
       } catch (err) {
         $("headerMeta").textContent = "Error cargando datos";
         $("decisionText").textContent = "Error";
