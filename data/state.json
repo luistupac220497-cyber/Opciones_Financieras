@@ -6,50 +6,56 @@
   "changePct": -1.51,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-03T07:50:39.911778+00:00",
-  "updatedAtText": "2026-07-03 07:50:39 UTC",
-  "updatedAtNY": "2026-07-03 03:50:39 ET",
+  "lastBarAt": "2026-07-02T23:55:00+00:00",
+  "updatedAt": "2026-07-03T07:59:56.508732+00:00",
+  "updatedAtText": "2026-07-03 07:59:56 UTC",
+  "updatedAtNY": "2026-07-03 03:59:55 ET",
   "session": {
     "code": "overnight",
     "label": "Overnight"
   },
-  "summary": "buffer 2.60% (base 1.85%) · short 733 · quotes de opciones cargadas · Tesla en 20d · tramo overnight",
+  "summary": "buffer 2.42% · short $732.00 · crédito $0.03 · macro 4h 30m · tramo overnight",
   "trade": {
     "bufferBasePct": 1.85,
-    "bufferDynamicPct": 2.6,
-    "bufferReason": "base 1.85% | exp move +0.27% | pm range +0.36% | macro +0.12%",
-    "shortStrike": 733.0,
-    "longStrike": 734.0,
-    "breakeven": 733.02,
+    "bufferDynamicPct": 2.42,
+    "bufferReason": "base 1.85% · exp move +0.27% · pm range +0.00% · sesión extendida +0.18% · macro +0.12%",
+    "shortStrike": 732.0,
+    "longStrike": 733.0,
+    "breakeven": 732.03,
     "spreadWidth": 1.0,
-    "netCredit": 0.02,
-    "distToShort": 18.82
+    "netCredit": 0.03,
+    "creditOk": false,
+    "minCreditRequired": 0.08,
+    "distToShort": 17.82
   },
   "bufferDebug": {
     "base": 1.85,
     "expectedMovePct": 1.51,
-    "premarketRangePct": 1.64,
+    "premarketRangePct": 0.0,
     "emComponent": 0.27,
-    "pmComponent": 0.36,
-    "sessionBoost": 0.0,
+    "pmComponent": 0.0,
+    "sessionBoost": 0.18,
     "macroBoost": 0.12,
-    "rawBeforeRound": 2.6026,
-    "final": 2.6
+    "rawBeforeRound": 2.42,
+    "final": 2.42
   },
   "options": {
     "expiration": "2026-07-06",
-    "shortCallBid": 0.1,
-    "shortCallAsk": 0.12,
-    "longCallBid": 0.08,
-    "longCallAsk": 0.1,
+    "shortCallBid": 0.13,
+    "shortCallAsk": 0.15,
+    "longCallBid": 0.1,
+    "longCallAsk": 0.12,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 2984.0,
-    "longCallOI": 1094.0,
-    "shortCallVolume": 5385.0,
-    "longCallVolume": 2643.0,
+    "shortCallOI": 1572.0,
+    "longCallOI": 2984.0,
+    "shortCallVolume": 6256.0,
+    "longCallVolume": 5385.0,
     "quotesUsable": true,
-    "notes": "Quotes de opciones cargadas"
+    "notes": "crédito insuficiente",
+    "issues": [
+      "crédito insuficiente"
+    ]
   },
   "vwap": {
     "value": 716.5,
@@ -61,17 +67,12 @@
   "openingRange": {
     "available": false,
     "status": "Pendiente",
-    "message": "Opening Range disponible a partir de 09:30 ET"
+    "message": "Opening Range disponible a partir de 09:35 ET"
   },
   "premarketRange": {
-    "available": true,
-    "status": "OK",
-    "message": "Premarket Range calculado",
-    "high": 731.33,
-    "low": 719.46,
-    "close": 725.58,
-    "size": 11.87,
-    "sizePct": 1.64
+    "available": false,
+    "status": "No disponible",
+    "message": "Premarket Range no disponible"
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
@@ -83,53 +84,76 @@
     "status": "OK"
   },
   "freshness": {
-    "ageMinutes": 0,
+    "ageMinutes": 484.94,
     "thresholdMinutes": 3,
-    "isStale": false,
-    "status": "OK"
+    "isStale": true,
+    "status": "Stale"
   },
-  "score": 55,
-  "decision": "esperar confirmación",
-  "decisionTone": "yellow",
-  "decisionLabel": "esperar confirmación",
-  "riskLabel": "Riesgo medio",
+  "score": 14,
+  "decision": "no entrar",
+  "decisionTone": "red",
+  "decisionLabel": "no entrar",
+  "riskLabel": "Riesgo alto",
   "reasons": [
-    "Buffer base: 1.85%",
-    "Buffer dinámico aplicado: 2.60%",
     "Sesgo bajista favorable",
-    "Por debajo del VWAP",
-    "Macro próxima: Nóminas no agrícolas (NFP)"
+    "Precio por debajo de VWAP",
+    "Sesión extendida",
+    "Dato no fresco",
+    "Crédito insuficiente",
+    "Macro cercana: Nóminas no agrícolas (NFP)"
   ],
   "alerts": [],
   "macro": {
-    "status": "OK | reciente + próximo",
+    "status": "OK",
     "next": {
       "evento": "Nóminas no agrícolas (NFP)",
       "impacto": "alto",
       "datetimeNY": "2026-07-03 08:30 ET",
+      "datetimeUTC": "2026-07-03 12:30 UTC",
       "dateNY": "2026-07-03",
       "timeNY": "08:30",
-      "dias": 1,
+      "dias": 0,
       "horas": 4,
-      "totalHoras": 28.32,
+      "totalHoras": 4.5,
+      "countdown": "4h 30m",
       "momento": "Antes de la apertura",
-      "status": "upcoming"
+      "status": "upcoming",
+      "isVeto": true
     },
     "items": [
       {
         "evento": "Nóminas no agrícolas (NFP)",
         "impacto": "alto",
         "datetimeNY": "2026-07-03 08:30 ET",
+        "datetimeUTC": "2026-07-03 12:30 UTC",
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
-        "dias": 1,
+        "dias": 0,
         "horas": 4,
-        "totalHoras": 28.32,
+        "totalHoras": 4.5,
+        "countdown": "4h 30m",
         "momento": "Antes de la apertura",
-        "status": "upcoming"
+        "status": "upcoming",
+        "isVeto": true
       }
     ],
-    "all": []
+    "all": [
+      {
+        "evento": "Nóminas no agrícolas (NFP)",
+        "impacto": "alto",
+        "datetimeNY": "2026-07-03 08:30 ET",
+        "datetimeUTC": "2026-07-03 12:30 UTC",
+        "dateNY": "2026-07-03",
+        "timeNY": "08:30",
+        "dias": 0,
+        "horas": 4,
+        "totalHoras": 4.5,
+        "countdown": "4h 30m",
+        "momento": "Antes de la apertura",
+        "status": "upcoming",
+        "isVeto": true
+      }
+    ]
   },
   "earnings": {
     "status": "OK",
