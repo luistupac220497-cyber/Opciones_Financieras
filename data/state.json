@@ -1,85 +1,80 @@
 {
   "ticker": "QQQ",
-  "price": 714.18,
+  "price": null,
   "prevClose": 725.17,
-  "change": -10.98,
-  "changePct": -1.51,
-  "tone": "down",
+  "change": null,
+  "changePct": null,
+  "tone": "flat",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-03T01:30:49.531036+00:00",
-  "updatedAtText": "2026-07-03 01:30:49 UTC",
-  "updatedAtNY": "2026-07-02 21:30:48 ET",
+  "updatedAt": "2026-07-03T01:40:37.906529+00:00",
+  "updatedAtText": "2026-07-03 01:40:37 UTC",
+  "updatedAtNY": "2026-07-02 21:40:37 ET",
   "session": {
     "code": "afterhours",
     "label": "After hours"
   },
-  "summary": "buffer 2.60% (base 1.85%) · short 733 · quotes de opciones cargadas · Tesla en 20d · tramo afterhours",
+  "summary": "buffer 2.24% (base 1.85%) · short -- · cadena de opciones no disponible · Tesla en 20d · tramo afterhours",
   "trade": {
     "bufferBasePct": 1.85,
-    "bufferDynamicPct": 2.6,
-    "bufferReason": "base 1.85% | exp move +0.27% | pm range +0.36% | macro +0.12%",
-    "shortStrike": 733.0,
-    "longStrike": 734.0,
-    "breakeven": 733.02,
+    "bufferDynamicPct": 2.24,
+    "bufferReason": "base 1.85% | exp move +0.27% | pm range +0.00% | macro +0.12%",
+    "shortStrike": null,
+    "longStrike": null,
+    "breakeven": null,
     "spreadWidth": 1.0,
-    "netCredit": 0.02,
-    "distToShort": 18.82
+    "netCredit": null,
+    "distToShort": null
   },
   "bufferDebug": {
     "base": 1.85,
     "expectedMovePct": 1.51,
-    "premarketRangePct": 1.64,
+    "premarketRangePct": 0.0,
     "emComponent": 0.27,
-    "pmComponent": 0.36,
+    "pmComponent": 0.0,
     "sessionBoost": 0.0,
     "macroBoost": 0.12,
-    "rawBeforeRound": 2.6026,
-    "final": 2.6
+    "rawBeforeRound": 2.2418,
+    "final": 2.24
   },
   "options": {
     "expiration": "2026-07-06",
-    "shortCallBid": 0.1,
-    "shortCallAsk": 0.12,
-    "longCallBid": 0.08,
-    "longCallAsk": 0.1,
+    "shortCallBid": null,
+    "shortCallAsk": null,
+    "longCallBid": null,
+    "longCallAsk": null,
     "shortCallDelta": null,
     "longCallDelta": null,
-    "shortCallOI": 2984.0,
-    "longCallOI": 1094.0,
-    "shortCallVolume": 5385.0,
-    "longCallVolume": 2643.0,
-    "quotesUsable": true,
-    "notes": "Quotes de opciones cargadas"
+    "shortCallOI": null,
+    "longCallOI": null,
+    "shortCallVolume": null,
+    "longCallVolume": null,
+    "quotesUsable": false,
+    "notes": "Cadena de opciones no disponible"
   },
   "vwap": {
-    "value": 716.5,
-    "distPct": -0.32,
-    "zScore": -0.36,
-    "sigma": 6.37,
-    "bias": "Por debajo"
+    "value": null,
+    "distPct": null,
+    "zScore": null,
+    "sigma": null,
+    "bias": "No disponible"
   },
   "openingRange": {
     "available": false,
     "status": "Pendiente",
-    "message": "Opening Range pendiente de cálculo en esta versión"
+    "message": "Opening Range no disponible"
   },
   "premarketRange": {
-    "available": true,
-    "status": "OK",
-    "message": "Premarket Range calculado",
-    "high": 731.33,
-    "low": 719.46,
-    "close": 725.58,
-    "size": 11.87,
-    "sizePct": 1.64
+    "available": false,
+    "status": "No disponible",
+    "message": "Premarket Range no disponible"
   },
   "expectedMove": {
     "method": "historical_vol_3mo",
     "dailyVolPct": 1.51,
-    "move": 10.81,
+    "move": null,
     "movePct": 1.51,
-    "upper": 724.99,
-    "lower": 703.37,
+    "upper": null,
+    "lower": null,
     "status": "OK"
   },
   "freshness": {
@@ -95,9 +90,8 @@
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Buffer base: 1.85%",
-    "Buffer dinámico aplicado: 2.60%",
-    "Sesgo bajista favorable",
-    "Por debajo del VWAP",
+    "Buffer dinámico aplicado: 2.24%",
+    "Premarket: quotes de opciones no fiables",
     "Macro próxima: Nóminas no agrícolas (NFP)"
   ],
   "alerts": [],
