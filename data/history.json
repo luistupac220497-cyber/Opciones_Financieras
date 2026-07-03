@@ -129,5 +129,16 @@
     "shortStrike": null,
     "netCredit": null,
     "freshness": "Prev session close"
+  },
+  {
+    "updatedAt": "2026-07-03T09:32:59.292800+00:00",
+    "updatedAtNY": "2026-07-03 05:32:59 ET",
+    "price": null,
+    "score": 0,
+    "decision": "no entrar",
+    "session": "Error",
+    "shortStrike": null,
+    "netCredit": null,
+    "freshness": "Error"
   }
 ]

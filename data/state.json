@@ -1,24 +1,24 @@
 {
   "ticker": "QQQ",
-  "price": 714.18,
-  "prevClose": 725.17,
-  "change": -10.98,
-  "changePct": -1.51,
-  "tone": "down",
-  "source": "intraday_5m",
-  "lastBarAt": "2026-07-02T23:55:00+00:00",
-  "updatedAt": "2026-07-03T09:30:46.545290+00:00",
-  "updatedAtText": "2026-07-03 09:30:46 UTC",
-  "updatedAtNY": "2026-07-03 05:30:46 ET",
+  "price": null,
+  "prevClose": null,
+  "change": null,
+  "changePct": null,
+  "tone": "flat",
+  "source": "error",
+  "lastBarAt": null,
+  "updatedAt": "2026-07-03T09:32:59.292800+00:00",
+  "updatedAtText": "2026-07-03 09:32:59 UTC",
+  "updatedAtNY": "2026-07-03 05:32:59 ET",
   "session": {
-    "code": "premarket",
-    "label": "Premarket"
+    "code": "error",
+    "label": "Error"
   },
-  "summary": "buffer 1.44% · short -- · crédito -- · macro 2h 59m · tramo premarket",
+  "summary": "Error generando estado: 403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898379&to=1783071179&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g",
   "trade": {
     "bufferBasePct": null,
-    "bufferDynamicPct": 1.44,
-    "bufferReason": "exp move +0.85% · pm range +0.00% · vwap dist +0.19% · sesión +0.22% · macro +0.18%",
+    "bufferDynamicPct": null,
+    "bufferReason": "error",
     "shortStrike": null,
     "longStrike": null,
     "breakeven": null,
@@ -28,20 +28,9 @@
     "minCreditRequired": 0.03,
     "distToShort": null
   },
-  "bufferDebug": {
-    "expectedMovePct": 1.51,
-    "premarketRangePct": 0.0,
-    "vwapDistPctAbs": 1.03,
-    "emComponent": 0.85,
-    "pmComponent": 0.0,
-    "vwapComponent": 0.19,
-    "sessionBoost": 0.22,
-    "macroBoost": 0.18,
-    "rawBeforeClamp": 1.44,
-    "final": 1.44
-  },
+  "bufferDebug": {},
   "options": {
-    "expiration": "2026-07-06",
+    "expiration": null,
     "shortCallBid": null,
     "shortCallAsk": null,
     "longCallBid": null,
@@ -55,57 +44,50 @@
     "quotesUsable": false,
     "liquidityOk": false,
     "deltaOk": false,
-    "notes": "Error options: Invalid value '[]' for dtype 'float64'",
+    "notes": "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898379&to=1783071179&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g",
     "issues": [
-      "error options: Invalid value '[]' for dtype 'float64'"
+      "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898379&to=1783071179&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g"
     ]
   },
   "vwap": {
-    "value": 721.61,
-    "distPct": -1.03,
-    "zScore": -1.01,
-    "sigma": 7.39,
-    "bias": "Muy por debajo"
+    "value": null,
+    "distPct": null,
+    "zScore": null,
+    "sigma": null,
+    "bias": "No disponible"
   },
   "openingRange": {
     "available": false,
-    "status": "Pendiente",
-    "message": "Opening Range disponible a partir de 09:35 ET"
+    "status": "Error",
+    "message": "Opening Range no disponible"
   },
   "premarketRange": {
     "available": false,
-    "status": "No disponible",
+    "status": "Error",
     "message": "Premarket Range no disponible"
   },
   "expectedMove": {
-    "method": "historical_vol_3mo",
-    "dailyVolPct": 1.51,
-    "move": 10.81,
-    "movePct": 1.51,
-    "upper": 724.99,
-    "lower": 703.37,
-    "status": "OK"
+    "method": "unavailable",
+    "dailyVolPct": null,
+    "move": null,
+    "movePct": null,
+    "upper": null,
+    "lower": null,
+    "status": "No disponible"
   },
   "freshness": {
-    "ageMinutes": 575.78,
-    "thresholdMinutes": 3,
-    "isStale": false,
-    "status": "Prev session close"
+    "ageMinutes": null,
+    "thresholdMinutes": 20,
+    "isStale": true,
+    "status": "Error"
   },
-  "score": 5,
+  "score": 0,
   "decision": "no entrar",
   "decisionTone": "red",
   "decisionLabel": "no entrar",
   "riskLabel": "Riesgo alto",
   "reasons": [
-    "Sesgo bajista favorable",
-    "Precio por debajo de VWAP",
-    "Sesión extendida",
-    "Quotes no operables",
-    "Liquidez insuficiente",
-    "Delta fuera de rango",
-    "Crédito bajo",
-    "Macro cercana: Nóminas no agrícolas (NFP)"
+    "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898379&to=1783071179&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g"
   ],
   "alerts": [],
   "macro": {
@@ -119,8 +101,8 @@
       "timeNY": "08:30",
       "dias": 0,
       "horas": 2,
-      "totalHoras": 2.99,
-      "countdown": "2h 59m",
+      "totalHoras": 2.95,
+      "countdown": "2h 57m",
       "momento": "Antes de la apertura",
       "status": "upcoming",
       "isVeto": true
@@ -135,8 +117,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 2,
-        "totalHoras": 2.99,
-        "countdown": "2h 59m",
+        "totalHoras": 2.95,
+        "countdown": "2h 57m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -152,8 +134,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 2,
-        "totalHoras": 2.99,
-        "countdown": "2h 59m",
+        "totalHoras": 2.95,
+        "countdown": "2h 57m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
