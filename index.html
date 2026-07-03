@@ -11,43 +11,38 @@
       --bg:#f7f6f2;
       --surface:#f9f8f5;
       --surface-2:#fbfbf9;
-      --offset:#f3f0ec;
       --border:#d4d1ca;
       --text:#28251d;
       --muted:#7a7974;
-      --primary:#01696f;
       --green:#437a22;
       --yellow:#d19900;
       --red:#a13544;
       --radius:18px;
       --shadow:0 12px 32px rgba(0,0,0,.08);
-      --font-body:"Satoshi",system-ui,sans-serif;
+      --font:"Satoshi",system-ui,sans-serif;
     }
 
     [data-theme="dark"]{
       --bg:#171614;
       --surface:#1c1b19;
       --surface-2:#201f1d;
-      --offset:#22211f;
       --border:#393836;
       --text:#cdccca;
       --muted:#797876;
-      --primary:#4f98a3;
       --green:#6daa45;
       --yellow:#edb336;
       --red:#dd6974;
       --radius:18px;
       --shadow:0 12px 32px rgba(0,0,0,.35);
-      --font-body:"Satoshi",system-ui,sans-serif;
+      --font:"Satoshi",system-ui,sans-serif;
     }
 
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
     body{
-      font-family:var(--font-body);
+      margin:0;
+      font-family:var(--font);
       background:var(--bg);
       color:var(--text);
-      min-height:100vh;
     }
 
     .wrap{
@@ -89,6 +84,16 @@
       cursor:pointer;
     }
 
+    .alert{
+      margin-bottom:18px;
+      padding:14px 16px;
+      border-radius:14px;
+      border:1px solid rgba(221,105,116,.35);
+      background:rgba(221,105,116,.12);
+      color:var(--text);
+      display:none;
+    }
+
     .hero{
       display:grid;
       grid-template-columns:1.25fr .75fr;
@@ -103,10 +108,7 @@
       box-shadow:var(--shadow);
     }
 
-    .hero-main{
-      padding:22px;
-    }
-
+    .hero-main{padding:22px}
     .eyebrow{
       color:var(--muted);
       font-size:.8rem;
@@ -179,10 +181,7 @@
       margin-bottom:18px;
     }
 
-    .panel{
-      padding:18px;
-    }
-
+    .panel{padding:18px}
     .panel h3{
       margin:0 0 14px;
       font-size:1rem;
@@ -204,10 +203,7 @@
       padding-top:0;
     }
 
-    .k{
-      color:var(--muted);
-    }
-
+    .k{color:var(--muted)}
     .v{
       font-weight:700;
       text-align:right;
@@ -228,10 +224,6 @@
       font-size:.85rem;
     }
 
-    .status-ok{color:var(--green)}
-    .status-mid{color:var(--yellow)}
-    .status-bad{color:var(--red)}
-
     @media (max-width:980px){
       .hero,.grid3{grid-template-columns:1fr}
       .grid4{grid-template-columns:repeat(2,1fr)}
@@ -240,7 +232,6 @@
     @media (max-width:560px){
       .grid4{grid-template-columns:1fr}
       .top{align-items:flex-start;flex-direction:column}
-      .toolbar{width:100%}
     }
   </style>
 </head>
@@ -251,12 +242,13 @@
         <h1 class="title">QQQ 0DTE Dashboard</h1>
         <div class="meta" id="headerMeta">Cargando...</div>
       </div>
-
       <div class="toolbar">
         <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema">◐</button>
         <button class="iconbtn" id="refreshBtn" aria-label="Actualizar">↻</button>
       </div>
     </div>
+
+    <div class="alert" id="marketAlert"></div>
 
     <section class="hero">
       <article class="card hero-main">
@@ -270,17 +262,14 @@
             <div class="mini-label">Precio</div>
             <div class="mini-value" id="priceValue">--</div>
           </div>
-
           <div class="mini">
             <div class="mini-label">Short strike</div>
             <div class="mini-value" id="shortStrikeValue">--</div>
           </div>
-
           <div class="mini">
             <div class="mini-label">Net credit</div>
             <div class="mini-value" id="creditValueTop">--</div>
           </div>
-
           <div class="mini">
             <div class="mini-label">Macro</div>
             <div class="mini-value" id="macroCountdown">--</div>
@@ -293,20 +282,21 @@
           <div class="side-label">Riesgo</div>
           <div class="side-value" id="riskValue">--</div>
         </div>
-
+        <div class="sidebox">
+          <div class="side-label">Sesión</div>
+          <div class="side-value" id="sessionValueTop">--</div>
+        </div>
         <div class="sidebox">
           <div class="side-label">Freshness</div>
           <div class="side-value"><span id="freshnessStatus">--</span> · <span id="freshnessValue">--</span></div>
         </div>
-
         <div class="sidebox">
-          <div class="side-label">Fuente</div>
+          <div class="side-label">Fuente spot</div>
           <div class="side-value" id="sourceValue">--</div>
         </div>
-
         <div class="sidebox">
-          <div class="side-label">Snapshot opciones</div>
-          <div class="side-value" id="snapshotStatus">--</div>
+          <div class="side-label">Fuente options</div>
+          <div class="side-value" id="optionsSourceValue">--</div>
         </div>
       </aside>
     </section>
@@ -367,8 +357,7 @@
     }
 
     function setDecisionTone(tone) {
-      const el = $("decisionText");
-      el.className = `decision ${tone || "yellow"}`;
+      $("decisionText").className = `decision ${tone || "yellow"}`;
     }
 
     function renderReasons(list) {
@@ -380,17 +369,6 @@
         span.textContent = item;
         box.appendChild(span);
       });
-    }
-
-    function sourceLabel(state) {
-      if (state.source === "intraday_5m") return "Intradía 5m";
-      if (state.source === "finnhub_quote") return "Finnhub quote";
-      return fmtText(state.source);
-    }
-
-    function snapshotLabel(state) {
-      if (state.optionsMeta?.used) return "Disponible";
-      return "Sin snapshot";
     }
 
     async function fetchState() {
@@ -409,8 +387,9 @@
         $("scoreValue").textContent = state.score ?? "--";
         $("summaryText").textContent = fmtText(state.summary);
         $("riskValue").textContent = fmtText(state.riskLabel);
-        $("sourceValue").textContent = sourceLabel(state);
-        $("snapshotStatus").textContent = snapshotLabel(state);
+        $("sessionValueTop").textContent = fmtText(state.session?.label);
+        $("sourceValue").textContent = fmtText(state.source);
+        $("optionsSourceValue").textContent = fmtText(state.optionsMeta?.source);
 
         setDecisionTone(state.decisionTone);
 
@@ -441,12 +420,19 @@
         $("notesValue").textContent = fmtText(state.options?.notes);
 
         renderReasons(state.reasons);
+
+        const alertBox = $("marketAlert");
+        if (state.market?.isHoliday) {
+          alertBox.style.display = "block";
+          alertBox.textContent = `Mercado cerrado en EE. UU.: ${fmtText(state.market?.name)}`;
+        } else {
+          alertBox.style.display = "none";
+          alertBox.textContent = "";
+        }
       } catch (err) {
         $("headerMeta").textContent = "Error cargando datos";
         $("decisionText").textContent = "Error";
         $("summaryText").textContent = err.message || "No se pudo cargar";
-        $("sourceValue").textContent = "--";
-        $("snapshotStatus").textContent = "--";
         renderReasons([err.message || "Error"]);
       }
     }
