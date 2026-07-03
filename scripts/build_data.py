@@ -1,10 +1,12 @@
 import json
 import math
-from datetime import datetime, timezone, date
+import os
+from datetime import datetime, timezone, date, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pandas as pd
+import requests
 import yfinance as yf
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -16,7 +18,7 @@ TICKER = "QQQ"
 SPREAD_WIDTH = 1.0
 QUOTE_MAX_SPREAD_PCT_REGULAR = 0.35
 QUOTE_MAX_SPREAD_PCT_EXTENDED = 0.25
-STALE_THRESHOLD_MINUTES = 3
+STALE_THRESHOLD_MINUTES = 20
 HISTORY_LIMIT = 150
 
 MIN_SHORT_OI = 300
@@ -26,6 +28,9 @@ TARGET_DELTA_MAX = 0.20
 
 NY_ZONE = ZoneInfo("America/New_York")
 UTC_ZONE = timezone.utc
+
+FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
+FINNHUB_BASE = "https://finnhub.io/api/v1"
 
 
 def now_utc():
@@ -93,45 +98,97 @@ def get_session_label(ny_dt):
     return {"code": "afterhours", "label": "After hours"}
 
 
+def finnhub_get(path, params=None):
+    if not FINNHUB_API_KEY:
+        raise RuntimeError("FINNHUB_API_KEY no configurada en GitHub Secrets")
+    params = params or {}
+    params["token"] = FINNHUB_API_KEY
+    r = requests.get(f"{FINNHUB_BASE}{path}", params=params, timeout=20)
+    r.raise_for_status()
+    return r.json()
+
+
+def get_finnhub_quote(symbol):
+    data = finnhub_get("/quote", {"symbol": symbol})
+    return {
+        "price": safe_float(data.get("c")),
+        "prevClose": safe_float(data.get("pc")),
+        "change": safe_float(data.get("d")),
+        "changePct": safe_float(data.get("dp")),
+        "timestamp": data.get("t"),
+        "high": safe_float(data.get("h")),
+        "low": safe_float(data.get("l")),
+        "open": safe_float(data.get("o")),
+    }
+
+
+def get_finnhub_candles(symbol, resolution="5", days=2):
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    from_ts = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
+
+    data = finnhub_get("/stock/candle", {
+        "symbol": symbol,
+        "resolution": resolution,
+        "from": from_ts,
+        "to": now_ts,
+    })
+
+    if data.get("s") != "ok":
+        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+
+    df = pd.DataFrame({
+        "Open": data.get("o", []),
+        "High": data.get("h", []),
+        "Low": data.get("l", []),
+        "Close": data.get("c", []),
+        "Volume": data.get("v", []),
+        "Timestamp": data.get("t", []),
+    })
+
+    if df.empty:
+        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="s", utc=True)
+    df = df.set_index("Timestamp").sort_index()
+    return df
+
+
 def get_price_data(ticker):
-    tk = yf.Ticker(ticker)
-    hist_5m = None
-    hist_1d = None
-    try:
-        hist_5m = tk.history(period="2d", interval="5m", auto_adjust=False, prepost=True)
-    except Exception:
-        pass
-    try:
-        hist_1d = tk.history(period="5d", interval="1d", auto_adjust=False, prepost=True)
-    except Exception:
-        pass
+    hist_5m = get_finnhub_candles(ticker, resolution="5", days=2)
+    quote = get_finnhub_quote(ticker)
 
-    price = prev_close = change = change_pct = None
-    source = "intraday_5m"
+    price = safe_float(quote.get("price"))
+    prev_close = safe_float(quote.get("prevClose"))
+    change = safe_float(quote.get("change"))
+    change_pct = safe_float(quote.get("changePct"))
+
     last_bar_utc = None
-
     if hist_5m is not None and not hist_5m.empty:
-        price = safe_float(hist_5m.iloc[-1].get("Close"))
         idx = hist_5m.index[-1]
         if isinstance(idx, pd.Timestamp):
             last_bar_utc = idx.tz_convert("UTC") if idx.tzinfo else idx.tz_localize("UTC")
 
-    if hist_1d is not None and len(hist_1d) >= 2:
-        prev_close = safe_float(hist_1d.iloc[-2].get("Close"))
+    if price is None and hist_5m is not None and not hist_5m.empty:
+        price = safe_float(hist_5m.iloc[-1].get("Close"))
 
-    if price is not None and prev_close not in (None, 0):
+    if prev_close in (None, 0) and hist_5m is not None and len(hist_5m) > 1:
+        prev_close = safe_float(hist_5m.iloc[-2].get("Close"))
+
+    if change is None and price is not None and prev_close not in (None, 0):
         change = price - prev_close
+
+    if change_pct is None and change is not None and prev_close not in (None, 0):
         change_pct = (change / prev_close) * 100
 
     tone = "up" if (change or 0) > 0 else "down" if (change or 0) < 0 else "flat"
 
-    return tk, hist_5m, {
+    return hist_5m, {
         "price": round2(price),
         "prevClose": round2(prev_close),
         "change": round2(change),
         "changePct": round2(change_pct),
         "tone": tone,
-        "source": source,
+        "source": "finnhub",
         "lastBarAt": last_bar_utc.isoformat() if last_bar_utc is not None else None,
     }
 
@@ -773,7 +830,10 @@ def main():
     try:
         ny = now_ny()
         nowu = now_utc()
-        tk, hist_5m, px = get_price_data(TICKER)
+
+        hist_5m, px = get_price_data(TICKER)
+        tk = yf.Ticker(TICKER)
+
         session = get_session_label(ny)
         vwap = compute_vwap(hist_5m)
         opening_range = compute_opening_range(hist_5m)
