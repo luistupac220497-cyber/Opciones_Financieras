@@ -40,7 +40,7 @@ def safe_float(v, default=None):
     try:
         if v is None:
             return default
-        if isinstance(v, list):
+        if isinstance(v, (list, tuple, dict, set)):
             return default
         if v == "":
             return default
@@ -112,6 +112,7 @@ def get_finnhub_quote(symbol):
 
 def get_price_data(ticker):
     quote = get_finnhub_quote(ticker)
+
     price = safe_float(quote.get("price"))
     prev_close = safe_float(quote.get("prevClose"))
     change = safe_float(quote.get("change"))
@@ -138,30 +139,46 @@ def get_price_data(ticker):
     }
 
 
-def parse_number(value):
-    if value is None:
+def to_num(v):
+    if v is None:
         return None
-    s = str(value).strip().replace(",", "").replace("$", "")
-    if s in {"", "-", "--", "N/A", "nan", "None"}:
+    if isinstance(v, (list, tuple, dict, set)):
         return None
-    if s.endswith("%"):
-        s = s[:-1]
+    s = str(v).strip().replace(",", "").replace("$", "").replace("%", "")
+    if s in {"", "-", "--", "N/A", "nan", "None", "[]"}:
+        return None
     try:
-        return float(s)
+        x = pd.to_numeric(s, errors="coerce")
+        if pd.isna(x):
+            return None
+        return float(x)
     except Exception:
         return None
 
 
-def find_column(cols, candidates):
-    lower_map = {str(c).strip().lower(): c for c in cols}
-    for cand in candidates:
-        if cand.lower() in lower_map:
-            return lower_map[cand.lower()]
-    for col in cols:
-        txt = str(col).strip().lower()
-        for cand in candidates:
-            if cand.lower() in txt:
-                return col
+def normalize_columns(df):
+    df = df.copy()
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    return df
+
+
+def find_candidate_table(tables):
+    for df in tables:
+        temp = normalize_columns(df)
+        cols = list(temp.columns)
+        has_strike = any("strike" in c for c in cols)
+        has_bid = any("bid" in c for c in cols)
+        has_ask = any("ask" in c for c in cols)
+        if has_strike and (has_bid or has_ask):
+            return temp
+    return None
+
+
+def first_col(cols, keywords):
+    for c in cols:
+        for kw in keywords:
+            if kw in c:
+                return c
     return None
 
 
@@ -172,81 +189,66 @@ def get_finviz_options_experimental(symbol):
     ]
 
     last_error = None
+
     for url in urls:
         try:
             r = requests.get(url, headers=HEADERS, timeout=20)
             r.raise_for_status()
+
             tables = pd.read_html(r.text)
-            best = None
-
-            for df in tables:
-                cols = [str(c) for c in df.columns]
-                strike_col = find_column(cols, ["strike", "strike price"])
-                bid_col = find_column(cols, ["bid"])
-                ask_col = find_column(cols, ["ask"])
-                vol_col = find_column(cols, ["volume", "vol"])
-                oi_col = find_column(cols, ["open interest", "oi"])
-
-                if strike_col:
-                    best = {
-                        "df": df.copy(),
-                        "strike_col": strike_col,
-                        "bid_col": bid_col,
-                        "ask_col": ask_col,
-                        "vol_col": vol_col,
-                        "oi_col": oi_col,
-                        "url": url,
-                    }
-                    break
-
-            if not best:
+            if not tables:
                 continue
 
-            df = best["df"]
-            strike_col = best["strike_col"]
-            bid_col = best["bid_col"]
-            ask_col = best["ask_col"]
-            vol_col = best["vol_col"]
-            oi_col = best["oi_col"]
+            df = find_candidate_table(tables)
+            if df is None or df.empty:
+                continue
 
-            df["_strike"] = df[strike_col].map(parse_number)
-            if bid_col:
-                df["_bid"] = df[bid_col].map(parse_number)
-            else:
-                df["_bid"] = None
-            if ask_col:
-                df["_ask"] = df[ask_col].map(parse_number)
-            else:
-                df["_ask"] = None
-            if vol_col:
-                df["_vol"] = df[vol_col].map(parse_number)
-            else:
-                df["_vol"] = None
-            if oi_col:
-                df["_oi"] = df[oi_col].map(parse_number)
-            else:
-                df["_oi"] = None
+            cols = list(df.columns)
+            strike_col = first_col(cols, ["strike"])
+            bid_col = first_col(cols, ["bid"])
+            ask_col = first_col(cols, ["ask"])
+            vol_col = first_col(cols, ["volume", "vol"])
+            oi_col = first_col(cols, ["open interest", "oi"])
+
+            if not strike_col:
+                continue
+
+            df["_strike"] = df[strike_col].map(to_num)
+            df["_bid"] = df[bid_col].map(to_num) if bid_col else None
+            df["_ask"] = df[ask_col].map(to_num) if ask_col else None
+            df["_vol"] = df[vol_col].map(to_num) if vol_col else None
+            df["_oi"] = df[oi_col].map(to_num) if oi_col else None
 
             df = df[df["_strike"].notna()].copy()
             if df.empty:
                 continue
 
+            if "_vol" not in df:
+                df["_vol"] = None
+            if "_oi" not in df:
+                df["_oi"] = None
+
             df["_activity"] = df[["_vol", "_oi"]].fillna(0).sum(axis=1)
             df = df.sort_values(["_activity", "_strike"], ascending=[False, True])
 
-            top = df.iloc[0]
-            short_strike = round2(top["_strike"])
-            long_strike = round2(short_strike + SPREAD_WIDTH) if short_strike is not None else None
+            row = df.iloc[0]
 
-            short_bid = round2(top["_bid"])
-            short_ask = round2(top["_ask"])
+            short_strike = round2(row["_strike"])
+            long_strike = round2(short_strike + SPREAD_WIDTH) if short_strike is not None else None
+            short_bid = round2(row["_bid"])
+            short_ask = round2(row["_ask"])
+            short_vol = round2(row["_vol"])
+            short_oi = round2(row["_oi"])
+
+            quotes_usable = short_bid is not None and short_ask is not None and short_ask > short_bid
+            liquidity_ok = (short_vol or 0) >= 10 or (short_oi or 0) >= 50
 
             net_credit = None
             breakeven = None
-            if short_bid is not None and short_ask is not None:
+            if quotes_usable:
                 mid = (short_bid + short_ask) / 2
-                long_mid = max(mid - 0.12, 0.01)
-                net_credit = round2(mid - long_mid)
+                synthetic_long_mid = max(mid - 0.12, 0.01)
+                net_credit = round2(mid - synthetic_long_mid)
                 breakeven = round2(short_strike + net_credit) if short_strike is not None else None
 
             return {
@@ -258,15 +260,16 @@ def get_finviz_options_experimental(symbol):
                 "longStrike": long_strike,
                 "shortBid": short_bid,
                 "shortAsk": short_ask,
-                "shortVolume": round2(top["_vol"]),
-                "shortOI": round2(top["_oi"]),
-                "quotesUsable": short_bid is not None and short_ask is not None and short_ask > short_bid,
-                "liquidityOk": (top["_vol"] or 0) >= 10 or (top["_oi"] or 0) >= 50,
+                "shortVolume": short_vol,
+                "shortOI": short_oi,
+                "quotesUsable": quotes_usable,
+                "liquidityOk": liquidity_ok,
                 "netCredit": net_credit,
                 "breakeven": breakeven,
                 "notes": "Datos orientativos extraídos experimentalmente de Finviz",
                 "issues": [],
             }
+
         except Exception as e:
             last_error = str(e)
 
@@ -334,7 +337,12 @@ def get_macro_block():
         "isVeto": delta_seconds > 0 and delta_seconds <= 24 * 3600,
     }
 
-    return {"status": "OK", "next": next_event, "items": [next_event], "all": [next_event]}
+    return {
+        "status": "OK",
+        "next": next_event,
+        "items": [next_event],
+        "all": [next_event],
+    }
 
 
 def get_earnings_block():
@@ -363,7 +371,12 @@ def get_earnings_block():
 
 def compute_freshness(last_bar_at, updated_at_iso):
     if not last_bar_at:
-        return {"ageMinutes": None, "thresholdMinutes": 20, "isStale": True, "status": "Sin timestamp"}
+        return {
+            "ageMinutes": None,
+            "thresholdMinutes": 20,
+            "isStale": True,
+            "status": "Sin timestamp",
+        }
     try:
         last_dt = datetime.fromisoformat(last_bar_at)
         now_dt = datetime.fromisoformat(updated_at_iso)
@@ -375,7 +388,12 @@ def compute_freshness(last_bar_at, updated_at_iso):
             "status": "Stale" if age > 20 else "OK",
         }
     except Exception:
-        return {"ageMinutes": None, "thresholdMinutes": 20, "isStale": True, "status": "Error"}
+        return {
+            "ageMinutes": None,
+            "thresholdMinutes": 20,
+            "isStale": True,
+            "status": "Error",
+        }
 
 
 def compute_score(state):
@@ -458,8 +476,32 @@ def build_error_state(msg):
             "minCreditRequired": 0.03,
             "distToShort": None,
         },
-        "options": {"expiration": None, "quotesUsable": False, "liquidityOk": False, "deltaOk": None, "notes": msg, "issues": [msg]},
-        "finviz": {"used": False, "source": "finviz_experimental", "sourceUrl": None, "updatedAt": None, "shortStrike": None, "longStrike": None, "shortBid": None, "shortAsk": None, "shortVolume": None, "shortOI": None, "quotesUsable": False, "liquidityOk": False, "netCredit": None, "breakeven": None, "notes": msg, "issues": [msg]},
+        "options": {
+            "expiration": None,
+            "quotesUsable": False,
+            "liquidityOk": False,
+            "deltaOk": None,
+            "notes": msg,
+            "issues": [msg],
+        },
+        "finviz": {
+            "used": False,
+            "source": "finviz_experimental",
+            "sourceUrl": None,
+            "updatedAt": None,
+            "shortStrike": None,
+            "longStrike": None,
+            "shortBid": None,
+            "shortAsk": None,
+            "shortVolume": None,
+            "shortOI": None,
+            "quotesUsable": False,
+            "liquidityOk": False,
+            "netCredit": None,
+            "breakeven": None,
+            "notes": msg,
+            "issues": [msg],
+        },
         "vwap": {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No usado"},
         "openingRange": {"available": False, "status": "No usado", "message": "No usado"},
         "premarketRange": {"available": False, "status": "No usado", "message": "No usado"},
@@ -501,7 +543,10 @@ def append_history(state):
 
     history.append(entry)
     history = history[-HISTORY_LIMIT:]
-    HISTORY_FILE.write_text(json.dumps(json_safe(history), ensure_ascii=False, indent=2), encoding="utf-8")
+    HISTORY_FILE.write_text(
+        json.dumps(json_safe(history), ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
 
 
 def main():
@@ -591,7 +636,10 @@ def main():
     except Exception as e:
         state = build_error_state(str(e))
 
-    STATE_FILE.write_text(json.dumps(json_safe(state), ensure_ascii=False, indent=2), encoding="utf-8")
+    STATE_FILE.write_text(
+        json.dumps(json_safe(state), ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
     append_history(state)
 
 
