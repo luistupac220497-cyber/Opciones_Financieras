@@ -6,14 +6,14 @@
   "changePct": -1.51,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-03T03:50:35.501079+00:00",
-  "updatedAtText": "2026-07-03 03:50:35 UTC",
-  "updatedAtNY": "2026-07-02 23:50:34 ET",
+  "updatedAt": "2026-07-03T04:00:46.367115+00:00",
+  "updatedAtText": "2026-07-03 04:00:46 UTC",
+  "updatedAtNY": "2026-07-03 00:00:45 ET",
   "session": {
-    "code": "afterhours",
-    "label": "After hours"
+    "code": "overnight",
+    "label": "Overnight"
   },
-  "summary": "buffer 2.60% (base 1.85%) · short 733 · quotes de opciones cargadas · Tesla en 20d · tramo afterhours",
+  "summary": "buffer 2.60% (base 1.85%) · short 733 · quotes de opciones cargadas · Tesla en 20d · tramo overnight",
   "trade": {
     "bufferBasePct": 1.85,
     "bufferDynamicPct": 2.6,
@@ -61,7 +61,7 @@
   "openingRange": {
     "available": false,
     "status": "Pendiente",
-    "message": "Opening Range pendiente de cálculo en esta versión"
+    "message": "Opening Range disponible a partir de 09:30 ET"
   },
   "premarketRange": {
     "available": true,
