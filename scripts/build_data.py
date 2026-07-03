@@ -1,9 +1,13 @@
 import json
 import math
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+import pandas as pd
+import requests
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -19,14 +23,9 @@ UTC_ZONE = timezone.utc
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
 FINNHUB_BASE = "https://finnhub.io/api/v1"
 
-try:
-    import requests
-except Exception as e:
-    raise RuntimeError("Falta instalar requests en requirements.txt") from e
-
-
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
 }
 
 
@@ -74,6 +73,26 @@ def fmt_countdown(delta_seconds):
     return f"{h}h {m}m" if h > 0 else f"{m}m"
 
 
+def clean_cell(v):
+    if v is None:
+        return None
+    if isinstance(v, (list, tuple, dict, set)):
+        return None
+    s = str(v).strip()
+    if s in {"", "-", "--", "N/A", "n/a", "nan", "None", "[]"}:
+        return None
+    return s
+
+
+def to_num(v):
+    s = clean_cell(v)
+    if s is None:
+        return None
+    s = s.replace(",", "").replace("$", "").replace("%", "")
+    x = pd.to_numeric(s, errors="coerce")
+    return None if pd.isna(x) else float(x)
+
+
 def get_session_label(ny_dt, market_closed=False):
     if market_closed:
         return {"code": "closed", "label": "Market closed"}
@@ -95,6 +114,7 @@ def is_us_market_holiday(ny_dt):
         "2026-02-16": "Presidents Day",
         "2026-04-03": "Good Friday",
         "2026-05-25": "Memorial Day",
+        "2026-06-19": "Juneteenth",
         "2026-07-03": "Independence Day (Observed)",
         "2026-09-07": "Labor Day",
         "2026-11-26": "Thanksgiving Day",
@@ -106,7 +126,7 @@ def is_us_market_holiday(ny_dt):
             "isHoliday": True,
             "name": holidays_2026[date_str],
             "date": date_str,
-            "source": "Nasdaq 2026 holiday schedule",
+            "source": "Nasdaq holiday calendar",
         }
 
     if ny_dt.weekday() >= 5:
@@ -182,9 +202,183 @@ def get_price_data(symbol):
     }
 
 
-def get_options_snapshot_market_closed():
+def normalize_columns(df):
+    out = df.copy()
+    out.columns = [str(c).strip().lower() for c in out.columns]
+    return out
+
+
+def find_col(cols, names):
+    for c in cols:
+        for name in names:
+            if name in c:
+                return c
+    return None
+
+
+def choose_best_option_row(df, spot):
+    cols = list(df.columns)
+
+    strike_col = find_col(cols, ["strike"])
+    bid_col = find_col(cols, ["bid"])
+    ask_col = find_col(cols, ["ask"])
+    vol_col = find_col(cols, ["volume", "vol"])
+    oi_col = find_col(cols, ["open interest", "openinterest", "oi"])
+    delta_col = find_col(cols, ["delta"])
+
+    if not strike_col:
+        return None
+
+    work = df.copy()
+    work["_strike"] = work[strike_col].map(to_num)
+    work["_bid"] = work[bid_col].map(to_num) if bid_col else None
+    work["_ask"] = work[ask_col].map(to_num) if ask_col else None
+    work["_vol"] = work[vol_col].map(to_num) if vol_col else None
+    work["_oi"] = work[oi_col].map(to_num) if oi_col else None
+    work["_delta"] = work[delta_col].map(to_num) if delta_col else None
+
+    work = work[work["_strike"].notna()].copy()
+    if work.empty:
+        return None
+
+    otm = work[work["_strike"] >= spot].copy() if spot is not None else work.copy()
+    if not otm.empty:
+        work = otm
+
+    if "_vol" not in work:
+        work["_vol"] = None
+    if "_oi" not in work:
+        work["_oi"] = None
+
+    work["_activity"] = work[["_vol", "_oi"]].fillna(0).sum(axis=1)
+    work["_distance"] = (work["_strike"] - spot).abs() if spot is not None else 999999
+
+    work = work.sort_values(["_activity", "_distance", "_strike"], ascending=[False, True, True])
+    if work.empty:
+        return None
+
+    return work.iloc[0]
+
+
+def parse_tables_from_html(html):
+    try:
+        tables = pd.read_html(html)
+    except Exception:
+        return []
+
+    candidates = []
+    for t in tables:
+        if t is None or t.empty:
+            continue
+        df = normalize_columns(t)
+        cols = list(df.columns)
+        has_strike = any("strike" in c for c in cols)
+        has_bid = any("bid" in c for c in cols)
+        has_ask = any("ask" in c for c in cols)
+        has_oi = any("open interest" in c or "openinterest" in c or c == "oi" for c in cols)
+        has_vol = any("volume" in c or c == "vol" for c in cols)
+
+        if has_strike and (has_bid or has_ask or has_oi or has_vol):
+            candidates.append(df)
+
+    return candidates
+
+
+def build_option_snapshot_from_row(row, source_name, source_url, expiration="0DTE_or_nearest"):
+    short_strike = round2(row.get("_strike"))
+    long_strike = round2(short_strike + SPREAD_WIDTH) if short_strike is not None else None
+    short_bid = round2(row.get("_bid"))
+    short_ask = round2(row.get("_ask"))
+    short_vol = round2(row.get("_vol"))
+    short_oi = round2(row.get("_oi"))
+    short_delta = round2(row.get("_delta"))
+
+    quotes_usable = short_bid is not None and short_ask is not None and short_ask > short_bid
+    liquidity_ok = (short_oi or 0) >= 50 or (short_vol or 0) >= 10
+    delta_ok = short_delta is not None and 0.10 <= abs(short_delta) <= 0.35
+
+    net_credit = None
+    breakeven = None
+    if quotes_usable:
+        mid = (short_bid + short_ask) / 2.0
+        net_credit = round2(max(mid, 0.01))
+        breakeven = round2(short_strike + net_credit) if short_strike is not None else None
+
     return {
-        "expiration": "market_closed",
+        "expiration": expiration,
+        "shortCallBid": short_bid,
+        "shortCallAsk": short_ask,
+        "longCallBid": None,
+        "longCallAsk": None,
+        "shortCallDelta": short_delta,
+        "longCallDelta": None,
+        "shortCallOI": short_oi,
+        "longCallOI": None,
+        "shortCallVolume": short_vol,
+        "longCallVolume": None,
+        "quotesUsable": quotes_usable,
+        "liquidityOk": liquidity_ok,
+        "deltaOk": delta_ok,
+        "notes": f"Snapshot orientativo desde {source_name}",
+        "issues": [],
+        "meta": {
+            "used": True,
+            "source": source_name,
+            "sourceUrl": source_url,
+            "updatedAt": now_utc().isoformat(),
+            "shortStrike": short_strike,
+            "longStrike": long_strike,
+            "netCredit": net_credit,
+            "breakeven": breakeven,
+        },
+    }
+
+
+def get_nasdaq_options_snapshot(symbol, spot):
+    urls = [
+        f"https://www.nasdaq.com/market-activity/etf/{symbol.lower()}/option-chain",
+        f"https://www.nasdaq.com/market-activity/stocks/{symbol.lower()}/option-chain",
+    ]
+
+    last_error = None
+
+    for url in urls:
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=25)
+            r.raise_for_status()
+
+            candidates = parse_tables_from_html(r.text)
+            if not candidates:
+                last_error = "No se encontraron tablas de chain en Nasdaq"
+                continue
+
+            for df in candidates:
+                row = choose_best_option_row(df, spot)
+                if row is None:
+                    continue
+
+                cols = list(df.columns)
+                exp_col = find_col(cols, ["expiry", "expiration", "date"])
+                expiration = "0DTE_or_nearest"
+                if exp_col and exp_col in df.columns and not df.empty:
+                    exp_value = clean_cell(df.iloc[0][exp_col])
+                    if exp_value:
+                        expiration = exp_value
+
+                return build_option_snapshot_from_row(
+                    row=row,
+                    source_name="nasdaq_option_chain",
+                    source_url=url,
+                    expiration=expiration,
+                )
+
+            last_error = "Nasdaq devolvió tablas pero no fila útil"
+
+        except Exception as e:
+            last_error = str(e)
+
+    return {
+        "expiration": "0DTE_or_nearest",
         "shortCallBid": None,
         "shortCallAsk": None,
         "longCallBid": None,
@@ -198,11 +392,190 @@ def get_options_snapshot_market_closed():
         "quotesUsable": False,
         "liquidityOk": False,
         "deltaOk": False,
-        "notes": "Mercado cerrado en EE. UU.; options chain operativa desactivada",
-        "issues": ["market_closed_us_holiday"],
+        "notes": "Nasdaq no devolvió snapshot usable en esta ejecución",
+        "issues": [f"nasdaq_unavailable_or_unparseable: {last_error}"] if last_error else ["nasdaq_unavailable_or_unparseable"],
         "meta": {
             "used": False,
-            "source": "market_closed_guard",
+            "source": "nasdaq_option_chain",
+            "sourceUrl": None,
+            "updatedAt": now_utc().isoformat(),
+            "shortStrike": None,
+            "longStrike": None,
+            "netCredit": None,
+            "breakeven": None,
+        },
+    }
+
+
+def get_yahoo_options_snapshot(symbol, spot):
+    url = f"https://finance.yahoo.com/quote/{symbol}/options/"
+
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=25)
+        r.raise_for_status()
+
+        candidates = parse_tables_from_html(r.text)
+        if not candidates:
+            return {
+                "expiration": "0DTE_or_nearest",
+                "shortCallBid": None,
+                "shortCallAsk": None,
+                "longCallBid": None,
+                "longCallAsk": None,
+                "shortCallDelta": None,
+                "longCallDelta": None,
+                "shortCallOI": None,
+                "longCallOI": None,
+                "shortCallVolume": None,
+                "longCallVolume": None,
+                "quotesUsable": False,
+                "liquidityOk": False,
+                "deltaOk": False,
+                "notes": "Yahoo no devolvió snapshot usable en esta ejecución",
+                "issues": ["yahoo_unavailable_or_unparseable"],
+                "meta": {
+                    "used": False,
+                    "source": "yahoo_option_chain",
+                    "sourceUrl": url,
+                    "updatedAt": now_utc().isoformat(),
+                    "shortStrike": None,
+                    "longStrike": None,
+                    "netCredit": None,
+                    "breakeven": None,
+                },
+            }
+
+        for df in candidates:
+            row = choose_best_option_row(df, spot)
+            if row is not None:
+                return build_option_snapshot_from_row(
+                    row=row,
+                    source_name="yahoo_option_chain",
+                    source_url=url,
+                    expiration="0DTE_or_nearest",
+                )
+
+        return {
+            "expiration": "0DTE_or_nearest",
+            "shortCallBid": None,
+            "shortCallAsk": None,
+            "longCallBid": None,
+            "longCallAsk": None,
+            "shortCallDelta": None,
+            "longCallDelta": None,
+            "shortCallOI": None,
+            "longCallOI": None,
+            "shortCallVolume": None,
+            "longCallVolume": None,
+            "quotesUsable": False,
+            "liquidityOk": False,
+            "deltaOk": False,
+            "notes": "Yahoo devolvió tablas pero no fila útil",
+            "issues": ["yahoo_no_usable_row"],
+            "meta": {
+                "used": False,
+                "source": "yahoo_option_chain",
+                "sourceUrl": url,
+                "updatedAt": now_utc().isoformat(),
+                "shortStrike": None,
+                "longStrike": None,
+                "netCredit": None,
+                "breakeven": None,
+            },
+        }
+
+    except Exception as e:
+        return {
+            "expiration": "0DTE_or_nearest",
+            "shortCallBid": None,
+            "shortCallAsk": None,
+            "longCallBid": None,
+            "longCallAsk": None,
+            "shortCallDelta": None,
+            "longCallDelta": None,
+            "shortCallOI": None,
+            "longCallOI": None,
+            "shortCallVolume": None,
+            "longCallVolume": None,
+            "quotesUsable": False,
+            "liquidityOk": False,
+            "deltaOk": False,
+            "notes": "Yahoo no devolvió snapshot usable en esta ejecución",
+            "issues": [f"yahoo_unavailable_or_unparseable: {e}"],
+            "meta": {
+                "used": False,
+                "source": "yahoo_option_chain",
+                "sourceUrl": url,
+                "updatedAt": now_utc().isoformat(),
+                "shortStrike": None,
+                "longStrike": None,
+                "netCredit": None,
+                "breakeven": None,
+            },
+        }
+
+
+def get_options_snapshot(symbol, spot, market_holiday):
+    if market_holiday["isHoliday"]:
+        return {
+            "expiration": "market_closed",
+            "shortCallBid": None,
+            "shortCallAsk": None,
+            "longCallBid": None,
+            "longCallAsk": None,
+            "shortCallDelta": None,
+            "longCallDelta": None,
+            "shortCallOI": None,
+            "longCallOI": None,
+            "shortCallVolume": None,
+            "longCallVolume": None,
+            "quotesUsable": False,
+            "liquidityOk": False,
+            "deltaOk": False,
+            "notes": "Mercado cerrado en EE. UU.; options chain operativa desactivada",
+            "issues": ["market_closed_us_holiday"],
+            "meta": {
+                "used": False,
+                "source": "market_closed_guard",
+                "sourceUrl": None,
+                "updatedAt": now_utc().isoformat(),
+                "shortStrike": None,
+                "longStrike": None,
+                "netCredit": None,
+                "breakeven": None,
+            },
+        }
+
+    nasdaq = get_nasdaq_options_snapshot(symbol, spot)
+    if nasdaq["meta"]["used"]:
+        return nasdaq
+
+    yahoo = get_yahoo_options_snapshot(symbol, spot)
+    if yahoo["meta"]["used"]:
+        yahoo["issues"] = nasdaq.get("issues", []) + yahoo.get("issues", [])
+        yahoo["notes"] = "Snapshot orientativo desde yahoo_option_chain (fallback tras Nasdaq)"
+        return yahoo
+
+    return {
+        "expiration": "0DTE_or_nearest",
+        "shortCallBid": None,
+        "shortCallAsk": None,
+        "longCallBid": None,
+        "longCallAsk": None,
+        "shortCallDelta": None,
+        "longCallDelta": None,
+        "shortCallOI": None,
+        "longCallOI": None,
+        "shortCallVolume": None,
+        "longCallVolume": None,
+        "quotesUsable": False,
+        "liquidityOk": False,
+        "deltaOk": False,
+        "notes": "Ni Nasdaq ni Yahoo devolvieron snapshot usable en esta ejecución",
+        "issues": nasdaq.get("issues", []) + yahoo.get("issues", []),
+        "meta": {
+            "used": False,
+            "source": "no_options_source_available",
             "sourceUrl": None,
             "updatedAt": now_utc().isoformat(),
             "shortStrike": None,
@@ -340,13 +713,14 @@ def compute_score_and_reasons(price_data, options, trade, macro, session, market
 
     if market_holiday["isHoliday"]:
         reasons.append(f"Mercado cerrado: {market_holiday['name']}")
-        score = 0
+        reasons.append("No hay sesión operable de opciones")
+        return 0, "no entrar", "red", "no entrar", "Riesgo alto", reasons
 
     if price_data["changePct"] is not None and price_data["changePct"] < 0:
         reasons.append("Sesgo bajista favorable")
 
     if session["code"] != "regular":
-        reasons.append("Sesión no regular")
+        reasons.append("Sesión extendida")
         score -= 10
 
     if not options["quotesUsable"]:
@@ -369,32 +743,13 @@ def compute_score_and_reasons(price_data, options, trade, macro, session, market
         reasons.append("Macro cercana: Nóminas no agrícolas (NFP)")
         score -= 20
 
-    if market_holiday["isHoliday"]:
-        decision = "no entrar"
-        tone = "red"
-        label = "no entrar"
-        risk = "Riesgo alto"
-        return 0, decision, tone, label, risk, reasons
-
     score = max(0, min(100, int(round(score))))
 
     if macro["next"]["isVeto"]:
-        decision = "no entrar"
-        tone = "red"
-        label = "no entrar"
-        risk = "Riesgo alto"
-    elif score >= 70:
-        decision = "entraría"
-        tone = "green"
-        label = "entraría"
-        risk = "Riesgo controlado"
-    else:
-        decision = "esperar confirmación"
-        tone = "yellow"
-        label = "esperar confirmación"
-        risk = "Riesgo medio"
-
-    return score, decision, tone, label, risk, reasons
+        return score, "no entrar", "red", "no entrar", "Riesgo alto", reasons
+    if score >= 70:
+        return score, "entraría", "green", "entraría", "Riesgo controlado", reasons
+    return score, "esperar confirmación", "yellow", "esperar confirmación", "Riesgo medio", reasons
 
 
 def append_history(state):
@@ -409,6 +764,7 @@ def append_history(state):
         "longStrike": state["trade"]["longStrike"],
         "notes": state["options"]["notes"],
         "source": state["source"],
+        "optionsSource": state["optionsMeta"]["source"],
         "marketClosed": state["market"]["isHoliday"],
         "marketHolidayName": state["market"]["name"],
     }
@@ -453,11 +809,7 @@ def main():
         market_closed=market_holiday["isHoliday"],
     )
 
-    if market_holiday["isHoliday"]:
-        options = get_options_snapshot_market_closed()
-    else:
-        options = get_options_snapshot_market_closed()
-
+    options = get_options_snapshot(TICKER, price_data["price"], market_holiday)
     meta = options.pop("meta")
 
     trade = {
