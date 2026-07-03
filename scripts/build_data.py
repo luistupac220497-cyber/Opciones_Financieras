@@ -10,6 +10,7 @@ import yfinance as yf
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
 STATE_FILE = DATA_DIR / "state.json"
+HISTORY_FILE = DATA_DIR / "history.json"
 
 TICKER = "QQQ"
 BASE_BUFFER_PCT = 1.85
@@ -19,6 +20,7 @@ MIN_CREDIT_PCT_WIDTH = 0.08
 QUOTE_MAX_SPREAD_PCT_REGULAR = 0.35
 QUOTE_MAX_SPREAD_PCT_EXTENDED = 0.25
 STALE_THRESHOLD_MINUTES = 3
+HISTORY_LIMIT = 150
 
 NY_ZONE = ZoneInfo("America/New_York")
 UTC_ZONE = timezone.utc
@@ -65,8 +67,6 @@ def json_safe(obj):
         return {k: json_safe(v) for k, v in obj.items()}
     if isinstance(obj, list):
         return [json_safe(x) for x in obj]
-    if isinstance(obj, tuple):
-        return [json_safe(x) for x in obj]
     return obj
 
 
@@ -96,7 +96,7 @@ def get_price_data(ticker):
     hist_5m = None
     hist_1d = None
     try:
-        hist_5m = tk.history(period="1d", interval="5m", auto_adjust=False, prepost=True)
+        hist_5m = tk.history(period="2d", interval="5m", auto_adjust=False, prepost=True)
     except Exception:
         pass
     try:
@@ -214,6 +214,7 @@ def compute_premarket_range(hist):
         hist_local.index = hist_local.index.tz_localize("UTC").tz_convert(NY_ZONE)
     else:
         hist_local.index = hist_local.index.tz_convert(NY_ZONE)
+
     day = now_ny().date()
     day_hist = hist_local[hist_local.index.date == day]
     pm = day_hist.between_time("04:00", "09:29")
@@ -380,6 +381,14 @@ def evaluate_quotes(short_bid, short_ask, long_bid, long_ask, session_code):
     return valid, notes
 
 
+def nearest_row(df, strike_target):
+    if df is None or df.empty or strike_target is None:
+        return None
+    tmp = df.copy()
+    tmp["dist"] = (tmp["strike"] - strike_target).abs()
+    return tmp.loc[tmp["dist"].idxmin()]
+
+
 def get_options_trade(tk, price, buffer_pct, session_code):
     short_strike = long_strike = breakeven = net_credit = dist_to_short = None
     expiration = None
@@ -398,43 +407,49 @@ def get_options_trade(tk, price, buffer_pct, session_code):
             calls = chain.calls.copy()
             if calls is not None and not calls.empty and price is not None:
                 short_target = ceil_strike(price * (1 + buffer_pct / 100.0), 1.0)
-                short_strike = short_target
-                long_strike = short_target + SPREAD_WIDTH
-                dist_to_short = short_strike - price
+                long_target = short_target + SPREAD_WIDTH
 
-                sc = calls[calls["strike"] == short_strike]
-                lc = calls[calls["strike"] == long_strike]
-                if not sc.empty:
-                    sc = sc.iloc[0]
+                sc = nearest_row(calls, short_target)
+                lc = nearest_row(calls, long_target)
+
+                if sc is not None:
+                    short_strike = safe_float(sc.get("strike"))
                     short_bid = safe_float(sc.get("bid"))
                     short_ask = safe_float(sc.get("ask"))
                     short_oi = safe_float(sc.get("openInterest"), 0)
                     short_vol = safe_float(sc.get("volume"), 0)
                     short_delta = safe_float(sc.get("delta"))
-                if not lc.empty:
-                    lc = lc.iloc[0]
+
+                if lc is not None:
+                    long_strike = safe_float(lc.get("strike"))
                     long_bid = safe_float(lc.get("bid"))
                     long_ask = safe_float(lc.get("ask"))
                     long_oi = safe_float(lc.get("openInterest"), 0)
                     long_vol = safe_float(lc.get("volume"), 0)
                     long_delta = safe_float(lc.get("delta"))
 
+                if short_strike is not None and price is not None:
+                    dist_to_short = short_strike - price
+
                 quote_valid, quote_notes = evaluate_quotes(short_bid, short_ask, long_bid, long_ask, session_code)
                 notes.extend(quote_notes)
 
-                if short_bid is not None and short_ask is not None and long_bid is not None and long_ask is not None:
+                if None not in (short_bid, short_ask, long_bid, long_ask):
                     short_mid = (short_bid + short_ask) / 2
                     long_mid = (long_bid + long_ask) / 2
                     net_credit = short_mid - long_mid
-                    breakeven = short_strike + net_credit if short_strike is not None and net_credit is not None else None
+                    breakeven = short_strike + net_credit if short_strike is not None else None
 
                 quotes_usable = quote_valid
                 min_credit_by_width = SPREAD_WIDTH * MIN_CREDIT_PCT_WIDTH
-                credit_ok = net_credit is not None and net_credit >= max(MIN_NET_CREDIT, min_credit_by_width)
+                min_credit_required = max(MIN_NET_CREDIT, min_credit_by_width)
+                credit_ok = net_credit is not None and net_credit >= min_credit_required
                 if not credit_ok:
                     notes.append("crédito insuficiente")
                 if quotes_usable and credit_ok and not notes:
                     notes.append("Quotes operables")
+            else:
+                notes.append("Cadena de calls vacía")
         else:
             notes.append("Sin expiraciones disponibles")
     except Exception as e:
@@ -477,14 +492,32 @@ def get_options_trade(tk, price, buffer_pct, session_code):
     return json_safe(payload)
 
 
-def compute_freshness(last_bar_at):
-    nowu = now_utc()
+def compute_freshness(last_bar_at, updated_at_iso, session_code):
     if not last_bar_at:
-        return {"ageMinutes": None, "thresholdMinutes": STALE_THRESHOLD_MINUTES, "isStale": True, "status": "Sin timestamp"}
+        return {
+            "ageMinutes": None,
+            "thresholdMinutes": STALE_THRESHOLD_MINUTES,
+            "isStale": True,
+            "status": "Sin timestamp",
+        }
+
     try:
         ts = pd.Timestamp(last_bar_at)
         ts = ts.tz_convert("UTC") if ts.tzinfo else ts.tz_localize("UTC")
-        age = (nowu - ts.to_pydatetime()).total_seconds() / 60
+        nowu = pd.Timestamp(updated_at_iso).tz_convert("UTC") if pd.Timestamp(updated_at_iso).tzinfo else pd.Timestamp(updated_at_iso).tz_localize("UTC")
+        age = (nowu - ts).total_seconds() / 60
+
+        if session_code == "premarket":
+            ts_ny = ts.tz_convert(NY_ZONE)
+            now_ny_ts = nowu.tz_convert(NY_ZONE)
+            if ts_ny.date() < now_ny_ts.date():
+                return {
+                    "ageMinutes": round2(age),
+                    "thresholdMinutes": STALE_THRESHOLD_MINUTES,
+                    "isStale": False,
+                    "status": "Prev session close",
+                }
+
         return {
             "ageMinutes": round2(age),
             "thresholdMinutes": STALE_THRESHOLD_MINUTES,
@@ -492,7 +525,12 @@ def compute_freshness(last_bar_at):
             "status": "Stale" if age > STALE_THRESHOLD_MINUTES else "OK",
         }
     except Exception:
-        return {"ageMinutes": None, "thresholdMinutes": STALE_THRESHOLD_MINUTES, "isStale": True, "status": "Error timestamp"}
+        return {
+            "ageMinutes": None,
+            "thresholdMinutes": STALE_THRESHOLD_MINUTES,
+            "isStale": True,
+            "status": "Error timestamp",
+        }
 
 
 def compute_score(state):
@@ -524,7 +562,12 @@ def compute_score(state):
 
     score = max(0, min(100, int(round(score))))
 
-    if state["freshness"]["isStale"] or (nxt and nxt.get("isVeto")) or (not state["options"]["quotesUsable"] and not state["trade"].get("creditOk")):
+    if nxt and nxt.get("isVeto"):
+        decision = "no entrar"
+        tone = "red"
+        label = "no entrar"
+        risk = "Riesgo alto"
+    elif state["freshness"]["isStale"] or (not state["options"]["quotesUsable"] and not state["trade"].get("creditOk")):
         decision = "no entrar"
         tone = "red"
         label = "no entrar"
@@ -553,14 +596,42 @@ def build_error_state(msg):
         "changePct": None,
         "tone": "flat",
         "source": "error",
+        "lastBarAt": None,
         "updatedAt": now_utc().isoformat(),
         "updatedAtText": now_utc().strftime("%Y-%m-%d %H:%M:%S UTC"),
         "updatedAtNY": ny.strftime("%Y-%m-%d %H:%M:%S ET"),
         "session": {"code": "error", "label": "Error"},
         "summary": f"Error generando estado: {msg}",
-        "trade": {"bufferBasePct": round2(BASE_BUFFER_PCT), "bufferDynamicPct": round2(BASE_BUFFER_PCT), "bufferReason": "error", "shortStrike": None, "longStrike": None, "breakeven": None, "spreadWidth": round2(SPREAD_WIDTH), "netCredit": None, "creditOk": False, "minCreditRequired": round2(max(MIN_NET_CREDIT, SPREAD_WIDTH * MIN_CREDIT_PCT_WIDTH)), "distToShort": None},
+        "trade": {
+            "bufferBasePct": round2(BASE_BUFFER_PCT),
+            "bufferDynamicPct": round2(BASE_BUFFER_PCT),
+            "bufferReason": "error",
+            "shortStrike": None,
+            "longStrike": None,
+            "breakeven": None,
+            "spreadWidth": round2(SPREAD_WIDTH),
+            "netCredit": None,
+            "creditOk": False,
+            "minCreditRequired": round2(max(MIN_NET_CREDIT, SPREAD_WIDTH * MIN_CREDIT_PCT_WIDTH)),
+            "distToShort": None,
+        },
         "bufferDebug": {},
-        "options": {"expiration": None, "shortCallBid": None, "shortCallAsk": None, "longCallBid": None, "longCallAsk": None, "shortCallDelta": None, "longCallDelta": None, "shortCallOI": None, "longCallOI": None, "shortCallVolume": None, "longCallVolume": None, "quotesUsable": False, "notes": msg, "issues": [msg]},
+        "options": {
+            "expiration": None,
+            "shortCallBid": None,
+            "shortCallAsk": None,
+            "longCallBid": None,
+            "longCallAsk": None,
+            "shortCallDelta": None,
+            "longCallDelta": None,
+            "shortCallOI": None,
+            "longCallOI": None,
+            "shortCallVolume": None,
+            "longCallVolume": None,
+            "quotesUsable": False,
+            "notes": msg,
+            "issues": [msg],
+        },
         "vwap": {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No disponible"},
         "openingRange": {"available": False, "status": "Error", "message": "Opening Range no disponible"},
         "premarketRange": {"available": False, "status": "Error", "message": "Premarket Range no disponible"},
@@ -578,10 +649,38 @@ def build_error_state(msg):
     }
 
 
+def append_history(state):
+    entry = {
+        "updatedAt": state.get("updatedAt"),
+        "updatedAtNY": state.get("updatedAtNY"),
+        "price": state.get("price"),
+        "score": state.get("score"),
+        "decision": state.get("decisionLabel"),
+        "session": state.get("session", {}).get("label"),
+        "shortStrike": state.get("trade", {}).get("shortStrike"),
+        "netCredit": state.get("trade", {}).get("netCredit"),
+        "freshness": state.get("freshness", {}).get("status"),
+    }
+
+    history = []
+    if HISTORY_FILE.exists():
+        try:
+            history = json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+            if not isinstance(history, list):
+                history = []
+        except Exception:
+            history = []
+
+    history.append(entry)
+    history = history[-HISTORY_LIMIT:]
+    HISTORY_FILE.write_text(json.dumps(json_safe(history), ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     try:
         ny = now_ny()
+        nowu = now_utc()
         tk, hist_5m, px = get_price_data(TICKER)
         session = get_session_label(ny)
         vwap = compute_vwap(hist_5m)
@@ -593,13 +692,14 @@ def main():
         dyn_buffer_pct, buffer_reason, buffer_debug = compute_dynamic_buffer_pct(expected_move, pm_range, session["code"], macro)
         opt = get_options_trade(tk, px["price"], dyn_buffer_pct, session["code"])
         opt["trade"]["bufferReason"] = buffer_reason
-        freshness = compute_freshness(px.get("lastBarAt"))
+        updated_at_iso = nowu.isoformat()
+        freshness = compute_freshness(px.get("lastBarAt"), updated_at_iso, session["code"])
 
         state = {
             "ticker": TICKER,
             **px,
-            "updatedAt": now_utc().isoformat(),
-            "updatedAtText": now_utc().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "updatedAt": updated_at_iso,
+            "updatedAtText": nowu.strftime("%Y-%m-%d %H:%M:%S UTC"),
             "updatedAtNY": ny.strftime("%Y-%m-%d %H:%M:%S ET"),
             "session": session,
             "summary": "",
@@ -622,9 +722,9 @@ def main():
             "earnings": earnings,
         }
 
-        short_txt = f"${state['trade']['shortStrike']:.2f}" if state['trade']['shortStrike'] is not None else "--"
-        macro_txt = state['macro']['next']['countdown'] if state['macro'].get('next') else '--'
-        credit_txt = f"${state['trade']['netCredit']:.2f}" if state['trade']['netCredit'] is not None else '--'
+        short_txt = f"${state['trade']['shortStrike']:.2f}" if state["trade"]["shortStrike"] is not None else "--"
+        macro_txt = state["macro"]["next"]["countdown"] if state["macro"].get("next") else "--"
+        credit_txt = f"${state['trade']['netCredit']:.2f}" if state["trade"]["netCredit"] is not None else "--"
         state["summary"] = f"buffer {state['trade']['bufferDynamicPct']:.2f}% · short {short_txt} · crédito {credit_txt} · macro {macro_txt} · tramo {state['session']['code']}"
 
         score, decision, decision_tone, decision_label, risk_label, reasons = compute_score(state)
@@ -637,8 +737,8 @@ def main():
     except Exception as e:
         state = build_error_state(str(e))
 
-    with STATE_FILE.open("w", encoding="utf-8") as f:
-        json.dump(json_safe(state), f, ensure_ascii=False, indent=2)
+    STATE_FILE.write_text(json.dumps(json_safe(state), ensure_ascii=False, indent=2), encoding="utf-8")
+    append_history(state)
 
 
 if __name__ == "__main__":
