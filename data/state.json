@@ -7,9 +7,9 @@
   "tone": "down",
   "source": "finnhub_quote",
   "lastBarAt": "2026-07-02T20:00:00+00:00",
-  "updatedAt": "2026-07-03T11:48:07.399027+00:00",
-  "updatedAtText": "2026-07-03 11:48:07 UTC",
-  "updatedAtNY": "2026-07-03 07:48:07 ET",
+  "updatedAt": "2026-07-03T11:53:27.846188+00:00",
+  "updatedAtText": "2026-07-03 11:53:27 UTC",
+  "updatedAtNY": "2026-07-03 07:53:27 ET",
   "session": {
     "code": "closed",
     "label": "Market closed"
@@ -20,7 +20,7 @@
     "date": "2026-07-03",
     "source": "Nasdaq holiday calendar"
   },
-  "summary": "buffer 1.23% · short -- · crédito -- · macro 41m · tramo closed",
+  "summary": "buffer 1.23% · short -- · crédito -- · macro 36m · tramo closed",
   "trade": {
     "bufferBasePct": null,
     "bufferDynamicPct": 1.23,
@@ -94,7 +94,7 @@
     "status": "OK"
   },
   "freshness": {
-    "ageMinutes": 948.12,
+    "ageMinutes": 953.46,
     "thresholdMinutes": 3,
     "isStale": false,
     "status": "Quote timestamp"
@@ -126,8 +126,8 @@
       "timeNY": "08:30",
       "dias": 0,
       "horas": 0,
-      "totalHoras": 0.7,
-      "countdown": "41m",
+      "totalHoras": 0.61,
+      "countdown": "36m",
       "momento": "Antes de la apertura",
       "status": "upcoming",
       "isVeto": true
@@ -142,8 +142,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 0,
-        "totalHoras": 0.7,
-        "countdown": "41m",
+        "totalHoras": 0.61,
+        "countdown": "36m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -159,8 +159,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 0,
-        "totalHoras": 0.7,
-        "countdown": "41m",
+        "totalHoras": 0.61,
+        "countdown": "36m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -192,7 +192,7 @@
     "used": false,
     "source": "market_closed_guard",
     "sourceUrl": null,
-    "updatedAt": "2026-07-03T11:48:07.399014+00:00",
+    "updatedAt": "2026-07-03T11:53:27.846174+00:00",
     "shortStrike": null,
     "longStrike": null,
     "netCredit": null,

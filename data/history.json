@@ -315,5 +315,20 @@
     "optionsSource": "market_closed_guard",
     "marketClosed": true,
     "marketHolidayName": "Independence Day (Observed)"
+  },
+  {
+    "updatedAt": "2026-07-03T11:53:27.846188+00:00",
+    "updatedAtNY": "2026-07-03 07:53:27 ET",
+    "price": 712.6,
+    "score": 0,
+    "decision": "no entrar",
+    "session": "Market closed",
+    "shortStrike": null,
+    "longStrike": null,
+    "notes": "Mercado cerrado en EE. UU.; options chain operativa desactivada",
+    "source": "finnhub_quote",
+    "optionsSource": "market_closed_guard",
+    "marketClosed": true,
+    "marketHolidayName": "Independence Day (Observed)"
   }
 ]
