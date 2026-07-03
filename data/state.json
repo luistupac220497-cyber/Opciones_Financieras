@@ -7,14 +7,14 @@
   "tone": "down",
   "source": "intraday_5m",
   "lastBarAt": "2026-07-02T23:55:00+00:00",
-  "updatedAt": "2026-07-03T08:00:53.040626+00:00",
-  "updatedAtText": "2026-07-03 08:00:53 UTC",
-  "updatedAtNY": "2026-07-03 04:00:52 ET",
+  "updatedAt": "2026-07-03T08:06:43.816052+00:00",
+  "updatedAtText": "2026-07-03 08:06:43 UTC",
+  "updatedAtNY": "2026-07-03 04:06:43 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
   },
-  "summary": "buffer 2.42% · short $732.00 · crédito $0.03 · macro 4h 29m · tramo premarket",
+  "summary": "buffer 2.42% · short $732.00 · crédito $0.03 · macro 4h 23m · tramo premarket",
   "trade": {
     "bufferBasePct": 1.85,
     "bufferDynamicPct": 2.42,
@@ -58,11 +58,11 @@
     ]
   },
   "vwap": {
-    "value": 716.5,
-    "distPct": -0.32,
-    "zScore": -0.36,
-    "sigma": 6.37,
-    "bias": "Por debajo"
+    "value": 721.61,
+    "distPct": -1.03,
+    "zScore": -1.01,
+    "sigma": 7.39,
+    "bias": "Muy por debajo"
   },
   "openingRange": {
     "available": false,
@@ -84,12 +84,12 @@
     "status": "OK"
   },
   "freshness": {
-    "ageMinutes": 485.88,
+    "ageMinutes": 491.73,
     "thresholdMinutes": 3,
-    "isStale": true,
-    "status": "Stale"
+    "isStale": false,
+    "status": "Prev session close"
   },
-  "score": 14,
+  "score": 32,
   "decision": "no entrar",
   "decisionTone": "red",
   "decisionLabel": "no entrar",
@@ -98,7 +98,6 @@
     "Sesgo bajista favorable",
     "Precio por debajo de VWAP",
     "Sesión extendida",
-    "Dato no fresco",
     "Crédito insuficiente",
     "Macro cercana: Nóminas no agrícolas (NFP)"
   ],
@@ -114,8 +113,8 @@
       "timeNY": "08:30",
       "dias": 0,
       "horas": 4,
-      "totalHoras": 4.49,
-      "countdown": "4h 29m",
+      "totalHoras": 4.39,
+      "countdown": "4h 23m",
       "momento": "Antes de la apertura",
       "status": "upcoming",
       "isVeto": true
@@ -130,8 +129,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 4,
-        "totalHoras": 4.49,
-        "countdown": "4h 29m",
+        "totalHoras": 4.39,
+        "countdown": "4h 23m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -147,8 +146,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 4,
-        "totalHoras": 4.49,
-        "countdown": "4h 29m",
+        "totalHoras": 4.39,
+        "countdown": "4h 23m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
