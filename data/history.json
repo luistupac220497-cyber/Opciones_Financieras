@@ -151,5 +151,16 @@
     "shortStrike": null,
     "netCredit": null,
     "freshness": "Error"
+  },
+  {
+    "updatedAt": "2026-07-03T09:43:39.216531+00:00",
+    "updatedAtNY": "2026-07-03 05:43:39 ET",
+    "price": 712.6,
+    "score": 55,
+    "decision": "no entrar",
+    "session": "Premarket",
+    "shortStrike": 737.0,
+    "longStrike": 738.0,
+    "optionStratConfirmed": true
   }
 ]
