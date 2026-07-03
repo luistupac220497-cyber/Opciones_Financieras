@@ -7,14 +7,14 @@
   "tone": "down",
   "source": "finnhub_quote",
   "lastBarAt": "2026-07-02T20:00:00+00:00",
-  "updatedAt": "2026-07-03T09:43:39.216531+00:00",
-  "updatedAtText": "2026-07-03 09:43:39 UTC",
-  "updatedAtNY": "2026-07-03 05:43:39 ET",
+  "updatedAt": "2026-07-03T09:45:30.929884+00:00",
+  "updatedAtText": "2026-07-03 09:45:30 UTC",
+  "updatedAtNY": "2026-07-03 05:45:30 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
   },
-  "summary": "precio $712.6 · short $737.00 · long $738.00 · OptionStrat confirmado · macro 2h 46m",
+  "summary": "precio $712.6 · short $737.00 · long $738.00 · OptionStrat confirmado · macro 2h 44m",
   "trade": {
     "bufferBasePct": 2.2,
     "bufferDynamicPct": 2.2,
@@ -75,7 +75,7 @@
     "status": "OK"
   },
   "freshness": {
-    "ageMinutes": 823.65,
+    "ageMinutes": 825.52,
     "thresholdMinutes": 20,
     "isStale": true,
     "status": "Stale"
@@ -104,8 +104,8 @@
       "timeNY": "08:30",
       "dias": 0,
       "horas": 2,
-      "totalHoras": 2.77,
-      "countdown": "2h 46m",
+      "totalHoras": 2.74,
+      "countdown": "2h 44m",
       "momento": "Antes de la apertura",
       "status": "upcoming",
       "isVeto": true
@@ -120,8 +120,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 2,
-        "totalHoras": 2.77,
-        "countdown": "2h 46m",
+        "totalHoras": 2.74,
+        "countdown": "2h 44m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -137,8 +137,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 2,
-        "totalHoras": 2.77,
-        "countdown": "2h 46m",
+        "totalHoras": 2.74,
+        "countdown": "2h 44m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
