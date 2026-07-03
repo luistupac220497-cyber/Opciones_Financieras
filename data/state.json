@@ -7,14 +7,14 @@
   "tone": "down",
   "source": "finnhub_quote",
   "lastBarAt": "2026-07-02T20:00:00+00:00",
-  "updatedAt": "2026-07-03T11:18:46.130077+00:00",
-  "updatedAtText": "2026-07-03 11:18:46 UTC",
-  "updatedAtNY": "2026-07-03 07:18:46 ET",
+  "updatedAt": "2026-07-03T11:30:42.164853+00:00",
+  "updatedAtText": "2026-07-03 11:30:42 UTC",
+  "updatedAtNY": "2026-07-03 07:30:42 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
   },
-  "summary": "buffer 1.25% · short -- · crédito -- · macro 1h 11m · tramo premarket",
+  "summary": "buffer 1.25% · short -- · crédito -- · macro 59m · tramo premarket",
   "trade": {
     "bufferBasePct": null,
     "bufferDynamicPct": 1.25,
@@ -87,7 +87,7 @@
     "status": "OK"
   },
   "freshness": {
-    "ageMinutes": 918.77,
+    "ageMinutes": 930.7,
     "thresholdMinutes": 3,
     "isStale": false,
     "status": "Quote timestamp"
@@ -117,9 +117,9 @@
       "dateNY": "2026-07-03",
       "timeNY": "08:30",
       "dias": 0,
-      "horas": 1,
-      "totalHoras": 1.19,
-      "countdown": "1h 11m",
+      "horas": 0,
+      "totalHoras": 0.99,
+      "countdown": "59m",
       "momento": "Antes de la apertura",
       "status": "upcoming",
       "isVeto": true
@@ -133,9 +133,9 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 0,
-        "horas": 1,
-        "totalHoras": 1.19,
-        "countdown": "1h 11m",
+        "horas": 0,
+        "totalHoras": 0.99,
+        "countdown": "59m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -150,9 +150,9 @@
         "dateNY": "2026-07-03",
         "timeNY": "08:30",
         "dias": 0,
-        "horas": 1,
-        "totalHoras": 1.19,
-        "countdown": "1h 11m",
+        "horas": 0,
+        "totalHoras": 0.99,
+        "countdown": "59m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -184,7 +184,7 @@
     "used": false,
     "source": "finviz_experimental",
     "sourceUrl": null,
-    "updatedAt": "2026-07-03T11:18:46.129327+00:00",
+    "updatedAt": "2026-07-03T11:30:42.164037+00:00",
     "shortStrike": null,
     "longStrike": null,
     "netCredit": null,
