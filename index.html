@@ -17,6 +17,7 @@
       --green:#437a22;
       --yellow:#d19900;
       --red:#a13544;
+      --blue:#006494;
       --radius:18px;
       --shadow:0 12px 32px rgba(0,0,0,.08);
       --font:"Satoshi",system-ui,sans-serif;
@@ -32,13 +33,13 @@
       --green:#6daa45;
       --yellow:#edb336;
       --red:#dd6974;
+      --blue:#5591c7;
       --radius:18px;
       --shadow:0 12px 32px rgba(0,0,0,.35);
       --font:"Satoshi",system-ui,sans-serif;
     }
 
     *{box-sizing:border-box}
-
     body{
       margin:0;
       font-family:var(--font);
@@ -109,9 +110,7 @@
       box-shadow:var(--shadow);
     }
 
-    .hero-main{
-      padding:22px;
-    }
+    .hero-main{padding:22px}
 
     .eyebrow{
       color:var(--muted);
@@ -172,10 +171,6 @@
       font-weight:800;
     }
 
-    .side{
-      padding:18px;
-    }
-
     .side-premium{
       padding:18px;
     }
@@ -191,14 +186,7 @@
       gap:12px;
     }
 
-    .status-item{
-      background:var(--surface-2);
-      border:1px solid rgba(127,127,127,.16);
-      border-radius:16px;
-      padding:14px;
-    }
-
-    .status-block{
+    .status-item,.status-block{
       background:var(--surface-2);
       border:1px solid rgba(127,127,127,.16);
       border-radius:16px;
@@ -287,16 +275,21 @@
       box-shadow:0 0 0 4px rgba(221,105,116,.14);
     }
 
+    .status-dot.info{
+      background:var(--blue);
+      box-shadow:0 0 0 4px rgba(85,145,199,.14);
+    }
+
     .source-list{
       display:grid;
       gap:10px;
     }
 
     .source-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      display:grid;
+      grid-template-columns:56px 1fr;
       gap:10px;
+      align-items:center;
     }
 
     .source-key{
@@ -307,16 +300,17 @@
     .source-pill{
       display:inline-flex;
       align-items:center;
-      justify-content:center;
-      max-width:100%;
+      justify-content:flex-start;
+      width:100%;
       padding:8px 10px;
       border-radius:999px;
       border:1px solid rgba(127,127,127,.18);
       background:rgba(127,127,127,.08);
       font-size:.84rem;
       font-weight:700;
-      overflow-wrap:anywhere;
-      text-align:right;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .grid3{
@@ -351,10 +345,7 @@
       padding-top:0;
     }
 
-    .k{
-      color:var(--muted);
-    }
-
+    .k{color:var(--muted)}
     .v{
       font-weight:700;
       text-align:right;
@@ -447,7 +438,7 @@
         </div>
       </article>
 
-      <aside class="card side side-premium">
+      <aside class="card side-premium">
         <div class="status-panel">
           <div class="status-top">
             <div class="status-item">
@@ -564,6 +555,91 @@
     const fmtText = (v, fallback="--") => v == null || v === "" ? fallback : String(v);
     const yesNo = (v) => v === true ? "Sí" : v === false ? "No" : "--";
 
+    function humanizeSource(value) {
+      const v = String(value || "").trim().toLowerCase();
+      const map = {
+        "finnhub_quote": "Finnhub",
+        "nasdaq_option_chain": "Nasdaq",
+        "yahoo_option_chain": "Yahoo Finance",
+        "market_closed_guard": "Mercado cerrado",
+        "no_options_source_available": "Sin fuente activa",
+        "missing_finnhub_api_key": "API no configurada"
+      };
+      return map[v] || (value ? String(value).replaceAll("_", " ") : "--");
+    }
+
+    function humanizeSession(code, label) {
+      const v = String(code || "").toLowerCase();
+      if (v === "closed") return "Mercado cerrado";
+      if (v === "regular") return "Sesión regular";
+      if (v === "premarket") return "Premarket";
+      if (v === "afterhours") return "After hours";
+      return label || "--";
+    }
+
+    function humanizeExpiration(value) {
+      const v = String(value || "").toLowerCase();
+      if (v === "market_closed") return "Mercado cerrado";
+      if (v === "0dte_or_nearest") return "0DTE o vencimiento más cercano";
+      return value || "--";
+    }
+
+    function humanizeFreshness(state) {
+      if (state.market?.isHoliday) {
+        return {
+          title: "Mercado cerrado",
+          detail: "Sin necesidad de update intradía",
+          dot: "info"
+        };
+      }
+
+      const age = state.freshness?.ageMinutes;
+      if (age == null) {
+        return {
+          title: "Sin referencia",
+          detail: "No hay timestamp disponible",
+          dot: "bad"
+        };
+      }
+
+      if (age <= 5) {
+        return {
+          title: "Dato reciente",
+          detail: `${age}m desde último update`,
+          dot: "good"
+        };
+      }
+
+      if (age <= 30) {
+        return {
+          title: "Ligero retraso",
+          detail: `${age}m desde último update`,
+          dot: "warning"
+        };
+      }
+
+      return {
+        title: "Dato retrasado",
+        detail: `${age}m desde último update`,
+        dot: "bad"
+      };
+    }
+
+    function humanizeRisk(value) {
+      const v = String(value || "").toLowerCase();
+      if (v.includes("alto")) return "Riesgo alto";
+      if (v.includes("medio")) return "Riesgo medio";
+      if (v.includes("controlado")) return "Riesgo controlado";
+      return value || "--";
+    }
+
+    function humanizeOptionsNotes(value) {
+      if (!value) return "--";
+      return String(value)
+        .replaceAll("market_closed", "mercado cerrado")
+        .replaceAll("_", " ");
+    }
+
     function applyThemeToggle() {
       const root = document.documentElement;
       let current = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -585,7 +661,7 @@
       (Array.isArray(list) && list.length ? list : ["Sin motivos"]).forEach(item => {
         const span = document.createElement("span");
         span.className = "chip";
-        span.textContent = item;
+        span.textContent = String(item).replaceAll("_", " ");
         box.appendChild(span);
       });
     }
@@ -605,7 +681,6 @@
         $("decisionText").textContent = fmtText(state.decisionLabel);
         $("scoreValue").textContent = state.score ?? "--";
         $("summaryText").textContent = fmtText(state.summary);
-
         setDecisionTone(state.decisionTone);
 
         $("priceValue").textContent = fmtMoney(state.price);
@@ -613,22 +688,21 @@
         $("creditValueTop").textContent = fmtMoney(state.trade?.netCredit);
         $("macroCountdownTop").textContent = fmtText(state.macro?.next?.countdown);
 
-        const riskText = fmtText(state.riskLabel);
-        const sessionText = fmtText(state.session?.label);
-        const freshnessStatus = fmtText(state.freshness?.status);
-        const freshnessMinutes = state.freshness?.ageMinutes != null ? `${state.freshness.ageMinutes}m desde último update` : "--";
+        const riskText = humanizeRisk(state.riskLabel);
+        const sessionText = humanizeSession(state.session?.code, state.session?.label);
+        const freshness = humanizeFreshness(state);
 
         $("riskBadge").textContent = riskText;
         $("sessionBadge").textContent = sessionText;
-        $("freshnessStatusPretty").textContent = freshnessStatus;
-        $("freshnessPretty").textContent = freshnessMinutes;
-        $("sourceValue").textContent = fmtText(state.source);
-        $("optionsSourceValue").textContent = fmtText(state.optionsMeta?.source);
+        $("freshnessStatusPretty").textContent = freshness.title;
+        $("freshnessPretty").textContent = freshness.detail;
+        $("sourceValue").textContent = humanizeSource(state.source);
+        $("optionsSourceValue").textContent = humanizeSource(state.optionsMeta?.source);
 
         $("riskBadge").className = "status-badge";
-        if ((state.riskLabel || "").toLowerCase().includes("alto")) {
+        if ((riskText || "").toLowerCase().includes("alto")) {
           $("riskBadge").classList.add("danger");
-        } else if ((state.riskLabel || "").toLowerCase().includes("medio")) {
+        } else if ((riskText || "").toLowerCase().includes("medio")) {
           $("riskBadge").classList.add("warning");
         } else {
           $("riskBadge").classList.add("success");
@@ -644,16 +718,14 @@
         }
 
         $("freshnessDot").className = "status-dot";
-        if (state.freshness?.isStale) {
-          $("freshnessDot").classList.add("bad");
-        } else {
-          $("freshnessDot").classList.add("good");
-        }
+        if (freshness.dot === "good") $("freshnessDot").classList.add("good");
+        else if (freshness.dot === "bad") $("freshnessDot").classList.add("bad");
+        else if (freshness.dot === "info") $("freshnessDot").classList.add("info");
 
         $("spotValue").textContent = fmtMoney(state.price);
         $("changeValue").textContent = `${fmtMoney(state.change)} · ${fmtPct(state.changePct)}`;
         $("vwapValue").textContent = `${fmtMoney(state.vwap?.value)} · ${fmtPct(state.vwap?.distPct)}`;
-        $("sessionValue").textContent = fmtText(state.session?.label);
+        $("sessionValue").textContent = sessionText;
         $("prevCloseValue").textContent = fmtMoney(state.prevClose);
 
         $("bufferValue").textContent = fmtPct(state.trade?.bufferDynamicPct);
@@ -662,11 +734,11 @@
         $("distToShortValue").textContent = state.trade?.distToShort == null ? "--" : fmtMoney(state.trade?.distToShort);
         $("expectedMoveValue").textContent = `${fmtMoney(state.expectedMove?.move)} (${fmtPct(state.expectedMove?.movePct)})`;
 
-        $("expirationValue").textContent = fmtText(state.options?.expiration);
+        $("expirationValue").textContent = humanizeExpiration(state.options?.expiration);
         $("quotesValue").textContent = yesNo(state.options?.quotesUsable);
-        $("liquidityValue").textContent = yesNo(state.options?.liquidityOk);
+        $("liquidityValue").textContent = state.options?.liquidityOk === true ? "Adecuada" : state.options?.liquidityOk === false ? "Débil" : "--";
         $("deltaValue").textContent = fmtDelta(state.options?.shortCallDelta);
-        $("notesValue").textContent = fmtText(state.options?.notes);
+        $("notesValue").textContent = humanizeOptionsNotes(state.options?.notes);
 
         $("macroEventValue").textContent = fmtText(state.macro?.next?.evento);
         $("macroImpactValue").textContent = fmtText(state.macro?.next?.impacto);
@@ -684,7 +756,7 @@
         $("marketNameValue").textContent = fmtText(state.market?.name, "Sesión normal");
         $("marketDateValue").textContent = fmtText(state.market?.date);
         $("marketSourceValue").textContent = fmtText(state.market?.source);
-        $("marketSessionValue").textContent = fmtText(state.session?.label);
+        $("marketSessionValue").textContent = sessionText;
 
         renderReasons(state.reasons);
 
