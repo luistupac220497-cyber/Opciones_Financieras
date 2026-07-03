@@ -40,6 +40,7 @@
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:var(--font);
@@ -110,7 +111,9 @@
       box-shadow:var(--shadow);
     }
 
-    .hero-main{padding:22px}
+    .hero-main{
+      padding:22px;
+    }
 
     .eyebrow{
       color:var(--muted);
@@ -142,7 +145,25 @@
     }
 
     .summary{
-      margin-top:12px;
+      margin-top:14px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .summary-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(127,127,127,.16);
+      background:var(--surface-2);
+      font-size:.84rem;
+      color:var(--text);
+    }
+
+    .summary-chip span{
       color:var(--muted);
     }
 
@@ -345,7 +366,10 @@
       padding-top:0;
     }
 
-    .k{color:var(--muted)}
+    .k{
+      color:var(--muted);
+    }
+
     .v{
       font-weight:700;
       text-align:right;
@@ -413,7 +437,14 @@
         <div class="eyebrow">Decisión operativa</div>
         <div class="decision yellow" id="decisionText">Cargando...</div>
         <div class="score">Score <span id="scoreValue">--</span></div>
-        <div class="summary" id="summaryText">Esperando datos...</div>
+
+        <div class="summary" id="summaryRow">
+          <div class="summary-chip"><span>Buffer</span><strong id="summaryBuffer">--</strong></div>
+          <div class="summary-chip"><span>Short</span><strong id="summaryShort">--</strong></div>
+          <div class="summary-chip"><span>Crédito</span><strong id="summaryCredit">--</strong></div>
+          <div class="summary-chip"><span>Macro</span><strong id="summaryMacro">--</strong></div>
+          <div class="summary-chip"><span>Sesión</span><strong id="summarySession">--</strong></div>
+        </div>
 
         <div class="grid4">
           <div class="mini">
@@ -640,6 +671,20 @@
         .replaceAll("_", " ");
     }
 
+    function humanizeLiquidity(value) {
+      if (value === true) return "Adecuada";
+      if (value === false) return "Débil";
+      return "--";
+    }
+
+    function buildSummary(state) {
+      $("summaryBuffer").textContent = fmtPct(state.trade?.bufferDynamicPct);
+      $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
+      $("summaryCredit").textContent = fmtMoney(state.trade?.netCredit);
+      $("summaryMacro").textContent = fmtText(state.macro?.next?.countdown);
+      $("summarySession").textContent = humanizeSession(state.session?.code, state.session?.label);
+    }
+
     function applyThemeToggle() {
       const root = document.documentElement;
       let current = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -680,8 +725,8 @@
         $("headerMeta").textContent = fmtText(state.updatedAtNY || state.updatedAtText);
         $("decisionText").textContent = fmtText(state.decisionLabel);
         $("scoreValue").textContent = state.score ?? "--";
-        $("summaryText").textContent = fmtText(state.summary);
         setDecisionTone(state.decisionTone);
+        buildSummary(state);
 
         $("priceValue").textContent = fmtMoney(state.price);
         $("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
@@ -736,7 +781,7 @@
 
         $("expirationValue").textContent = humanizeExpiration(state.options?.expiration);
         $("quotesValue").textContent = yesNo(state.options?.quotesUsable);
-        $("liquidityValue").textContent = state.options?.liquidityOk === true ? "Adecuada" : state.options?.liquidityOk === false ? "Débil" : "--";
+        $("liquidityValue").textContent = humanizeLiquidity(state.options?.liquidityOk);
         $("deltaValue").textContent = fmtDelta(state.options?.shortCallDelta);
         $("notesValue").textContent = humanizeOptionsNotes(state.options?.notes);
 
@@ -772,7 +817,6 @@
       } catch (err) {
         $("headerMeta").textContent = "Error cargando datos";
         $("decisionText").textContent = "Error";
-        $("summaryText").textContent = err.message || "No se pudo cargar";
         renderReasons([err.message || "Error"]);
       }
     }
