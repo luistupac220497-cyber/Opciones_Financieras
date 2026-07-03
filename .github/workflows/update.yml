@@ -35,9 +35,19 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      - name: Verify secret presence
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
+        run: |
+          if [ -z "$FINNHUB_API_KEY" ]; then
+            echo "ERROR: el secret FINNHUB no está configurado en GitHub Secrets"
+            exit 1
+          fi
+          echo "Secret FINNHUB detectado"
+
       - name: Build data
         env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
         run: |
           mkdir -p data
           python scripts/build_data.py
