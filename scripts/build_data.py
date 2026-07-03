@@ -80,18 +80,20 @@ def get_session_label(ny_dt):
     return {"code": "afterhours", "label": "After hours"}
 
 
-def finnhub_get(path, params=None):
+def finnhub_get(path, params=None, raise_http=True):
     if not FINNHUB_API_KEY:
         raise RuntimeError("FINNHUB_API_KEY no configurada")
     params = params or {}
     params["token"] = FINNHUB_API_KEY
     r = requests.get(f"{FINNHUB_BASE}{path}", params=params, timeout=20)
-    r.raise_for_status()
-    return r.json()
+    if raise_http:
+        r.raise_for_status()
+    return r
 
 
 def get_finnhub_quote(symbol):
-    data = finnhub_get("/quote", {"symbol": symbol})
+    r = finnhub_get("/quote", {"symbol": symbol}, raise_http=True)
+    data = r.json()
     return {
         "price": safe_float(data.get("c")),
         "prevClose": safe_float(data.get("pc")),
@@ -104,23 +106,55 @@ def get_finnhub_quote(symbol):
 def get_finnhub_candles(symbol):
     now_ts = int(now_utc().timestamp())
     start_ts = int((now_utc() - timedelta(days=5)).timestamp())
-    data = finnhub_get(
-        "/stock/candle",
-        {
-            "symbol": symbol,
-            "resolution": "5",
-            "from": start_ts,
-            "to": now_ts,
-        },
-    )
-    if data.get("s") != "ok":
-        return None
-    return data
+
+    try:
+        r = finnhub_get(
+            "/stock/candle",
+            {
+                "symbol": symbol,
+                "resolution": "5",
+                "from": start_ts,
+                "to": now_ts,
+            },
+            raise_http=False,
+        )
+
+        if r.status_code != 200:
+            return {
+                "ok": False,
+                "status_code": r.status_code,
+                "error": f"HTTP {r.status_code}",
+                "data": None,
+            }
+
+        data = r.json()
+        if data.get("s") != "ok":
+            return {
+                "ok": False,
+                "status_code": 200,
+                "error": data.get("error") or "Finnhub candles unavailable",
+                "data": None,
+            }
+
+        return {
+            "ok": True,
+            "status_code": 200,
+            "error": None,
+            "data": data,
+        }
+
+    except Exception as e:
+        return {
+            "ok": False,
+            "status_code": None,
+            "error": str(e),
+            "data": None,
+        }
 
 
 def get_price_data(symbol):
     quote = get_finnhub_quote(symbol)
-    candles = get_finnhub_candles(symbol)
+    candles_result = get_finnhub_candles(symbol)
 
     price = round2(quote["price"])
     prev_close = round2(quote["prevClose"])
@@ -133,17 +167,23 @@ def get_price_data(symbol):
     z_score = None
     vwap_dist_pct = None
     bias = "No usado"
+    candles_status = {
+        "used": False,
+        "statusCode": candles_result.get("status_code"),
+        "error": candles_result.get("error"),
+    }
 
-    if candles and candles.get("c") and candles.get("t"):
-        closes = [safe_float(x) for x in candles["c"]]
+    if candles_result["ok"] and candles_result["data"]:
+        candles = candles_result["data"]
+        closes = [safe_float(x) for x in candles.get("c", [])]
         highs = [safe_float(x) for x in candles.get("h", [])]
         lows = [safe_float(x) for x in candles.get("l", [])]
         opens = [safe_float(x) for x in candles.get("o", [])]
         vols = [safe_float(x, 0) for x in candles.get("v", [])]
-        times = candles["t"]
+        times = candles.get("t", [])
 
         rows = []
-        for i in range(min(len(closes), len(times), len(highs), len(lows), len(opens), len(vols))):
+        for i in range(min(len(closes), len(highs), len(lows), len(opens), len(vols), len(times))):
             if None in (closes[i], highs[i], lows[i], opens[i]):
                 continue
             rows.append(
@@ -166,19 +206,18 @@ def get_price_data(symbol):
 
             if not day_df.empty:
                 source = "intraday_5m"
+                candles_status["used"] = True
                 last_dt = day_df["dt"].max()
                 last_bar_at = last_dt.isoformat()
 
                 typical = (day_df["high"] + day_df["low"] + day_df["close"]) / 3.0
                 vol = day_df["volume"].replace(0, 1)
-                cum_pv = (typical * vol).cumsum()
-                cum_v = vol.cumsum().replace(0, 1)
-                day_df["vwap"] = cum_pv / cum_v
+                day_df["vwap"] = (typical * vol).cumsum() / vol.cumsum().replace(0, 1)
 
                 latest = day_df.iloc[-1]
                 vwap_value = round2(latest["vwap"])
 
-                if price is not None and vwap_value is not None and vwap_value != 0:
+                if price is not None and vwap_value not in (None, 0):
                     vwap_dist_pct = round2(((price - vwap_value) / vwap_value) * 100.0)
 
                 close_std = safe_float(day_df["close"].std(ddof=0))
@@ -196,6 +235,12 @@ def get_price_data(symbol):
                     else:
                         bias = "Cerca"
 
+    if last_bar_at is None and quote.get("timestamp"):
+        try:
+            last_bar_at = datetime.fromtimestamp(int(quote["timestamp"]), tz=UTC_ZONE).isoformat()
+        except Exception:
+            last_bar_at = None
+
     tone = "up" if (change or 0) > 0 else "down" if (change or 0) < 0 else "flat"
 
     return {
@@ -206,6 +251,7 @@ def get_price_data(symbol):
         "tone": tone,
         "source": source,
         "lastBarAt": last_bar_at,
+        "candlesStatus": candles_status,
         "vwap": {
             "value": vwap_value,
             "distPct": vwap_dist_pct,
@@ -471,12 +517,7 @@ def get_macro_block():
         "isVeto": delta_seconds > 0 and delta_seconds <= 24 * 3600,
     }
 
-    return {
-        "status": "OK",
-        "next": item,
-        "items": [item],
-        "all": [item],
-    }
+    return {"status": "OK", "next": item, "items": [item], "all": [item]}
 
 
 def get_earnings_block():
@@ -491,11 +532,11 @@ def get_earnings_block():
     return {"status": "OK", "next": next_item, "items": [next_item]}
 
 
-def compute_freshness(last_bar_at):
+def compute_freshness(last_bar_at, candles_used):
     if not last_bar_at:
         return {
             "ageMinutes": None,
-            "thresholdMinutes": 20,
+            "thresholdMinutes": 3,
             "isStale": True,
             "status": "Sin timestamp",
         }
@@ -503,6 +544,15 @@ def compute_freshness(last_bar_at):
     try:
         last_dt = datetime.fromisoformat(last_bar_at)
         age = (now_utc() - last_dt.astimezone(UTC_ZONE)).total_seconds() / 60.0
+
+        if not candles_used:
+            return {
+                "ageMinutes": round2(age),
+                "thresholdMinutes": 3,
+                "isStale": False,
+                "status": "Quote timestamp",
+            }
+
         is_prev_session = age > 390
         return {
             "ageMinutes": round2(age),
@@ -513,7 +563,7 @@ def compute_freshness(last_bar_at):
     except Exception:
         return {
             "ageMinutes": None,
-            "thresholdMinutes": 20,
+            "thresholdMinutes": 3,
             "isStale": True,
             "status": "Error",
         }
@@ -525,6 +575,8 @@ def compute_score_and_reasons(price_data, options, trade, macro, session):
 
     vwap_dist = price_data["vwap"]["distPct"]
 
+    if price_data["changePct"] is not None and price_data["changePct"] < 0:
+        reasons.append("Sesgo bajista favorable")
     if vwap_dist is not None and vwap_dist < 0:
         reasons.append("Precio por debajo de VWAP")
         score += 5
@@ -546,8 +598,6 @@ def compute_score_and_reasons(price_data, options, trade, macro, session):
     if macro["next"]["isVeto"]:
         reasons.append("Macro cercana: Nóminas no agrícolas (NFP)")
         score -= 20
-    if price_data["changePct"] is not None and price_data["changePct"] < 0:
-        reasons.insert(0, "Sesgo bajista favorable")
 
     score = max(0, min(100, int(round(score))))
 
@@ -581,6 +631,7 @@ def append_history(state):
         "shortStrike": state["trade"]["shortStrike"],
         "longStrike": state["trade"]["longStrike"],
         "notes": state["options"]["notes"],
+        "source": state["source"],
     }
 
     history = []
@@ -638,7 +689,7 @@ def main():
         "distToShort": round2(meta["shortStrike"] - price_data["price"]) if meta["shortStrike"] is not None and price_data["price"] is not None else None,
     }
 
-    freshness = compute_freshness(price_data["lastBarAt"])
+    freshness = compute_freshness(price_data["lastBarAt"], price_data["candlesStatus"]["used"])
     score, decision, tone, label, risk, reasons = compute_score_and_reasons(price_data, options, trade, macro, session)
 
     state = {
@@ -681,6 +732,11 @@ def main():
         "macro": macro,
         "earnings": earnings,
         "optionsMeta": meta,
+        "sourceMeta": {
+            "candlesUsed": price_data["candlesStatus"]["used"],
+            "candlesStatusCode": price_data["candlesStatus"]["statusCode"],
+            "candlesError": price_data["candlesStatus"]["error"],
+        },
     }
 
     STATE_FILE.write_text(
