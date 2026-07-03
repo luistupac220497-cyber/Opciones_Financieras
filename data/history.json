@@ -195,5 +195,16 @@
     "shortStrike": 737.0,
     "longStrike": 738.0,
     "optionStratConfirmed": true
+  },
+  {
+    "updatedAt": "2026-07-03T10:30:37.729698+00:00",
+    "updatedAtNY": "2026-07-03 06:30:37 ET",
+    "price": 712.6,
+    "score": 55,
+    "decision": "no entrar",
+    "session": "Premarket",
+    "shortStrike": 737.0,
+    "longStrike": 738.0,
+    "optionStratConfirmed": true
   }
 ]
