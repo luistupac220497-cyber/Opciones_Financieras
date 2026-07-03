@@ -13,14 +13,16 @@ STATE_FILE = DATA_DIR / "state.json"
 HISTORY_FILE = DATA_DIR / "history.json"
 
 TICKER = "QQQ"
-BASE_BUFFER_PCT = 1.85
 SPREAD_WIDTH = 1.0
-MIN_NET_CREDIT = 0.05
-MIN_CREDIT_PCT_WIDTH = 0.08
 QUOTE_MAX_SPREAD_PCT_REGULAR = 0.35
 QUOTE_MAX_SPREAD_PCT_EXTENDED = 0.25
 STALE_THRESHOLD_MINUTES = 3
 HISTORY_LIMIT = 150
+
+MIN_SHORT_OI = 300
+MIN_SHORT_VOL = 100
+TARGET_DELTA_MIN = 0.06
+TARGET_DELTA_MAX = 0.20
 
 NY_ZONE = ZoneInfo("America/New_York")
 UTC_ZONE = timezone.utc
@@ -323,41 +325,53 @@ def get_earnings_block():
     }
 
 
-def compute_dynamic_buffer_pct(expected_move, pm_range, session_code, macro):
-    base = BASE_BUFFER_PCT
-    move_pct = safe_float(expected_move.get("movePct"), 0) if expected_move.get("status") == "OK" else 0
-    pm_pct = safe_float(pm_range.get("sizePct"), 0) if pm_range.get("available") else 0
+def compute_conservative_buffer_pct(expected_move, pm_range, session_code, macro, vwap):
+    em = safe_float(expected_move.get("movePct"), 0)
+    pm = safe_float(pm_range.get("sizePct"), 0) if pm_range.get("available") else 0
+    vwap_dist = abs(safe_float(vwap.get("distPct"), 0))
 
-    em_component = move_pct * 0.18
-    pm_component = pm_pct * 0.22
-    session_boost = 0.18 if session_code in ("premarket", "overnight", "afterhours") else 0.0
+    em_component = max(0.85, em * 0.55)
+    pm_component = min(0.55, pm * 0.20)
+    vwap_component = min(0.35, vwap_dist * 0.18)
+
+    session_boost = 0.0
+    if session_code in ("premarket", "afterhours"):
+        session_boost = 0.22
+    elif session_code == "overnight":
+        session_boost = 0.30
 
     macro_boost = 0.0
     nxt = macro.get("next")
     total_hours = safe_float(nxt.get("totalHoras")) if nxt else None
     if nxt and total_hours is not None and 0 <= total_hours <= 24 and nxt.get("impacto") == "alto":
-        macro_boost = 0.12
+        macro_boost = 0.18
 
-    raw = base + em_component + pm_component + session_boost + macro_boost
-    final = round2(raw)
-    reason_parts = [f"base {base:.2f}%", f"exp move +{em_component:.2f}%", f"pm range +{pm_component:.2f}%"]
+    raw = em_component + pm_component + vwap_component + session_boost + macro_boost
+    final = max(1.10, min(3.60, raw))
+
+    reason_parts = [
+        f"exp move +{em_component:.2f}%",
+        f"pm range +{pm_component:.2f}%",
+        f"vwap dist +{vwap_component:.2f}%"
+    ]
     if session_boost:
-        reason_parts.append(f"sesión extendida +{session_boost:.2f}%")
+        reason_parts.append(f"sesión +{session_boost:.2f}%")
     if macro_boost:
         reason_parts.append(f"macro +{macro_boost:.2f}%")
 
     debug = {
-        "base": round2(base),
-        "expectedMovePct": round2(move_pct),
-        "premarketRangePct": round2(pm_pct),
+        "expectedMovePct": round2(em),
+        "premarketRangePct": round2(pm),
+        "vwapDistPctAbs": round2(vwap_dist),
         "emComponent": round2(em_component),
         "pmComponent": round2(pm_component),
+        "vwapComponent": round2(vwap_component),
         "sessionBoost": round2(session_boost),
         "macroBoost": round2(macro_boost),
-        "rawBeforeRound": round2(raw),
-        "final": final,
+        "rawBeforeClamp": round2(raw),
+        "final": round2(final),
     }
-    return final, " · ".join(reason_parts), debug
+    return round2(final), " · ".join(reason_parts), debug
 
 
 def evaluate_quotes(short_bid, short_ask, long_bid, long_ask, session_code):
@@ -389,15 +403,63 @@ def nearest_row(df, strike_target):
     return tmp.loc[tmp["dist"].idxmin()]
 
 
-def get_options_trade(tk, price, buffer_pct, session_code):
+def choose_short_call(calls, price, short_target, expected_move):
+    if calls is None or calls.empty or price is None:
+        return None
+
+    tmp = calls.copy()
+    tmp["strike"] = pd.to_numeric(tmp["strike"], errors="coerce")
+    tmp["bid"] = pd.to_numeric(tmp["bid"], errors="coerce")
+    tmp["ask"] = pd.to_numeric(tmp["ask"], errors="coerce")
+    tmp["openInterest"] = pd.to_numeric(tmp["openInterest"], errors="coerce").fillna(0)
+    tmp["volume"] = pd.to_numeric(tmp["volume"], errors="coerce").fillna(0)
+
+    if "delta" in tmp.columns:
+        tmp["delta"] = pd.to_numeric(tmp["delta"], errors="coerce")
+    else:
+        tmp["delta"] = pd.NA
+
+    tmp = tmp[tmp["strike"] >= short_target].copy()
+    if tmp.empty:
+        return None
+
+    em_upper = expected_move.get("upper")
+    if em_upper is not None:
+        tmp["outside_em_bonus"] = (tmp["strike"] >= em_upper).astype(int)
+    else:
+        tmp["outside_em_bonus"] = 0
+
+    tmp["delta_abs"] = tmp["delta"].abs()
+    tmp["delta_score"] = 0.0
+    has_delta = tmp["delta_abs"].notna()
+    tmp.loc[has_delta, "delta_score"] = tmp.loc[has_delta, "delta_abs"].apply(
+        lambda d: 3.0 if TARGET_DELTA_MIN <= d <= TARGET_DELTA_MAX else (2.0 if d < TARGET_DELTA_MIN else 1.0)
+    )
+
+    tmp["liq_score"] = (
+        (tmp["openInterest"] >= MIN_SHORT_OI).astype(int) * 1.5 +
+        (tmp["volume"] >= MIN_SHORT_VOL).astype(int) * 1.5
+    )
+
+    tmp["distance_score"] = 1 / (1 + (tmp["strike"] - short_target).abs())
+    tmp["total_score"] = tmp["outside_em_bonus"] * 2.5 + tmp["delta_score"] + tmp["liq_score"] + tmp["distance_score"]
+
+    tmp = tmp.sort_values(["total_score", "strike"], ascending=[False, True])
+    return tmp.iloc[0]
+
+
+def get_options_trade(tk, price, buffer_pct, session_code, expected_move):
     short_strike = long_strike = breakeven = net_credit = dist_to_short = None
     expiration = None
     short_bid = short_ask = long_bid = long_ask = None
     short_delta = long_delta = None
     short_oi = long_oi = short_vol = long_vol = None
     quotes_usable = False
+    liquidity_ok = False
+    delta_ok = False
     credit_ok = False
     notes = []
+    issues = []
 
     try:
         exps = tk.options
@@ -407,11 +469,7 @@ def get_options_trade(tk, price, buffer_pct, session_code):
             calls = chain.calls.copy()
             if calls is not None and not calls.empty and price is not None:
                 short_target = ceil_strike(price * (1 + buffer_pct / 100.0), 1.0)
-                long_target = short_target + SPREAD_WIDTH
-
-                sc = nearest_row(calls, short_target)
-                lc = nearest_row(calls, long_target)
-
+                sc = choose_short_call(calls, price, short_target, expected_move)
                 if sc is not None:
                     short_strike = safe_float(sc.get("strike"))
                     short_bid = safe_float(sc.get("bid"))
@@ -419,40 +477,62 @@ def get_options_trade(tk, price, buffer_pct, session_code):
                     short_oi = safe_float(sc.get("openInterest"), 0)
                     short_vol = safe_float(sc.get("volume"), 0)
                     short_delta = safe_float(sc.get("delta"))
+                    long_target = short_strike + SPREAD_WIDTH
+                    lc = nearest_row(calls[calls["strike"] >= long_target], long_target)
 
-                if lc is not None:
-                    long_strike = safe_float(lc.get("strike"))
-                    long_bid = safe_float(lc.get("bid"))
-                    long_ask = safe_float(lc.get("ask"))
-                    long_oi = safe_float(lc.get("openInterest"), 0)
-                    long_vol = safe_float(lc.get("volume"), 0)
-                    long_delta = safe_float(lc.get("delta"))
+                    if lc is not None:
+                        long_strike = safe_float(lc.get("strike"))
+                        long_bid = safe_float(lc.get("bid"))
+                        long_ask = safe_float(lc.get("ask"))
+                        long_oi = safe_float(lc.get("openInterest"), 0)
+                        long_vol = safe_float(lc.get("volume"), 0)
+                        long_delta = safe_float(lc.get("delta"))
 
-                if short_strike is not None and price is not None:
+                if short_strike is not None:
                     dist_to_short = short_strike - price
 
                 quote_valid, quote_notes = evaluate_quotes(short_bid, short_ask, long_bid, long_ask, session_code)
+                quotes_usable = quote_valid
                 notes.extend(quote_notes)
+                issues.extend(quote_notes)
+
+                liquidity_ok = (short_oi or 0) >= MIN_SHORT_OI and (short_vol or 0) >= MIN_SHORT_VOL
+                if not liquidity_ok:
+                    issues.append("liquidez insuficiente")
+
+                if short_delta is not None:
+                    short_delta_abs = abs(short_delta)
+                    delta_ok = TARGET_DELTA_MIN <= short_delta_abs <= TARGET_DELTA_MAX
+                    if not delta_ok:
+                        issues.append("delta fuera de rango")
+                else:
+                    issues.append("delta pendiente")
 
                 if None not in (short_bid, short_ask, long_bid, long_ask):
                     short_mid = (short_bid + short_ask) / 2
                     long_mid = (long_bid + long_ask) / 2
                     net_credit = short_mid - long_mid
                     breakeven = short_strike + net_credit if short_strike is not None else None
+                    credit_ok = net_credit is not None and net_credit >= 0.03
+                    if not credit_ok:
+                        issues.append("crédito bajo")
+                else:
+                    issues.append("crédito no calculable")
 
-                quotes_usable = quote_valid
-                min_credit_by_width = SPREAD_WIDTH * MIN_CREDIT_PCT_WIDTH
-                min_credit_required = max(MIN_NET_CREDIT, min_credit_by_width)
-                credit_ok = net_credit is not None and net_credit >= min_credit_required
-                if not credit_ok:
-                    notes.append("crédito insuficiente")
-                if quotes_usable and credit_ok and not notes:
+                if quotes_usable and liquidity_ok:
                     notes.append("Quotes operables")
+                elif quotes_usable:
+                    notes.append("Quotes presentes, pero liquidez floja")
+                else:
+                    notes.append("Quotes no operables")
             else:
+                issues.append("cadena de calls vacía")
                 notes.append("Cadena de calls vacía")
         else:
+            issues.append("sin expiraciones")
             notes.append("Sin expiraciones disponibles")
     except Exception as e:
+        issues = [f"error options: {str(e)}"]
         notes = [f"Error options: {str(e)}"]
 
     if not notes:
@@ -460,7 +540,7 @@ def get_options_trade(tk, price, buffer_pct, session_code):
 
     payload = {
         "trade": {
-            "bufferBasePct": round2(BASE_BUFFER_PCT),
+            "bufferBasePct": None,
             "bufferDynamicPct": round2(buffer_pct),
             "bufferReason": None,
             "shortStrike": round2(short_strike),
@@ -469,7 +549,7 @@ def get_options_trade(tk, price, buffer_pct, session_code):
             "spreadWidth": round2(SPREAD_WIDTH),
             "netCredit": round2(net_credit),
             "creditOk": credit_ok,
-            "minCreditRequired": round2(max(MIN_NET_CREDIT, SPREAD_WIDTH * MIN_CREDIT_PCT_WIDTH)),
+            "minCreditRequired": 0.03,
             "distToShort": round2(dist_to_short),
         },
         "options": {
@@ -485,8 +565,10 @@ def get_options_trade(tk, price, buffer_pct, session_code):
             "shortCallVolume": round2(short_vol),
             "longCallVolume": round2(long_vol),
             "quotesUsable": quotes_usable,
-            "notes": " · ".join(notes),
-            "issues": notes,
+            "liquidityOk": liquidity_ok,
+            "deltaOk": delta_ok,
+            "notes": " · ".join(dict.fromkeys(notes)),
+            "issues": list(dict.fromkeys(issues)),
         },
     }
     return json_safe(payload)
@@ -534,27 +616,33 @@ def compute_freshness(last_bar_at, updated_at_iso, session_code):
 
 
 def compute_score(state):
-    score = 55
+    score = 52
     reasons = []
 
     if (state["change"] or 0) < 0:
         score += 8
         reasons.append("Sesgo bajista favorable")
     if safe_float(state["vwap"].get("distPct")) is not None and state["vwap"]["distPct"] < 0:
-        score += 7
+        score += 8
         reasons.append("Precio por debajo de VWAP")
     if state["session"]["code"] in ("overnight", "premarket", "afterhours"):
-        score -= 10
+        score -= 9
         reasons.append("Sesión extendida")
     if state["freshness"]["isStale"]:
         score -= 18
         reasons.append("Dato no fresco")
-    if not state["options"]["quotesUsable"]:
-        score -= 15
+    if not state["options"].get("quotesUsable"):
+        score -= 18
         reasons.append("Quotes no operables")
+    if not state["options"].get("liquidityOk"):
+        score -= 12
+        reasons.append("Liquidez insuficiente")
+    if not state["options"].get("deltaOk"):
+        score -= 8
+        reasons.append("Delta fuera de rango")
     if not state["trade"].get("creditOk"):
-        score -= 16
-        reasons.append("Crédito insuficiente")
+        score -= 4
+        reasons.append("Crédito bajo")
     nxt = state["macro"].get("next")
     if nxt and nxt.get("isVeto"):
         score -= 12
@@ -562,17 +650,19 @@ def compute_score(state):
 
     score = max(0, min(100, int(round(score))))
 
-    if nxt and nxt.get("isVeto"):
+    hard_block = (
+        state["freshness"]["isStale"] or
+        not state["options"].get("quotesUsable") or
+        not state["options"].get("liquidityOk") or
+        (nxt and nxt.get("isVeto"))
+    )
+
+    if hard_block:
         decision = "no entrar"
         tone = "red"
         label = "no entrar"
         risk = "Riesgo alto"
-    elif state["freshness"]["isStale"] or (not state["options"]["quotesUsable"] and not state["trade"].get("creditOk")):
-        decision = "no entrar"
-        tone = "red"
-        label = "no entrar"
-        risk = "Riesgo alto"
-    elif score >= 70 and state["options"]["quotesUsable"] and state["trade"].get("creditOk"):
+    elif score >= 72:
         decision = "entraría"
         tone = "green"
         label = "entraría"
@@ -603,8 +693,8 @@ def build_error_state(msg):
         "session": {"code": "error", "label": "Error"},
         "summary": f"Error generando estado: {msg}",
         "trade": {
-            "bufferBasePct": round2(BASE_BUFFER_PCT),
-            "bufferDynamicPct": round2(BASE_BUFFER_PCT),
+            "bufferBasePct": None,
+            "bufferDynamicPct": None,
             "bufferReason": "error",
             "shortStrike": None,
             "longStrike": None,
@@ -612,7 +702,7 @@ def build_error_state(msg):
             "spreadWidth": round2(SPREAD_WIDTH),
             "netCredit": None,
             "creditOk": False,
-            "minCreditRequired": round2(max(MIN_NET_CREDIT, SPREAD_WIDTH * MIN_CREDIT_PCT_WIDTH)),
+            "minCreditRequired": 0.03,
             "distToShort": None,
         },
         "bufferDebug": {},
@@ -629,6 +719,8 @@ def build_error_state(msg):
             "shortCallVolume": None,
             "longCallVolume": None,
             "quotesUsable": False,
+            "liquidityOk": False,
+            "deltaOk": False,
             "notes": msg,
             "issues": [msg],
         },
@@ -689,8 +781,12 @@ def main():
         expected_move = compute_expected_move(tk, px["price"])
         macro = get_macro_block()
         earnings = get_earnings_block()
-        dyn_buffer_pct, buffer_reason, buffer_debug = compute_dynamic_buffer_pct(expected_move, pm_range, session["code"], macro)
-        opt = get_options_trade(tk, px["price"], dyn_buffer_pct, session["code"])
+
+        dyn_buffer_pct, buffer_reason, buffer_debug = compute_conservative_buffer_pct(
+            expected_move, pm_range, session["code"], macro, vwap
+        )
+
+        opt = get_options_trade(tk, px["price"], dyn_buffer_pct, session["code"], expected_move)
         opt["trade"]["bufferReason"] = buffer_reason
         updated_at_iso = nowu.isoformat()
         freshness = compute_freshness(px.get("lastBarAt"), updated_at_iso, session["code"])
