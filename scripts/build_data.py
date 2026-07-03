@@ -5,6 +5,7 @@ from datetime import datetime, timezone, date
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import pandas as pd
 import requests
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -20,26 +21,10 @@ UTC_ZONE = timezone.utc
 
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
 FINNHUB_BASE = "https://finnhub.io/api/v1"
-
 BASE_BUFFER_PCT = 2.20
 
-# =========================================================
-# OPTIONSTRAT MANUAL / SEMI-MANUAL LAYER
-# Rellena estos campos mirando OptionStrat delayed (15m)
-# =========================================================
-OPTIONSTRAT_INPUT = {
-    "enabled": True,
-    "updatedAt": "2026-07-03 10:40 WEST",
-    "shortStrike": 737,
-    "longStrike": 738,
-    "shortVolume": 420,
-    "longVolume": 165,
-    "shortOI": 980,
-    "longOI": 420,
-    "volumeBias": "short_active",
-    "liquidityNote": "Volumen aceptable en short strike; long menor pero usable",
-    "strikeConfirmed": True,
-    "quotesUsable": True
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 }
 
 
@@ -54,6 +39,10 @@ def now_ny():
 def safe_float(v, default=None):
     try:
         if v is None:
+            return default
+        if isinstance(v, list):
+            return default
+        if v == "":
             return default
         x = float(v)
         if math.isnan(x):
@@ -118,15 +107,11 @@ def get_finnhub_quote(symbol):
         "change": safe_float(data.get("d")),
         "changePct": safe_float(data.get("dp")),
         "timestamp": data.get("t"),
-        "high": safe_float(data.get("h")),
-        "low": safe_float(data.get("l")),
-        "open": safe_float(data.get("o")),
     }
 
 
 def get_price_data(ticker):
     quote = get_finnhub_quote(ticker)
-
     price = safe_float(quote.get("price"))
     prev_close = safe_float(quote.get("prevClose"))
     change = safe_float(quote.get("change"))
@@ -135,10 +120,10 @@ def get_price_data(ticker):
 
     last_bar_at = None
     if quote_ts:
-      try:
-          last_bar_at = datetime.fromtimestamp(int(quote_ts), tz=UTC_ZONE).isoformat()
-      except Exception:
-          last_bar_at = None
+        try:
+            last_bar_at = datetime.fromtimestamp(int(quote_ts), tz=UTC_ZONE).isoformat()
+        except Exception:
+            last_bar_at = None
 
     tone = "up" if (change or 0) > 0 else "down" if (change or 0) < 0 else "flat"
 
@@ -150,6 +135,158 @@ def get_price_data(ticker):
         "tone": tone,
         "source": "finnhub_quote",
         "lastBarAt": last_bar_at,
+    }
+
+
+def parse_number(value):
+    if value is None:
+        return None
+    s = str(value).strip().replace(",", "").replace("$", "")
+    if s in {"", "-", "--", "N/A", "nan", "None"}:
+        return None
+    if s.endswith("%"):
+        s = s[:-1]
+    try:
+        return float(s)
+    except Exception:
+        return None
+
+
+def find_column(cols, candidates):
+    lower_map = {str(c).strip().lower(): c for c in cols}
+    for cand in candidates:
+        if cand.lower() in lower_map:
+            return lower_map[cand.lower()]
+    for col in cols:
+        txt = str(col).strip().lower()
+        for cand in candidates:
+            if cand.lower() in txt:
+                return col
+    return None
+
+
+def get_finviz_options_experimental(symbol):
+    urls = [
+        f"https://finviz.com/quote.ashx?t={symbol}&p=d&ty=oc",
+        f"https://finviz.com/quote.ashx?t={symbol}&p=d",
+    ]
+
+    last_error = None
+    for url in urls:
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            r.raise_for_status()
+            tables = pd.read_html(r.text)
+            best = None
+
+            for df in tables:
+                cols = [str(c) for c in df.columns]
+                strike_col = find_column(cols, ["strike", "strike price"])
+                bid_col = find_column(cols, ["bid"])
+                ask_col = find_column(cols, ["ask"])
+                vol_col = find_column(cols, ["volume", "vol"])
+                oi_col = find_column(cols, ["open interest", "oi"])
+
+                if strike_col:
+                    best = {
+                        "df": df.copy(),
+                        "strike_col": strike_col,
+                        "bid_col": bid_col,
+                        "ask_col": ask_col,
+                        "vol_col": vol_col,
+                        "oi_col": oi_col,
+                        "url": url,
+                    }
+                    break
+
+            if not best:
+                continue
+
+            df = best["df"]
+            strike_col = best["strike_col"]
+            bid_col = best["bid_col"]
+            ask_col = best["ask_col"]
+            vol_col = best["vol_col"]
+            oi_col = best["oi_col"]
+
+            df["_strike"] = df[strike_col].map(parse_number)
+            if bid_col:
+                df["_bid"] = df[bid_col].map(parse_number)
+            else:
+                df["_bid"] = None
+            if ask_col:
+                df["_ask"] = df[ask_col].map(parse_number)
+            else:
+                df["_ask"] = None
+            if vol_col:
+                df["_vol"] = df[vol_col].map(parse_number)
+            else:
+                df["_vol"] = None
+            if oi_col:
+                df["_oi"] = df[oi_col].map(parse_number)
+            else:
+                df["_oi"] = None
+
+            df = df[df["_strike"].notna()].copy()
+            if df.empty:
+                continue
+
+            df["_activity"] = df[["_vol", "_oi"]].fillna(0).sum(axis=1)
+            df = df.sort_values(["_activity", "_strike"], ascending=[False, True])
+
+            top = df.iloc[0]
+            short_strike = round2(top["_strike"])
+            long_strike = round2(short_strike + SPREAD_WIDTH) if short_strike is not None else None
+
+            short_bid = round2(top["_bid"])
+            short_ask = round2(top["_ask"])
+
+            net_credit = None
+            breakeven = None
+            if short_bid is not None and short_ask is not None:
+                mid = (short_bid + short_ask) / 2
+                long_mid = max(mid - 0.12, 0.01)
+                net_credit = round2(mid - long_mid)
+                breakeven = round2(short_strike + net_credit) if short_strike is not None else None
+
+            return {
+                "used": True,
+                "source": "finviz_experimental",
+                "sourceUrl": url,
+                "updatedAt": now_utc().isoformat(),
+                "shortStrike": short_strike,
+                "longStrike": long_strike,
+                "shortBid": short_bid,
+                "shortAsk": short_ask,
+                "shortVolume": round2(top["_vol"]),
+                "shortOI": round2(top["_oi"]),
+                "quotesUsable": short_bid is not None and short_ask is not None and short_ask > short_bid,
+                "liquidityOk": (top["_vol"] or 0) >= 10 or (top["_oi"] or 0) >= 50,
+                "netCredit": net_credit,
+                "breakeven": breakeven,
+                "notes": "Datos orientativos extraídos experimentalmente de Finviz",
+                "issues": [],
+            }
+        except Exception as e:
+            last_error = str(e)
+
+    return {
+        "used": False,
+        "source": "finviz_experimental",
+        "sourceUrl": None,
+        "updatedAt": now_utc().isoformat(),
+        "shortStrike": None,
+        "longStrike": None,
+        "shortBid": None,
+        "shortAsk": None,
+        "shortVolume": None,
+        "shortOI": None,
+        "quotesUsable": False,
+        "liquidityOk": False,
+        "netCredit": None,
+        "breakeven": None,
+        "notes": "Finviz no disponible en esta ejecución",
+        "issues": [last_error] if last_error else ["No se pudo extraer tabla de opciones"],
     }
 
 
@@ -197,12 +334,7 @@ def get_macro_block():
         "isVeto": delta_seconds > 0 and delta_seconds <= 24 * 3600,
     }
 
-    return {
-        "status": "OK",
-        "next": next_event,
-        "items": [next_event],
-        "all": [next_event],
-    }
+    return {"status": "OK", "next": next_event, "items": [next_event], "all": [next_event]}
 
 
 def get_earnings_block():
@@ -229,74 +361,9 @@ def get_earnings_block():
     }
 
 
-def build_optionstrat_block(price):
-    os_in = OPTIONSTRAT_INPUT if OPTIONSTRAT_INPUT.get("enabled") else {}
-
-    short_strike = safe_float(os_in.get("shortStrike"))
-    long_strike = safe_float(os_in.get("longStrike"))
-    short_volume = safe_float(os_in.get("shortVolume"), 0)
-    long_volume = safe_float(os_in.get("longVolume"), 0)
-    short_oi = safe_float(os_in.get("shortOI"), 0)
-    long_oi = safe_float(os_in.get("longOI"), 0)
-    strike_confirmed = bool(os_in.get("strikeConfirmed"))
-    quotes_usable = bool(os_in.get("quotesUsable"))
-
-    net_credit = None
-    breakeven = None
-    if short_strike is not None and long_strike is not None:
-        net_credit = 0.12
-        breakeven = short_strike + net_credit
-
-    liquidity_ok = short_volume >= 100 or short_oi >= 300
-    volume_bias = os_in.get("volumeBias") or "neutral"
-
-    return {
-        "trade": {
-            "bufferBasePct": BASE_BUFFER_PCT,
-            "bufferDynamicPct": BASE_BUFFER_PCT,
-            "bufferReason": "Buffer base fijo mientras la lógica delayed se estabiliza",
-            "shortStrike": round2(short_strike),
-            "longStrike": round2(long_strike),
-            "breakeven": round2(breakeven),
-            "spreadWidth": round2(SPREAD_WIDTH),
-            "netCredit": round2(net_credit),
-            "creditOk": net_credit is not None and net_credit >= 0.03,
-            "minCreditRequired": 0.03,
-            "distToShort": round2(short_strike - price) if short_strike is not None and price is not None else None,
-        },
-        "options": {
-            "expiration": "0DTE",
-            "quotesUsable": quotes_usable,
-            "liquidityOk": liquidity_ok,
-            "deltaOk": None,
-            "notes": os_in.get("liquidityNote") or "Sin nota",
-            "issues": [],
-        },
-        "optionStrat": {
-            "used": True,
-            "updatedAt": os_in.get("updatedAt"),
-            "shortStrike": round2(short_strike),
-            "longStrike": round2(long_strike),
-            "shortVolume": round2(short_volume),
-            "longVolume": round2(long_volume),
-            "shortOI": round2(short_oi),
-            "longOI": round2(long_oi),
-            "volumeBias": volume_bias,
-            "strikeConfirmed": strike_confirmed,
-            "liquidityNote": os_in.get("liquidityNote"),
-        },
-    }
-
-
 def compute_freshness(last_bar_at, updated_at_iso):
     if not last_bar_at:
-        return {
-            "ageMinutes": None,
-            "thresholdMinutes": 20,
-            "isStale": True,
-            "status": "Sin timestamp",
-        }
-
+        return {"ageMinutes": None, "thresholdMinutes": 20, "isStale": True, "status": "Sin timestamp"}
     try:
         last_dt = datetime.fromisoformat(last_bar_at)
         now_dt = datetime.fromisoformat(updated_at_iso)
@@ -308,32 +375,30 @@ def compute_freshness(last_bar_at, updated_at_iso):
             "status": "Stale" if age > 20 else "OK",
         }
     except Exception:
-        return {
-            "ageMinutes": None,
-            "thresholdMinutes": 20,
-            "isStale": True,
-            "status": "Error",
-        }
+        return {"ageMinutes": None, "thresholdMinutes": 20, "isStale": True, "status": "Error"}
 
 
 def compute_score(state):
-    score = 55
+    score = 50
     reasons = []
 
     if state["price"] is not None:
-        score += 5
-        reasons.append("Precio disponible")
+        score += 8
+        reasons.append("Precio disponible vía Finnhub")
 
-    if state["optionStrat"]["strikeConfirmed"]:
-        score += 10
-        reasons.append("Strike confirmado con OptionStrat")
+    if state["finviz"]["used"]:
+        score += 8
+        reasons.append("Finviz experimental devolvió referencia de opciones")
+    else:
+        score -= 10
+        reasons.append("Finviz no devolvió opciones en esta ejecución")
 
     if state["options"]["liquidityOk"]:
         score += 8
-        reasons.append("Liquidez aceptable en strike objetivo")
+        reasons.append("Liquidez orientativa aceptable")
     else:
-        score -= 12
-        reasons.append("Liquidez floja en strike objetivo")
+        score -= 10
+        reasons.append("Liquidez orientativa débil")
 
     if state["macro"]["next"]["isVeto"]:
         score -= 15
@@ -393,30 +458,11 @@ def build_error_state(msg):
             "minCreditRequired": 0.03,
             "distToShort": None,
         },
-        "options": {
-            "expiration": None,
-            "quotesUsable": False,
-            "liquidityOk": False,
-            "deltaOk": None,
-            "notes": msg,
-            "issues": [msg],
-        },
-        "optionStrat": {
-            "used": False,
-            "updatedAt": None,
-            "shortStrike": None,
-            "longStrike": None,
-            "shortVolume": None,
-            "longVolume": None,
-            "shortOI": None,
-            "longOI": None,
-            "volumeBias": None,
-            "strikeConfirmed": False,
-            "liquidityNote": msg,
-        },
-        "vwap": {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No disponible"},
-        "openingRange": {"available": False, "status": "No disponible", "message": "No usado"},
-        "premarketRange": {"available": False, "status": "No disponible", "message": "No usado"},
+        "options": {"expiration": None, "quotesUsable": False, "liquidityOk": False, "deltaOk": None, "notes": msg, "issues": [msg]},
+        "finviz": {"used": False, "source": "finviz_experimental", "sourceUrl": None, "updatedAt": None, "shortStrike": None, "longStrike": None, "shortBid": None, "shortAsk": None, "shortVolume": None, "shortOI": None, "quotesUsable": False, "liquidityOk": False, "netCredit": None, "breakeven": None, "notes": msg, "issues": [msg]},
+        "vwap": {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No usado"},
+        "openingRange": {"available": False, "status": "No usado", "message": "No usado"},
+        "premarketRange": {"available": False, "status": "No usado", "message": "No usado"},
         "expectedMove": compute_expected_move_simple(None),
         "freshness": {"ageMinutes": None, "thresholdMinutes": 20, "isStale": True, "status": "Error"},
         "score": 0,
@@ -441,7 +487,7 @@ def append_history(state):
         "session": state.get("session", {}).get("label"),
         "shortStrike": state.get("trade", {}).get("shortStrike"),
         "longStrike": state.get("trade", {}).get("longStrike"),
-        "optionStratConfirmed": state.get("optionStrat", {}).get("strikeConfirmed"),
+        "finvizUsed": state.get("finviz", {}).get("used"),
     }
 
     history = []
@@ -470,8 +516,31 @@ def main():
         macro = get_macro_block()
         earnings = get_earnings_block()
         expected_move = compute_expected_move_simple(px["price"])
-        option_block = build_optionstrat_block(px["price"])
+        finviz = get_finviz_options_experimental(TICKER)
         freshness = compute_freshness(px.get("lastBarAt"), nowu.isoformat())
+
+        trade = {
+            "bufferBasePct": BASE_BUFFER_PCT,
+            "bufferDynamicPct": BASE_BUFFER_PCT,
+            "bufferReason": "Buffer base con opciones orientativas desde Finviz experimental",
+            "shortStrike": finviz["shortStrike"],
+            "longStrike": finviz["longStrike"],
+            "breakeven": finviz["breakeven"],
+            "spreadWidth": round2(SPREAD_WIDTH),
+            "netCredit": finviz["netCredit"],
+            "creditOk": finviz["netCredit"] is not None and finviz["netCredit"] >= 0.03,
+            "minCreditRequired": 0.03,
+            "distToShort": round2(finviz["shortStrike"] - px["price"]) if finviz["shortStrike"] is not None and px["price"] is not None else None,
+        }
+
+        options = {
+            "expiration": "0DTE_or_nearest",
+            "quotesUsable": finviz["quotesUsable"],
+            "liquidityOk": finviz["liquidityOk"],
+            "deltaOk": None,
+            "notes": finviz["notes"],
+            "issues": finviz["issues"],
+        }
 
         state = {
             "ticker": TICKER,
@@ -481,9 +550,9 @@ def main():
             "updatedAtNY": ny.strftime("%Y-%m-%d %H:%M:%S ET"),
             "session": session,
             "summary": "",
-            "trade": option_block["trade"],
-            "options": option_block["options"],
-            "optionStrat": option_block["optionStrat"],
+            "trade": trade,
+            "options": options,
+            "finviz": finviz,
             "vwap": {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No usado"},
             "openingRange": {"available": False, "status": "No usado", "message": "No usado"},
             "premarketRange": {"available": False, "status": "No usado", "message": "No usado"},
@@ -507,7 +576,7 @@ def main():
         state["summary"] = (
             f"precio {('$' + str(state['price'])) if state['price'] is not None else '--'} · "
             f"short {short_txt} · long {long_txt} · "
-            f"OptionStrat {'confirmado' if state['optionStrat']['strikeConfirmed'] else 'sin confirmar'} · "
+            f"Finviz {'OK' if state['finviz']['used'] else 'sin datos'} · "
             f"macro {macro_txt}"
         )
 
