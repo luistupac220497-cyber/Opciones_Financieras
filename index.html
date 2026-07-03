@@ -17,14 +17,14 @@
       --text-hero: clamp(2.4rem, 2rem + 2vw, 4.5rem);
       --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
       --color-bg: #f5f4ef; --color-surface: rgba(255,255,255,0.82); --color-surface-2: rgba(255,255,255,0.6); --color-surface-3: rgba(255,255,255,0.38);
-      --color-border: rgba(40,37,29,0.10); --color-divider: rgba(40,37,29,0.08); --color-text: #211e18; --color-text-muted: #726f68; --color-text-faint: #98948d;
+      --color-border: rgba(40,37,29,0.10); --color-divider: rgba(40,37,29,0.08); --color-text: #211e18; --color-text-muted: #726f68;
       --color-primary: #01696f; --color-primary-soft: rgba(1,105,111,0.11); --color-success: #437a22; --color-success-soft: rgba(67,122,34,0.12);
       --color-warning: #964219; --color-warning-soft: rgba(150,66,25,0.12); --color-error: #a12c7b; --color-error-soft: rgba(161,44,123,0.12);
       --radius-sm: 12px; --radius-md: 18px; --radius-lg: 24px; --shadow-sm: 0 4px 18px rgba(40,37,29,0.06); --shadow-lg: 0 18px 48px rgba(40,37,29,0.10); --blur: blur(16px);
     }
     [data-theme="dark"] {
       --color-bg: #11110f; --color-surface: rgba(28,27,25,0.88); --color-surface-2: rgba(32,31,29,0.82); --color-surface-3: rgba(41,40,37,0.72);
-      --color-border: rgba(255,255,255,0.08); --color-divider: rgba(255,255,255,0.06); --color-text: #e5e2dc; --color-text-muted: #a39f98; --color-text-faint: #7c7872;
+      --color-border: rgba(255,255,255,0.08); --color-divider: rgba(255,255,255,0.06); --color-text: #e5e2dc; --color-text-muted: #a39f98;
       --color-primary: #58a7b3; --color-primary-soft: rgba(88,167,179,0.15); --color-success: #89bd68; --color-success-soft: rgba(137,189,104,0.14);
       --color-warning: #de9569; --color-warning-soft: rgba(222,149,105,0.14); --color-error: #db71b0; --color-error-soft: rgba(219,113,176,0.14);
       --shadow-sm: 0 10px 28px rgba(0,0,0,0.22); --shadow-lg: 0 24px 60px rgba(0,0,0,0.34);
@@ -239,7 +239,7 @@
 
     const fmt = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : Number(v).toFixed(d);
     const intFmt = (v) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : new Intl.NumberFormat("es-ES").format(Number(v));
-    const money = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? `$${Number(v).toFixed(d)}` : "--";
+    const money = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `$${Number(v).toFixed(d)}`;
     const pct = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? "--" : `${Number(v).toFixed(d)}%`;
     const text = (v) => (v === null || v === undefined || v === "") ? "--" : String(v);
     const qs = (id) => document.getElementById(id);
@@ -347,8 +347,7 @@
 
       const issuesBox = qs("issuesBox");
       issuesBox.innerHTML = "";
-      const issues = os.issues || [];
-      issues.forEach(it => {
+      (os.issues || []).forEach(it => {
         const s = document.createElement("span");
         s.className = "issue-chip " + (String(it).toLowerCase().includes("crédito") || String(it).toLowerCase().includes("vacío") || String(it).toLowerCase().includes("ask <= bid") ? "issue-critical" : "issue-warn");
         s.textContent = it;
