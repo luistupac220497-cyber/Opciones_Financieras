@@ -6,9 +6,9 @@
   "changePct": -1.51,
   "tone": "down",
   "source": "intraday_5m",
-  "updatedAt": "2026-07-03T01:00:51.252924+00:00",
-  "updatedAtText": "2026-07-03 01:00:51 UTC",
-  "updatedAtNY": "2026-07-02 21:00:50 ET",
+  "updatedAt": "2026-07-03T01:10:35.515422+00:00",
+  "updatedAtText": "2026-07-03 01:10:35 UTC",
+  "updatedAtNY": "2026-07-02 21:10:34 ET",
   "session": {
     "code": "afterhours",
     "label": "After hours"
