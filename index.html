@@ -17,445 +17,198 @@
       --green:#22c55e;
       --yellow:#f59e0b;
       --red:#ef4444;
-      --blue:#60a5fa;
-      --cyan:#22d3ee;
       --shadow:0 16px 40px rgba(0,0,0,.28);
       --radius:18px;
     }
-
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
     body{
-      font-family:"Satoshi",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(34,211,238,.08), transparent 28%),
-        radial-gradient(circle at top right, rgba(96,165,250,.08), transparent 22%),
-        linear-gradient(180deg, #0a0f1a 0%, #0b1220 100%);
+      font-family:"Satoshi",system-ui,sans-serif;
+      background:linear-gradient(180deg,#0a0f1a 0%,#0b1220 100%);
       color:var(--text);
       min-height:100vh;
     }
-
-    .wrap{
-      width:min(1180px, calc(100% - 28px));
-      margin:28px auto 60px;
-    }
-
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:14px;
-      margin-bottom:18px;
-    }
-
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    .title{
-      margin:0;
-      font-size:clamp(1.6rem,2vw,2.1rem);
-      font-weight:900;
-      letter-spacing:.01em;
-    }
-
-    .meta{
-      color:var(--muted);
-      font-size:.95rem;
-    }
-
-    .theme-btn{
+    .wrap{width:min(1100px,calc(100% - 24px));margin:24px auto 50px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
+    .title{margin:0;font-size:clamp(1.5rem,2vw,2rem);font-weight:900}
+    .meta{color:var(--muted);font-size:.95rem}
+    .btn{
       border:1px solid var(--line);
       background:rgba(255,255,255,.03);
       color:var(--text);
-      width:44px;
-      height:44px;
-      border-radius:12px;
-      cursor:pointer;
-      font-size:1rem;
+      width:44px;height:44px;border-radius:12px;cursor:pointer
     }
-
-    .hero{
-      display:grid;
-      grid-template-columns: 1.25fr .9fr;
-      gap:18px;
-      margin-bottom:18px;
-    }
-
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:18px}
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
       border:1px solid var(--line);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
     }
-
-    .hero-main{
-      padding:24px;
-      min-height:260px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      gap:16px;
-    }
-
-    .hero-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:18px;
-      flex-wrap:wrap;
-    }
-
-    .eyebrow{
-      color:var(--muted);
-      font-size:.85rem;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      margin-bottom:8px;
-    }
-
-    .decision{
-      font-size:clamp(2rem, 4vw, 3.4rem);
-      line-height:1;
-      margin:0 0 8px;
-      font-weight:900;
-    }
-
+    .hero-main{padding:22px;display:flex;flex-direction:column;gap:18px}
+    .eyebrow{color:var(--muted);font-size:.82rem;text-transform:uppercase;letter-spacing:.12em}
+    .decision{font-size:clamp(2rem,4vw,3.2rem);line-height:1;font-weight:900;margin:8px 0}
     .decision.green{color:var(--green)}
     .decision.yellow{color:var(--yellow)}
     .decision.red{color:var(--red)}
-
-    .score-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:10px 14px;
-      border-radius:999px;
-      font-weight:800;
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--line);
-      min-width:120px;
-      justify-content:center;
+    .score{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;
+      border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:800
     }
-
-    .score-pill.green{color:var(--green)}
-    .score-pill.yellow{color:var(--yellow)}
-    .score-pill.red{color:var(--red)}
-
-    .summary{
-      color:var(--text);
-      font-size:1rem;
-    }
-
-    .hero-grid{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:12px;
-    }
-
-    .mini{
-      background:var(--panel-2);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-    }
-
-    .mini-label{
-      color:var(--muted);
-      font-size:.82rem;
-      margin-bottom:6px;
-    }
-
-    .mini-value{
-      font-size:1.35rem;
-      font-weight:800;
-      line-height:1.15;
-    }
-
-    .hero-side{
-      padding:20px;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      min-height:260px;
-    }
-
-    .side-block{
-      background:var(--panel-2);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-    }
-
-    .side-title{
-      font-size:.82rem;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.10em;
-      margin-bottom:8px;
-    }
-
-    .side-big{
-      font-size:1.2rem;
-      font-weight:800;
-    }
-
-    .grid-3{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:18px;
-      margin-bottom:18px;
-    }
-
-    .panel{
-      padding:18px;
-    }
-
-    .panel h3{
-      margin:0 0 14px;
-      font-size:1rem;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      color:var(--muted);
-    }
-
-    .kv{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:10px;
-      padding:10px 0;
-      border-top:1px solid rgba(255,255,255,.05);
-    }
-
+    .summary{color:var(--text)}
+    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .mini{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .mini-label{color:var(--muted);font-size:.82rem;margin-bottom:6px}
+    .mini-value{font-size:1.2rem;font-weight:800}
+    .side{padding:20px;display:flex;flex-direction:column;gap:12px}
+    .block{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .block-title{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+    .block-value{font-size:1.08rem;font-weight:800}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
+    .panel{padding:18px}
+    .panel h3{margin:0 0 14px;font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .kv{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.05)}
     .kv:first-of-type{border-top:none;padding-top:0}
     .k{color:var(--muted)}
     .v{font-weight:700;text-align:right}
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:14px;
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:.85rem}
+    @media (max-width:980px){
+      .hero,.grid3{grid-template-columns:1fr}
+      .grid4{grid-template-columns:repeat(2,1fr)}
     }
-
-    .chip{
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-size:.85rem;
-    }
-
-    .muted{color:var(--muted)}
-
-    .footer-note{
-      margin-top:8px;
-      color:var(--muted);
-      font-size:.9rem;
-    }
-
-    @media (max-width: 980px){
-      .hero{
-        grid-template-columns:1fr;
-      }
-      .grid-3{
-        grid-template-columns:1fr;
-      }
-      .hero-grid{
-        grid-template-columns:repeat(2,1fr);
-      }
-    }
-
-    @media (max-width: 640px){
-      .wrap{
-        width:min(100% - 18px, 100%);
-        margin:18px auto 40px;
-      }
-      .hero-main,.hero-side,.panel{
-        padding:16px;
-      }
-      .hero-grid{
-        grid-template-columns:1fr 1fr;
-      }
-      .decision{
-        font-size:2rem;
-      }
-      .mini-value{
-        font-size:1.15rem;
-      }
+    @media (max-width:640px){
+      .grid4{grid-template-columns:1fr 1fr}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="brand">
+      <div>
         <h1 class="title">QQQ 0DTE Dashboard</h1>
         <div class="meta" id="headerMeta">Cargando estado...</div>
       </div>
-      <button class="theme-btn" id="refreshBtn" title="Recargar">↻</button>
+      <button class="btn" id="refreshBtn">↻</button>
     </div>
 
     <section class="hero">
       <article class="card hero-main">
-        <div class="hero-top">
-          <div>
-            <div class="eyebrow">Decisión operativa</div>
-            <h2 class="decision yellow" id="decisionText">Cargando...</h2>
-            <div class="summary" id="summaryText">Esperando datos de data/state.json...</div>
-          </div>
-          <div class="score-pill yellow" id="scorePill">
-            Score <span id="scoreValue">--</span>
-          </div>
-        </div>
+        <div class="eyebrow">Decisión operativa</div>
+        <div class="decision yellow" id="decisionText">Cargando...</div>
+        <div class="score" id="scorePill">Score <span id="scoreValue">--</span></div>
+        <div class="summary" id="summaryText">Esperando datos...</div>
 
-        <div class="hero-grid">
+        <div class="grid4">
           <div class="mini">
             <div class="mini-label">Precio</div>
             <div class="mini-value" id="priceValue">--</div>
           </div>
           <div class="mini">
-            <div class="mini-label">Short strike</div>
+            <div class="mini-label">Short</div>
             <div class="mini-value" id="shortStrikeValue">--</div>
           </div>
           <div class="mini">
-            <div class="mini-label">Long strike</div>
+            <div class="mini-label">Long</div>
             <div class="mini-value" id="longStrikeValue">--</div>
           </div>
           <div class="mini">
-            <div class="mini-label">Próximo macro</div>
+            <div class="mini-label">Macro</div>
             <div class="mini-value" id="macroCountdown">--</div>
           </div>
         </div>
       </article>
 
-      <aside class="card hero-side">
-        <div class="side-block">
-          <div class="side-title">Freshness</div>
-          <div class="side-big"><span id="freshnessStatus">--</span> · <span id="freshnessValue">--</span></div>
-          <div class="footer-note" id="sourceValue">Source --</div>
+      <aside class="card side">
+        <div class="block">
+          <div class="block-title">Freshness</div>
+          <div class="block-value"><span id="freshnessStatus">--</span> · <span id="freshnessValue">--</span></div>
         </div>
-
-        <div class="side-block">
-          <div class="side-title">Riesgo</div>
-          <div class="side-big" id="riskValue">--</div>
-          <div class="footer-note" id="sessionValue">Sesión --</div>
+        <div class="block">
+          <div class="block-title">Riesgo</div>
+          <div class="block-value" id="riskValue">--</div>
         </div>
-
-        <div class="side-block">
-          <div class="side-title">Contexto</div>
-          <div class="side-big" id="vwapBiasValue">VWAP --</div>
-          <div class="footer-note" id="changeValue">Cambio --</div>
+        <div class="block">
+          <div class="block-title">OptionStrat</div>
+          <div class="block-value" id="optionStratConfirmValue">--</div>
         </div>
       </aside>
     </section>
 
-    <section class="grid-3">
+    <section class="grid3">
       <article class="card panel">
         <h3>Setup</h3>
-        <div class="kv"><div class="k">Buffer dinámico</div><div class="v" id="bufferValue">--</div></div>
+        <div class="kv"><div class="k">Buffer</div><div class="v" id="bufferValue">--</div></div>
         <div class="kv"><div class="k">Breakeven</div><div class="v" id="breakevenValue">--</div></div>
-        <div class="kv"><div class="k">Crédito neto</div><div class="v" id="creditValue">--</div></div>
+        <div class="kv"><div class="k">Crédito</div><div class="v" id="creditValue">--</div></div>
         <div class="kv"><div class="k">Expected move</div><div class="v" id="expectedMoveValue">--</div></div>
       </article>
 
       <article class="card panel">
-        <h3>Liquidez</h3>
-        <div class="kv"><div class="k">Quotes usables</div><div class="v" id="quotesValue">--</div></div>
-        <div class="kv"><div class="k">Liquidez OK</div><div class="v" id="liquidityValue">--</div></div>
-        <div class="kv"><div class="k">Delta OK</div><div class="v" id="deltaValue">--</div></div>
-        <div class="kv"><div class="k">Expiración</div><div class="v" id="expirationValue">--</div></div>
+        <h3>OptionStrat</h3>
+        <div class="kv"><div class="k">Short volume</div><div class="v" id="osShortVol">--</div></div>
+        <div class="kv"><div class="k">Long volume</div><div class="v" id="osLongVol">--</div></div>
+        <div class="kv"><div class="k">Short OI</div><div class="v" id="osShortOI">--</div></div>
+        <div class="kv"><div class="k">Bias</div><div class="v" id="osBias">--</div></div>
       </article>
 
       <article class="card panel">
-        <h3>Filtros</h3>
-        <div class="kv"><div class="k">Opening range</div><div class="v" id="orValue">--</div></div>
-        <div class="kv"><div class="k">Premarket range</div><div class="v" id="pmValue">--</div></div>
-        <div class="kv"><div class="k">VWAP</div><div class="v" id="vwapValue">--</div></div>
-        <div class="kv"><div class="k">Macro veto</div><div class="v" id="macroVetoValue">--</div></div>
+        <h3>Estado</h3>
+        <div class="kv"><div class="k">Sesión</div><div class="v" id="sessionValue">--</div></div>
+        <div class="kv"><div class="k">Source</div><div class="v" id="sourceValue">--</div></div>
+        <div class="kv"><div class="k">Quotes</div><div class="v" id="quotesValue">--</div></div>
+        <div class="kv"><div class="k">Liquidez</div><div class="v" id="liquidityValue">--</div></div>
       </article>
     </section>
 
     <section class="card panel">
       <h3>Motivos</h3>
-      <div class="chips" id="reasonsChips">
-        <span class="chip">Esperando datos...</span>
-      </div>
+      <div class="chips" id="reasonsChips"></div>
     </section>
   </div>
 
   <script>
     const qs = (id) => document.getElementById(id);
 
-    function fmtMoney(v){
-      return v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`;
+    function fmtMoney(v){ return v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`; }
+    function fmtPct(v){ return v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`; }
+    function fmtNum(v){ return v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v)}`; }
+    function fmtText(v, fallback="--"){ return v == null || v === "" ? fallback : String(v); }
+    function yesNo(v){ if (v === true) return "Sí"; if (v === false) return "No"; return "--"; }
+
+    function applyTone(tone){
+      const d = qs("decisionText");
+      const score = qs("scorePill");
+      d.className = `decision ${tone || "yellow"}`;
+      score.style.color = tone === "green" ? "#22c55e" : tone === "red" ? "#ef4444" : "#f59e0b";
     }
 
-    function fmtPct(v){
-      return v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`;
-    }
-
-    function fmtText(v, fallback="--"){
-      return v == null || v === "" ? fallback : String(v);
-    }
-
-    function yesNo(v){
-      if (v === true) return "Sí";
-      if (v === false) return "No";
-      return "--";
-    }
-
-    function scoreTone(score){
-      if (score == null) return "yellow";
-      if (score >= 72) return "green";
-      if (score >= 55) return "yellow";
-      return "red";
-    }
-
-    function applyDecisionTone(decisionTone, score){
-      const tone = decisionTone || scoreTone(score);
-      const decisionEl = qs("decisionText");
-      const scorePill = qs("scorePill");
-      decisionEl.className = `decision ${tone}`;
-      scorePill.className = `score-pill ${tone}`;
-    }
-
-    async function fetchJsonFresh(url){
-      const freshUrl = `${url}?t=${Date.now()}`;
-      const res = await fetch(freshUrl, {
-        cache: "no-store"
-      });
+    async function fetchFresh(url){
+      const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status} en ${url}`);
       return res.json();
     }
 
-    function renderReasons(reasons){
+    function renderReasons(list){
       const box = qs("reasonsChips");
       box.innerHTML = "";
-      const arr = Array.isArray(reasons) && reasons.length ? reasons : ["Sin motivos disponibles"];
+      const arr = Array.isArray(list) && list.length ? list : ["Sin motivos"];
       arr.forEach(item => {
-        const span = document.createElement("span");
-        span.className = "chip";
-        span.textContent = item;
-        box.appendChild(span);
+        const el = document.createElement("span");
+        el.className = "chip";
+        el.textContent = item;
+        box.appendChild(el);
       });
     }
 
     async function loadDashboard(){
       try{
-        const state = await fetchJsonFresh("./data/state.json");
-        await fetchJsonFresh("./data/history.json").catch(() => []);
-
-        console.log("STATE fresh", state);
-
-        qs("headerMeta").textContent = fmtText(state.updatedAtNY || state.updatedAtText || state.updatedAt, "Sin hora");
+        const state = await fetchFresh("./data/state.json");
+        qs("headerMeta").textContent = fmtText(state.updatedAtNY || state.updatedAtText, "Sin hora");
         qs("decisionText").textContent = fmtText(state.decisionLabel, "--");
-        qs("summaryText").textContent = fmtText(state.summary, "Sin resumen");
         qs("scoreValue").textContent = state.score ?? "--";
-        applyDecisionTone(state.decisionTone, state.score);
+        qs("summaryText").textContent = fmtText(state.summary, "--");
+        applyTone(state.decisionTone);
 
         qs("priceValue").textContent = fmtMoney(state.price);
         qs("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
@@ -464,48 +217,35 @@
 
         qs("freshnessStatus").textContent = fmtText(state.freshness?.status, "--");
         qs("freshnessValue").textContent = state.freshness?.ageMinutes != null ? `${state.freshness.ageMinutes}m` : "--";
-        qs("sourceValue").textContent = `Source ${fmtText(state.source, "--")}`;
         qs("riskValue").textContent = fmtText(state.riskLabel, "--");
-        qs("sessionValue").textContent = `Sesión ${fmtText(state.session?.label, "--")}`;
-        qs("vwapBiasValue").textContent = `VWAP ${fmtText(state.vwap?.bias, "--")}`;
-        qs("changeValue").textContent = state.changePct != null ? `${fmtMoney(state.change)} · ${fmtPct(state.changePct)}` : "--";
+        qs("optionStratConfirmValue").textContent = state.optionStrat?.strikeConfirmed ? "Confirmado" : "Sin confirmar";
 
         qs("bufferValue").textContent = fmtPct(state.trade?.bufferDynamicPct);
         qs("breakevenValue").textContent = fmtMoney(state.trade?.breakeven);
         qs("creditValue").textContent = fmtMoney(state.trade?.netCredit);
         qs("expectedMoveValue").textContent = fmtMoney(state.expectedMove?.move);
 
+        qs("osShortVol").textContent = fmtNum(state.optionStrat?.shortVolume);
+        qs("osLongVol").textContent = fmtNum(state.optionStrat?.longVolume);
+        qs("osShortOI").textContent = fmtNum(state.optionStrat?.shortOI);
+        qs("osBias").textContent = fmtText(state.optionStrat?.volumeBias, "--");
+
+        qs("sessionValue").textContent = fmtText(state.session?.label, "--");
+        qs("sourceValue").textContent = fmtText(state.source, "--");
         qs("quotesValue").textContent = yesNo(state.options?.quotesUsable);
         qs("liquidityValue").textContent = yesNo(state.options?.liquidityOk);
-        qs("deltaValue").textContent = yesNo(state.options?.deltaOk);
-        qs("expirationValue").textContent = fmtText(state.options?.expiration, "--");
-
-        qs("orValue").textContent = state.openingRange?.available
-          ? `${fmtMoney(state.openingRange?.low)} / ${fmtMoney(state.openingRange?.high)}`
-          : fmtText(state.openingRange?.status, "--");
-
-        qs("pmValue").textContent = state.premarketRange?.available
-          ? `${fmtMoney(state.premarketRange?.low)} / ${fmtMoney(state.premarketRange?.high)}`
-          : fmtText(state.premarketRange?.status, "--");
-
-        qs("vwapValue").textContent = fmtMoney(state.vwap?.value);
-        qs("macroVetoValue").textContent = state.macro?.next?.isVeto ? "Sí" : "No";
 
         renderReasons(state.reasons);
       } catch(err){
         console.error(err);
         qs("headerMeta").textContent = "Error cargando datos";
-        qs("summaryText").textContent = "No se pudo cargar data/state.json";
         qs("decisionText").textContent = "Error";
-        qs("decisionText").className = "decision red";
-        qs("scorePill").className = "score-pill red";
-        qs("scoreValue").textContent = "--";
-        renderReasons([err.message || "Error cargando dashboard"]);
+        qs("summaryText").textContent = err.message || "No se pudo cargar state.json";
+        renderReasons([err.message || "Error"]);
       }
     }
 
     qs("refreshBtn").addEventListener("click", loadDashboard);
-
     loadDashboard();
     setInterval(loadDashboard, 60000);
   </script>
