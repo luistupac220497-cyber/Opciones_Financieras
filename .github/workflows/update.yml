@@ -1,22 +1,21 @@
 name: Update QQQ Dashboard
 
 on:
-  schedule:
-    - cron: "*/10 * * * 1-5"
   workflow_dispatch:
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+  schedule:
+    - cron: "*/15 * * * 1-5"
 
 concurrency:
-  group: "pages"
+  group: update-dashboard
   cancel-in-progress: true
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -27,52 +26,31 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Generate data files
+      - name: Run dashboard builder
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
         run: |
           python scripts/build_data.py
 
-      - name: Debug generated files
+      - name: Verify generated files
         run: |
-          echo "PWD:"
-          pwd
-          echo "ROOT:"
           ls -la
-          echo "DATA:"
           ls -la data || true
-          echo "STATE HEAD:"
-          head -n 80 data/state.json || true
-          echo "HISTORY HEAD:"
-          head -n 80 data/history.json || true
+          test -f data/state.json
+          test -f data/history.json
 
-      - name: Commit and push if changed
+      - name: Commit generated files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/state.json data/history.json
-          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update dashboard data"
+          git diff --staged --quiet || git commit -m "Auto-update dashboard data"
+
+      - name: Push changes
+        run: |
           git push
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: .
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
