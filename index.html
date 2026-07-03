@@ -8,78 +8,36 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
   <style>
     :root{
-      --bg:#0b1220;
-      --panel:#121a2b;
-      --panel-2:#182236;
-      --line:#26324a;
-      --text:#edf3ff;
-      --muted:#97a6c0;
-      --green:#22c55e;
-      --yellow:#f59e0b;
-      --red:#ef4444;
-      --shadow:0 16px 40px rgba(0,0,0,.28);
-      --radius:18px;
+      --bg:#0b1220;--panel:#121a2b;--panel-2:#182236;--line:#26324a;--text:#edf3ff;--muted:#97a6c0;
+      --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--shadow:0 16px 40px rgba(0,0,0,.28);--radius:18px;
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{
-      font-family:"Satoshi",system-ui,sans-serif;
-      background:linear-gradient(180deg,#0a0f1a 0%,#0b1220 100%);
-      color:var(--text);
-      min-height:100vh;
-    }
+    *{box-sizing:border-box} html,body{margin:0;padding:0}
+    body{font-family:"Satoshi",system-ui,sans-serif;background:linear-gradient(180deg,#0a0f1a 0%,#0b1220 100%);color:var(--text);min-height:100vh}
     .wrap{width:min(1100px,calc(100% - 24px));margin:24px auto 50px}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
     .title{margin:0;font-size:clamp(1.5rem,2vw,2rem);font-weight:900}
     .meta{color:var(--muted);font-size:.95rem}
-    .btn{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      color:var(--text);
-      width:44px;height:44px;border-radius:12px;cursor:pointer
-    }
+    .btn{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);width:44px;height:44px;border-radius:12px;cursor:pointer}
     .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:18px}
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-    }
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
     .hero-main{padding:22px;display:flex;flex-direction:column;gap:18px}
     .eyebrow{color:var(--muted);font-size:.82rem;text-transform:uppercase;letter-spacing:.12em}
     .decision{font-size:clamp(2rem,4vw,3.2rem);line-height:1;font-weight:900;margin:8px 0}
-    .decision.green{color:var(--green)}
-    .decision.yellow{color:var(--yellow)}
-    .decision.red{color:var(--red)}
-    .score{
-      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;
-      border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:800
-    }
-    .summary{color:var(--text)}
+    .decision.green{color:var(--green)} .decision.yellow{color:var(--yellow)} .decision.red{color:var(--red)}
+    .score{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:800}
     .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    .mini{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:14px}
-    .mini-label{color:var(--muted);font-size:.82rem;margin-bottom:6px}
-    .mini-value{font-size:1.2rem;font-weight:800}
+    .mini,.block{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .mini-label,.block-title{color:var(--muted);font-size:.82rem;margin-bottom:6px}
+    .mini-value,.block-value{font-size:1.15rem;font-weight:800}
     .side{padding:20px;display:flex;flex-direction:column;gap:12px}
-    .block{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:14px}
-    .block-title{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
-    .block-value{font-size:1.08rem;font-weight:800}
     .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
     .panel{padding:18px}
     .panel h3{margin:0 0 14px;font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
     .kv{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.05)}
     .kv:first-of-type{border-top:none;padding-top:0}
-    .k{color:var(--muted)}
-    .v{font-weight:700;text-align:right}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:.85rem}
-    @media (max-width:980px){
-      .hero,.grid3{grid-template-columns:1fr}
-      .grid4{grid-template-columns:repeat(2,1fr)}
-    }
-    @media (max-width:640px){
-      .grid4{grid-template-columns:1fr 1fr}
-    }
+    .k{color:var(--muted)} .v{font-weight:700;text-align:right}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:.85rem}
+    @media (max-width:980px){.hero,.grid3{grid-template-columns:1fr}.grid4{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
 <body>
@@ -96,42 +54,20 @@
       <article class="card hero-main">
         <div class="eyebrow">Decisión operativa</div>
         <div class="decision yellow" id="decisionText">Cargando...</div>
-        <div class="score" id="scorePill">Score <span id="scoreValue">--</span></div>
-        <div class="summary" id="summaryText">Esperando datos...</div>
-
+        <div class="score">Score <span id="scoreValue">--</span></div>
+        <div id="summaryText">Esperando datos...</div>
         <div class="grid4">
-          <div class="mini">
-            <div class="mini-label">Precio</div>
-            <div class="mini-value" id="priceValue">--</div>
-          </div>
-          <div class="mini">
-            <div class="mini-label">Short</div>
-            <div class="mini-value" id="shortStrikeValue">--</div>
-          </div>
-          <div class="mini">
-            <div class="mini-label">Long</div>
-            <div class="mini-value" id="longStrikeValue">--</div>
-          </div>
-          <div class="mini">
-            <div class="mini-label">Macro</div>
-            <div class="mini-value" id="macroCountdown">--</div>
-          </div>
+          <div class="mini"><div class="mini-label">Precio</div><div class="mini-value" id="priceValue">--</div></div>
+          <div class="mini"><div class="mini-label">Short</div><div class="mini-value" id="shortStrikeValue">--</div></div>
+          <div class="mini"><div class="mini-label">Long</div><div class="mini-value" id="longStrikeValue">--</div></div>
+          <div class="mini"><div class="mini-label">Macro</div><div class="mini-value" id="macroCountdown">--</div></div>
         </div>
       </article>
 
       <aside class="card side">
-        <div class="block">
-          <div class="block-title">Freshness</div>
-          <div class="block-value"><span id="freshnessStatus">--</span> · <span id="freshnessValue">--</span></div>
-        </div>
-        <div class="block">
-          <div class="block-title">Riesgo</div>
-          <div class="block-value" id="riskValue">--</div>
-        </div>
-        <div class="block">
-          <div class="block-title">OptionStrat</div>
-          <div class="block-value" id="optionStratConfirmValue">--</div>
-        </div>
+        <div class="block"><div class="block-title">Freshness</div><div class="block-value"><span id="freshnessStatus">--</span> · <span id="freshnessValue">--</span></div></div>
+        <div class="block"><div class="block-title">Riesgo</div><div class="block-value" id="riskValue">--</div></div>
+        <div class="block"><div class="block-title">Finviz</div><div class="block-value" id="finvizStatus">--</div></div>
       </aside>
     </section>
 
@@ -145,17 +81,17 @@
       </article>
 
       <article class="card panel">
-        <h3>OptionStrat</h3>
-        <div class="kv"><div class="k">Short volume</div><div class="v" id="osShortVol">--</div></div>
-        <div class="kv"><div class="k">Long volume</div><div class="v" id="osLongVol">--</div></div>
-        <div class="kv"><div class="k">Short OI</div><div class="v" id="osShortOI">--</div></div>
-        <div class="kv"><div class="k">Bias</div><div class="v" id="osBias">--</div></div>
+        <h3>Finviz opciones</h3>
+        <div class="kv"><div class="k">Short bid/ask</div><div class="v" id="shortBidAsk">--</div></div>
+        <div class="kv"><div class="k">Short volume</div><div class="v" id="finvizVol">--</div></div>
+        <div class="kv"><div class="k">Short OI</div><div class="v" id="finvizOI">--</div></div>
+        <div class="kv"><div class="k">Source</div><div class="v" id="finvizSource">--</div></div>
       </article>
 
       <article class="card panel">
         <h3>Estado</h3>
         <div class="kv"><div class="k">Sesión</div><div class="v" id="sessionValue">--</div></div>
-        <div class="kv"><div class="k">Source</div><div class="v" id="sourceValue">--</div></div>
+        <div class="kv"><div class="k">Price source</div><div class="v" id="sourceValue">--</div></div>
         <div class="kv"><div class="k">Quotes</div><div class="v" id="quotesValue">--</div></div>
         <div class="kv"><div class="k">Liquidez</div><div class="v" id="liquidityValue">--</div></div>
       </article>
@@ -169,18 +105,14 @@
 
   <script>
     const qs = (id) => document.getElementById(id);
-
-    function fmtMoney(v){ return v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`; }
-    function fmtPct(v){ return v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`; }
-    function fmtNum(v){ return v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v)}`; }
-    function fmtText(v, fallback="--"){ return v == null || v === "" ? fallback : String(v); }
-    function yesNo(v){ if (v === true) return "Sí"; if (v === false) return "No"; return "--"; }
+    const fmtMoney = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`;
+    const fmtPct = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`;
+    const fmtNum = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v)}`;
+    const fmtText = (v, f="--") => v == null || v === "" ? f : String(v);
+    const yesNo = (v) => v === true ? "Sí" : v === false ? "No" : "--";
 
     function applyTone(tone){
-      const d = qs("decisionText");
-      const score = qs("scorePill");
-      d.className = `decision ${tone || "yellow"}`;
-      score.style.color = tone === "green" ? "#22c55e" : tone === "red" ? "#ef4444" : "#f59e0b";
+      qs("decisionText").className = `decision ${tone || "yellow"}`;
     }
 
     async function fetchFresh(url){
@@ -192,8 +124,7 @@
     function renderReasons(list){
       const box = qs("reasonsChips");
       box.innerHTML = "";
-      const arr = Array.isArray(list) && list.length ? list : ["Sin motivos"];
-      arr.forEach(item => {
+      (Array.isArray(list) && list.length ? list : ["Sin motivos"]).forEach(item => {
         const el = document.createElement("span");
         el.className = "chip";
         el.textContent = item;
@@ -204,34 +135,36 @@
     async function loadDashboard(){
       try{
         const state = await fetchFresh("./data/state.json");
-        qs("headerMeta").textContent = fmtText(state.updatedAtNY || state.updatedAtText, "Sin hora");
-        qs("decisionText").textContent = fmtText(state.decisionLabel, "--");
+        qs("headerMeta").textContent = fmtText(state.updatedAtNY || state.updatedAtText);
+        qs("decisionText").textContent = fmtText(state.decisionLabel);
         qs("scoreValue").textContent = state.score ?? "--";
-        qs("summaryText").textContent = fmtText(state.summary, "--");
+        qs("summaryText").textContent = fmtText(state.summary);
         applyTone(state.decisionTone);
 
         qs("priceValue").textContent = fmtMoney(state.price);
         qs("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
         qs("longStrikeValue").textContent = fmtMoney(state.trade?.longStrike);
-        qs("macroCountdown").textContent = fmtText(state.macro?.next?.countdown, "--");
+        qs("macroCountdown").textContent = fmtText(state.macro?.next?.countdown);
 
-        qs("freshnessStatus").textContent = fmtText(state.freshness?.status, "--");
+        qs("freshnessStatus").textContent = fmtText(state.freshness?.status);
         qs("freshnessValue").textContent = state.freshness?.ageMinutes != null ? `${state.freshness.ageMinutes}m` : "--";
-        qs("riskValue").textContent = fmtText(state.riskLabel, "--");
-        qs("optionStratConfirmValue").textContent = state.optionStrat?.strikeConfirmed ? "Confirmado" : "Sin confirmar";
+        qs("riskValue").textContent = fmtText(state.riskLabel);
+        qs("finvizStatus").textContent = state.finviz?.used ? "OK experimental" : "Sin datos";
 
         qs("bufferValue").textContent = fmtPct(state.trade?.bufferDynamicPct);
         qs("breakevenValue").textContent = fmtMoney(state.trade?.breakeven);
         qs("creditValue").textContent = fmtMoney(state.trade?.netCredit);
         qs("expectedMoveValue").textContent = fmtMoney(state.expectedMove?.move);
 
-        qs("osShortVol").textContent = fmtNum(state.optionStrat?.shortVolume);
-        qs("osLongVol").textContent = fmtNum(state.optionStrat?.longVolume);
-        qs("osShortOI").textContent = fmtNum(state.optionStrat?.shortOI);
-        qs("osBias").textContent = fmtText(state.optionStrat?.volumeBias, "--");
+        const bid = fmtMoney(state.finviz?.shortBid);
+        const ask = fmtMoney(state.finviz?.shortAsk);
+        qs("shortBidAsk").textContent = `${bid} / ${ask}`;
+        qs("finvizVol").textContent = fmtNum(state.finviz?.shortVolume);
+        qs("finvizOI").textContent = fmtNum(state.finviz?.shortOI);
+        qs("finvizSource").textContent = fmtText(state.finviz?.source);
 
-        qs("sessionValue").textContent = fmtText(state.session?.label, "--");
-        qs("sourceValue").textContent = fmtText(state.source, "--");
+        qs("sessionValue").textContent = fmtText(state.session?.label);
+        qs("sourceValue").textContent = fmtText(state.source);
         qs("quotesValue").textContent = yesNo(state.options?.quotesUsable);
         qs("liquidityValue").textContent = yesNo(state.options?.liquidityOk);
 
