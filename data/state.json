@@ -7,14 +7,14 @@
   "tone": "down",
   "source": "finnhub_quote",
   "lastBarAt": "2026-07-02T20:00:00+00:00",
-  "updatedAt": "2026-07-03T11:00:44.754401+00:00",
-  "updatedAtText": "2026-07-03 11:00:44 UTC",
-  "updatedAtNY": "2026-07-03 07:00:44 ET",
+  "updatedAt": "2026-07-03T11:04:28.536764+00:00",
+  "updatedAtText": "2026-07-03 11:04:28 UTC",
+  "updatedAtNY": "2026-07-03 07:04:28 ET",
   "session": {
     "code": "premarket",
     "label": "Premarket"
   },
-  "summary": "precio $712.6 · short -- · long -- · Finviz sin datos · macro 1h 29m",
+  "summary": "precio $712.6 · short -- · long -- · Finviz sin datos · macro 1h 25m",
   "trade": {
     "bufferBasePct": 2.2,
     "bufferDynamicPct": 2.2,
@@ -42,7 +42,7 @@
     "used": false,
     "source": "finviz_experimental",
     "sourceUrl": null,
-    "updatedAt": "2026-07-03T11:00:45.228978+00:00",
+    "updatedAt": "2026-07-03T11:04:29.279681+00:00",
     "shortStrike": null,
     "longStrike": null,
     "shortBid": null,
@@ -84,7 +84,7 @@
     "status": "OK"
   },
   "freshness": {
-    "ageMinutes": 900.75,
+    "ageMinutes": 904.48,
     "thresholdMinutes": 20,
     "isStale": true,
     "status": "Stale"
@@ -113,8 +113,8 @@
       "timeNY": "08:30",
       "dias": 0,
       "horas": 1,
-      "totalHoras": 1.49,
-      "countdown": "1h 29m",
+      "totalHoras": 1.43,
+      "countdown": "1h 25m",
       "momento": "Antes de la apertura",
       "status": "upcoming",
       "isVeto": true
@@ -129,8 +129,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 1,
-        "totalHoras": 1.49,
-        "countdown": "1h 29m",
+        "totalHoras": 1.43,
+        "countdown": "1h 25m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -146,8 +146,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 1,
-        "totalHoras": 1.49,
-        "countdown": "1h 29m",
+        "totalHoras": 1.43,
+        "countdown": "1h 25m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
