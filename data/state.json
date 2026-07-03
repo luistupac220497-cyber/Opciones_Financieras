@@ -7,14 +7,14 @@
   "tone": "flat",
   "source": "error",
   "lastBarAt": null,
-  "updatedAt": "2026-07-03T09:32:59.292800+00:00",
-  "updatedAtText": "2026-07-03 09:32:59 UTC",
-  "updatedAtNY": "2026-07-03 05:32:59 ET",
+  "updatedAt": "2026-07-03T09:37:39.483113+00:00",
+  "updatedAtText": "2026-07-03 09:37:39 UTC",
+  "updatedAtNY": "2026-07-03 05:37:39 ET",
   "session": {
     "code": "error",
     "label": "Error"
   },
-  "summary": "Error generando estado: 403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898379&to=1783071179&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g",
+  "summary": "Error generando estado: 403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898659&to=1783071459&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g",
   "trade": {
     "bufferBasePct": null,
     "bufferDynamicPct": null,
@@ -44,9 +44,9 @@
     "quotesUsable": false,
     "liquidityOk": false,
     "deltaOk": false,
-    "notes": "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898379&to=1783071179&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g",
+    "notes": "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898659&to=1783071459&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g",
     "issues": [
-      "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898379&to=1783071179&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g"
+      "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898659&to=1783071459&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g"
     ]
   },
   "vwap": {
@@ -87,7 +87,7 @@
   "decisionLabel": "no entrar",
   "riskLabel": "Riesgo alto",
   "reasons": [
-    "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898379&to=1783071179&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g"
+    "403 Client Error: Forbidden for url: https://finnhub.io/api/v1/stock/candle?symbol=QQQ&resolution=5&from=1782898659&to=1783071459&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g"
   ],
   "alerts": [],
   "macro": {
@@ -101,8 +101,8 @@
       "timeNY": "08:30",
       "dias": 0,
       "horas": 2,
-      "totalHoras": 2.95,
-      "countdown": "2h 57m",
+      "totalHoras": 2.87,
+      "countdown": "2h 52m",
       "momento": "Antes de la apertura",
       "status": "upcoming",
       "isVeto": true
@@ -117,8 +117,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 2,
-        "totalHoras": 2.95,
-        "countdown": "2h 57m",
+        "totalHoras": 2.87,
+        "countdown": "2h 52m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -134,8 +134,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 2,
-        "totalHoras": 2.95,
-        "countdown": "2h 57m",
+        "totalHoras": 2.87,
+        "countdown": "2h 52m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
