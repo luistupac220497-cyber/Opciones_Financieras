@@ -7,14 +7,14 @@
   "tone": "down",
   "source": "intraday_5m",
   "lastBarAt": "2026-07-02T23:55:00+00:00",
-  "updatedAt": "2026-07-03T07:59:56.508732+00:00",
-  "updatedAtText": "2026-07-03 07:59:56 UTC",
-  "updatedAtNY": "2026-07-03 03:59:55 ET",
+  "updatedAt": "2026-07-03T08:00:53.040626+00:00",
+  "updatedAtText": "2026-07-03 08:00:53 UTC",
+  "updatedAtNY": "2026-07-03 04:00:52 ET",
   "session": {
-    "code": "overnight",
-    "label": "Overnight"
+    "code": "premarket",
+    "label": "Premarket"
   },
-  "summary": "buffer 2.42% · short $732.00 · crédito $0.03 · macro 4h 30m · tramo overnight",
+  "summary": "buffer 2.42% · short $732.00 · crédito $0.03 · macro 4h 29m · tramo premarket",
   "trade": {
     "bufferBasePct": 1.85,
     "bufferDynamicPct": 2.42,
@@ -84,7 +84,7 @@
     "status": "OK"
   },
   "freshness": {
-    "ageMinutes": 484.94,
+    "ageMinutes": 485.88,
     "thresholdMinutes": 3,
     "isStale": true,
     "status": "Stale"
@@ -114,8 +114,8 @@
       "timeNY": "08:30",
       "dias": 0,
       "horas": 4,
-      "totalHoras": 4.5,
-      "countdown": "4h 30m",
+      "totalHoras": 4.49,
+      "countdown": "4h 29m",
       "momento": "Antes de la apertura",
       "status": "upcoming",
       "isVeto": true
@@ -130,8 +130,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 4,
-        "totalHoras": 4.5,
-        "countdown": "4h 30m",
+        "totalHoras": 4.49,
+        "countdown": "4h 29m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
@@ -147,8 +147,8 @@
         "timeNY": "08:30",
         "dias": 0,
         "horas": 4,
-        "totalHoras": 4.5,
-        "countdown": "4h 30m",
+        "totalHoras": 4.49,
+        "countdown": "4h 29m",
         "momento": "Antes de la apertura",
         "status": "upcoming",
         "isVeto": true
