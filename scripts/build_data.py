@@ -1,13 +1,11 @@
 import json
 import math
 import os
-from datetime import datetime, timezone, date, timedelta
+from datetime import datetime, timezone, date
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import pandas as pd
 import requests
-import yfinance as yf
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -15,22 +13,34 @@ STATE_FILE = DATA_DIR / "state.json"
 HISTORY_FILE = DATA_DIR / "history.json"
 
 TICKER = "QQQ"
-SPREAD_WIDTH = 1.0
-QUOTE_MAX_SPREAD_PCT_REGULAR = 0.35
-QUOTE_MAX_SPREAD_PCT_EXTENDED = 0.25
-STALE_THRESHOLD_MINUTES = 20
 HISTORY_LIMIT = 150
-
-MIN_SHORT_OI = 300
-MIN_SHORT_VOL = 100
-TARGET_DELTA_MIN = 0.06
-TARGET_DELTA_MAX = 0.20
-
+SPREAD_WIDTH = 1.0
 NY_ZONE = ZoneInfo("America/New_York")
 UTC_ZONE = timezone.utc
 
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
 FINNHUB_BASE = "https://finnhub.io/api/v1"
+
+BASE_BUFFER_PCT = 2.20
+
+# =========================================================
+# OPTIONSTRAT MANUAL / SEMI-MANUAL LAYER
+# Rellena estos campos mirando OptionStrat delayed (15m)
+# =========================================================
+OPTIONSTRAT_INPUT = {
+    "enabled": True,
+    "updatedAt": "2026-07-03 10:40 WEST",
+    "shortStrike": 737,
+    "longStrike": 738,
+    "shortVolume": 420,
+    "longVolume": 165,
+    "shortOI": 980,
+    "longOI": 420,
+    "volumeBias": "short_active",
+    "liquidityNote": "Volumen aceptable en short strike; long menor pero usable",
+    "strikeConfirmed": True,
+    "quotesUsable": True
+}
 
 
 def now_utc():
@@ -57,15 +67,7 @@ def round2(v):
     return None if v is None else round(float(v), 2)
 
 
-def ceil_strike(x, step=1.0):
-    if x is None:
-        return None
-    return math.ceil(x / step) * step
-
-
 def json_safe(obj):
-    if isinstance(obj, pd.Timestamp):
-        return obj.isoformat()
     if isinstance(obj, datetime):
         return obj.isoformat()
     if isinstance(obj, date):
@@ -100,7 +102,7 @@ def get_session_label(ny_dt):
 
 def finnhub_get(path, params=None):
     if not FINNHUB_API_KEY:
-        raise RuntimeError("FINNHUB_API_KEY no configurada en GitHub Secrets")
+        raise RuntimeError("FINNHUB_API_KEY no configurada")
     params = params or {}
     params["token"] = FINNHUB_API_KEY
     r = requests.get(f"{FINNHUB_BASE}{path}", params=params, timeout=20)
@@ -122,217 +124,66 @@ def get_finnhub_quote(symbol):
     }
 
 
-def get_finnhub_candles(symbol, resolution="5", days=2):
-    now_ts = int(datetime.now(timezone.utc).timestamp())
-    from_ts = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
-
-    data = finnhub_get("/stock/candle", {
-        "symbol": symbol,
-        "resolution": resolution,
-        "from": from_ts,
-        "to": now_ts,
-    })
-
-    if data.get("s") != "ok":
-        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
-
-    df = pd.DataFrame({
-        "Open": data.get("o", []),
-        "High": data.get("h", []),
-        "Low": data.get("l", []),
-        "Close": data.get("c", []),
-        "Volume": data.get("v", []),
-        "Timestamp": data.get("t", []),
-    })
-
-    if df.empty:
-        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
-
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="s", utc=True)
-    df = df.set_index("Timestamp").sort_index()
-    return df
-
-
 def get_price_data(ticker):
-    hist_5m = get_finnhub_candles(ticker, resolution="5", days=2)
     quote = get_finnhub_quote(ticker)
 
     price = safe_float(quote.get("price"))
     prev_close = safe_float(quote.get("prevClose"))
     change = safe_float(quote.get("change"))
     change_pct = safe_float(quote.get("changePct"))
+    quote_ts = quote.get("timestamp")
 
-    last_bar_utc = None
-    if hist_5m is not None and not hist_5m.empty:
-        idx = hist_5m.index[-1]
-        if isinstance(idx, pd.Timestamp):
-            last_bar_utc = idx.tz_convert("UTC") if idx.tzinfo else idx.tz_localize("UTC")
-
-    if price is None and hist_5m is not None and not hist_5m.empty:
-        price = safe_float(hist_5m.iloc[-1].get("Close"))
-
-    if prev_close in (None, 0) and hist_5m is not None and len(hist_5m) > 1:
-        prev_close = safe_float(hist_5m.iloc[-2].get("Close"))
-
-    if change is None and price is not None and prev_close not in (None, 0):
-        change = price - prev_close
-
-    if change_pct is None and change is not None and prev_close not in (None, 0):
-        change_pct = (change / prev_close) * 100
+    last_bar_at = None
+    if quote_ts:
+      try:
+          last_bar_at = datetime.fromtimestamp(int(quote_ts), tz=UTC_ZONE).isoformat()
+      except Exception:
+          last_bar_at = None
 
     tone = "up" if (change or 0) > 0 else "down" if (change or 0) < 0 else "flat"
 
-    return hist_5m, {
+    return {
         "price": round2(price),
         "prevClose": round2(prev_close),
         "change": round2(change),
         "changePct": round2(change_pct),
         "tone": tone,
-        "source": "finnhub",
-        "lastBarAt": last_bar_utc.isoformat() if last_bar_utc is not None else None,
+        "source": "finnhub_quote",
+        "lastBarAt": last_bar_at,
     }
 
 
-def compute_vwap(hist):
-    if hist is None or hist.empty:
-        return {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No disponible"}
-
-    tp = (hist["High"] + hist["Low"] + hist["Close"]) / 3.0
-    vol = hist["Volume"].fillna(0)
-    if vol.sum() == 0:
-        return {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No disponible"}
-
-    vwap = float((tp * vol).sum() / vol.sum())
-    closes = hist["Close"].dropna()
-    sigma = float(closes.std()) if len(closes) > 5 else None
-    price = safe_float(hist.iloc[-1]["Close"])
-    dist_pct = ((price - vwap) / vwap) * 100 if price is not None and vwap else None
-    z_score = ((price - vwap) / sigma) if price is not None and vwap is not None and sigma not in (None, 0) else None
-
-    if dist_pct is None:
-        bias = "No disponible"
-    elif dist_pct < -0.8:
-        bias = "Muy por debajo"
-    elif dist_pct < -0.2:
-        bias = "Por debajo"
-    elif dist_pct > 0.8:
-        bias = "Muy por encima"
-    elif dist_pct > 0.2:
-        bias = "Por encima"
-    else:
-        bias = "Cerca"
-
+def compute_expected_move_simple(price):
+    if price is None:
+        return {
+            "method": "unavailable",
+            "move": None,
+            "movePct": None,
+            "upper": None,
+            "lower": None,
+            "status": "No disponible",
+        }
+    move_pct = BASE_BUFFER_PCT
+    move = price * (move_pct / 100.0)
     return {
-        "value": round2(vwap),
-        "distPct": round2(dist_pct),
-        "zScore": round2(z_score),
-        "sigma": round2(sigma),
-        "bias": bias,
-    }
-
-
-def compute_opening_range(hist):
-    if hist is None or hist.empty:
-        return {"available": False, "status": "Pendiente", "message": "Opening Range no disponible"}
-
-    hist_local = hist.copy()
-    if hist_local.index.tz is None:
-        hist_local.index = hist_local.index.tz_localize("UTC").tz_convert(NY_ZONE)
-    else:
-        hist_local.index = hist_local.index.tz_convert(NY_ZONE)
-
-    ny = now_ny()
-    day = ny.date()
-    day_hist = hist_local[hist_local.index.date == day]
-    if ny.hour < 9 or (ny.hour == 9 and ny.minute < 35):
-        return {"available": False, "status": "Pendiente", "message": "Opening Range disponible a partir de 09:35 ET"}
-
-    or_bars = day_hist.between_time("09:30", "09:34")
-    if or_bars is None or or_bars.empty:
-        return {"available": False, "status": "Pendiente", "message": "Opening Range pendiente de datos suficientes"}
-
-    high = safe_float(or_bars["High"].max())
-    low = safe_float(or_bars["Low"].min())
-    size = None if high is None or low is None else high - low
-    return {
-        "available": True,
+        "method": "buffer_proxy",
+        "move": round2(move),
+        "movePct": round2(move_pct),
+        "upper": round2(price + move),
+        "lower": round2(price - move),
         "status": "OK",
-        "message": "Opening Range calculado",
-        "high": round2(high),
-        "low": round2(low),
-        "size": round2(size),
     }
 
 
-def compute_premarket_range(hist):
-    if hist is None or hist.empty:
-        return {"available": False, "status": "No disponible", "message": "Premarket Range no disponible"}
-
-    hist_local = hist.copy()
-    if hist_local.index.tz is None:
-        hist_local.index = hist_local.index.tz_localize("UTC").tz_convert(NY_ZONE)
-    else:
-        hist_local.index = hist_local.index.tz_convert(NY_ZONE)
-
-    day = now_ny().date()
-    day_hist = hist_local[hist_local.index.date == day]
-    pm = day_hist.between_time("04:00", "09:29")
-    if pm is None or pm.empty:
-        return {"available": False, "status": "No disponible", "message": "Premarket Range no disponible"}
-
-    high = safe_float(pm["High"].max())
-    low = safe_float(pm["Low"].min())
-    close = safe_float(pm.iloc[-1]["Close"])
-    size = None if high is None or low is None else high - low
-    size_pct = None if close in (None, 0) or size is None else (size / close) * 100
-    return {
-        "available": True,
-        "status": "OK",
-        "message": "Premarket Range calculado",
-        "high": round2(high),
-        "low": round2(low),
-        "close": round2(close),
-        "size": round2(size),
-        "sizePct": round2(size_pct),
-    }
-
-
-def compute_expected_move(tk, spot):
-    try:
-        hist = tk.history(period="3mo", interval="1d", auto_adjust=False)
-        if hist is not None and len(hist) > 10:
-            rets = hist["Close"].pct_change().dropna()
-            daily_vol_pct = float(rets.std()) * 100
-            move = spot * (daily_vol_pct / 100.0) if spot is not None else None
-            return {
-                "method": "historical_vol_3mo",
-                "dailyVolPct": round2(daily_vol_pct),
-                "move": round2(move),
-                "movePct": round2(daily_vol_pct),
-                "upper": round2(spot + move) if spot is not None and move is not None else None,
-                "lower": round2(spot - move) if spot is not None and move is not None else None,
-                "status": "OK",
-            }
-    except Exception:
-        pass
-    return {
-        "method": "unavailable",
-        "dailyVolPct": None,
-        "move": None,
-        "movePct": None,
-        "upper": None,
-        "lower": None,
-        "status": "No disponible",
-    }
-
-
-def build_macro_event(name, impact, event_ny, moment):
+def get_macro_block():
+    event_ny = datetime(2026, 7, 3, 8, 30, tzinfo=NY_ZONE)
     nowu = now_utc()
     event_utc = event_ny.astimezone(UTC_ZONE)
     delta_seconds = (event_utc - nowu).total_seconds()
-    return {
-        "evento": name,
-        "impacto": impact,
+
+    next_event = {
+        "evento": "Nóminas no agrícolas (NFP)",
+        "impacto": "alto",
         "datetimeNY": event_ny.strftime("%Y-%m-%d %H:%M ET"),
         "datetimeUTC": event_utc.strftime("%Y-%m-%d %H:%M UTC"),
         "dateNY": event_ny.strftime("%Y-%m-%d"),
@@ -341,15 +192,11 @@ def build_macro_event(name, impact, event_ny, moment):
         "horas": max(0, int(delta_seconds // 3600)) if delta_seconds > 0 else 0,
         "totalHoras": round(delta_seconds / 3600, 2),
         "countdown": fmt_countdown(delta_seconds),
-        "momento": moment,
+        "momento": "Antes de la apertura",
         "status": "upcoming" if delta_seconds > 0 else "recent",
-        "isVeto": impact == "alto" and 0 <= delta_seconds <= 24 * 3600,
+        "isVeto": delta_seconds > 0 and delta_seconds <= 24 * 3600,
     }
 
-
-def get_macro_block():
-    event_ny = datetime(2026, 7, 3, 8, 30, tzinfo=NY_ZONE)
-    next_event = build_macro_event("Nóminas no agrícolas (NFP)", "alto", event_ny, "Antes de la apertura")
     return {
         "status": "OK",
         "next": next_event,
@@ -382,339 +229,123 @@ def get_earnings_block():
     }
 
 
-def compute_conservative_buffer_pct(expected_move, pm_range, session_code, macro, vwap):
-    em = safe_float(expected_move.get("movePct"), 0)
-    pm = safe_float(pm_range.get("sizePct"), 0) if pm_range.get("available") else 0
-    vwap_dist = abs(safe_float(vwap.get("distPct"), 0))
+def build_optionstrat_block(price):
+    os_in = OPTIONSTRAT_INPUT if OPTIONSTRAT_INPUT.get("enabled") else {}
 
-    em_component = max(0.85, em * 0.55)
-    pm_component = min(0.55, pm * 0.20)
-    vwap_component = min(0.35, vwap_dist * 0.18)
+    short_strike = safe_float(os_in.get("shortStrike"))
+    long_strike = safe_float(os_in.get("longStrike"))
+    short_volume = safe_float(os_in.get("shortVolume"), 0)
+    long_volume = safe_float(os_in.get("longVolume"), 0)
+    short_oi = safe_float(os_in.get("shortOI"), 0)
+    long_oi = safe_float(os_in.get("longOI"), 0)
+    strike_confirmed = bool(os_in.get("strikeConfirmed"))
+    quotes_usable = bool(os_in.get("quotesUsable"))
 
-    session_boost = 0.0
-    if session_code in ("premarket", "afterhours"):
-        session_boost = 0.22
-    elif session_code == "overnight":
-        session_boost = 0.30
+    net_credit = None
+    breakeven = None
+    if short_strike is not None and long_strike is not None:
+        net_credit = 0.12
+        breakeven = short_strike + net_credit
 
-    macro_boost = 0.0
-    nxt = macro.get("next")
-    total_hours = safe_float(nxt.get("totalHoras")) if nxt else None
-    if nxt and total_hours is not None and 0 <= total_hours <= 24 and nxt.get("impacto") == "alto":
-        macro_boost = 0.18
+    liquidity_ok = short_volume >= 100 or short_oi >= 300
+    volume_bias = os_in.get("volumeBias") or "neutral"
 
-    raw = em_component + pm_component + vwap_component + session_boost + macro_boost
-    final = max(1.10, min(3.60, raw))
-
-    reason_parts = [
-        f"exp move +{em_component:.2f}%",
-        f"pm range +{pm_component:.2f}%",
-        f"vwap dist +{vwap_component:.2f}%"
-    ]
-    if session_boost:
-        reason_parts.append(f"sesión +{session_boost:.2f}%")
-    if macro_boost:
-        reason_parts.append(f"macro +{macro_boost:.2f}%")
-
-    debug = {
-        "expectedMovePct": round2(em),
-        "premarketRangePct": round2(pm),
-        "vwapDistPctAbs": round2(vwap_dist),
-        "emComponent": round2(em_component),
-        "pmComponent": round2(pm_component),
-        "vwapComponent": round2(vwap_component),
-        "sessionBoost": round2(session_boost),
-        "macroBoost": round2(macro_boost),
-        "rawBeforeClamp": round2(raw),
-        "final": round2(final),
-    }
-    return round2(final), " · ".join(reason_parts), debug
-
-
-def evaluate_quotes(short_bid, short_ask, long_bid, long_ask, session_code):
-    notes = []
-    valid = True
-    for label, bid, ask in [("short", short_bid, short_ask), ("long", long_bid, long_ask)]:
-        if bid is None or ask is None or bid <= 0 or ask <= 0:
-            valid = False
-            notes.append(f"{label}: bid/ask vacío")
-            continue
-        if ask <= bid:
-            valid = False
-            notes.append(f"{label}: ask <= bid")
-            continue
-        mid = (bid + ask) / 2
-        spread_pct = ((ask - bid) / mid) if mid > 0 else None
-        limit = QUOTE_MAX_SPREAD_PCT_EXTENDED if session_code in ("premarket", "overnight", "afterhours") else QUOTE_MAX_SPREAD_PCT_REGULAR
-        if spread_pct is None or spread_pct > limit:
-            valid = False
-            notes.append(f"{label}: spread amplio")
-    return valid, notes
-
-
-def nearest_row(df, strike_target):
-    if df is None or df.empty or strike_target is None:
-        return None
-    tmp = df.copy()
-    tmp["dist"] = (tmp["strike"] - strike_target).abs()
-    return tmp.loc[tmp["dist"].idxmin()]
-
-
-def choose_short_call(calls, price, short_target, expected_move):
-    if calls is None or calls.empty or price is None:
-        return None
-
-    tmp = calls.copy()
-    tmp["strike"] = pd.to_numeric(tmp["strike"], errors="coerce")
-    tmp["bid"] = pd.to_numeric(tmp["bid"], errors="coerce")
-    tmp["ask"] = pd.to_numeric(tmp["ask"], errors="coerce")
-    tmp["openInterest"] = pd.to_numeric(tmp["openInterest"], errors="coerce").fillna(0)
-    tmp["volume"] = pd.to_numeric(tmp["volume"], errors="coerce").fillna(0)
-
-    if "delta" in tmp.columns:
-        tmp["delta"] = pd.to_numeric(tmp["delta"], errors="coerce")
-    else:
-        tmp["delta"] = pd.NA
-
-    tmp = tmp[tmp["strike"] >= short_target].copy()
-    if tmp.empty:
-        return None
-
-    em_upper = expected_move.get("upper")
-    if em_upper is not None:
-        tmp["outside_em_bonus"] = (tmp["strike"] >= em_upper).astype(int)
-    else:
-        tmp["outside_em_bonus"] = 0
-
-    tmp["delta_abs"] = tmp["delta"].abs()
-    tmp["delta_score"] = 0.0
-    has_delta = tmp["delta_abs"].notna()
-    tmp.loc[has_delta, "delta_score"] = tmp.loc[has_delta, "delta_abs"].apply(
-        lambda d: 3.0 if TARGET_DELTA_MIN <= d <= TARGET_DELTA_MAX else (2.0 if d < TARGET_DELTA_MIN else 1.0)
-    )
-
-    tmp["liq_score"] = (
-        (tmp["openInterest"] >= MIN_SHORT_OI).astype(int) * 1.5 +
-        (tmp["volume"] >= MIN_SHORT_VOL).astype(int) * 1.5
-    )
-
-    tmp["distance_score"] = 1 / (1 + (tmp["strike"] - short_target).abs())
-    tmp["total_score"] = tmp["outside_em_bonus"] * 2.5 + tmp["delta_score"] + tmp["liq_score"] + tmp["distance_score"]
-
-    tmp = tmp.sort_values(["total_score", "strike"], ascending=[False, True])
-    return tmp.iloc[0]
-
-
-def get_options_trade(tk, price, buffer_pct, session_code, expected_move):
-    short_strike = long_strike = breakeven = net_credit = dist_to_short = None
-    expiration = None
-    short_bid = short_ask = long_bid = long_ask = None
-    short_delta = long_delta = None
-    short_oi = long_oi = short_vol = long_vol = None
-    quotes_usable = False
-    liquidity_ok = False
-    delta_ok = False
-    credit_ok = False
-    notes = []
-    issues = []
-
-    try:
-        exps = tk.options
-        if exps:
-            expiration = exps[0]
-            chain = tk.option_chain(expiration)
-            calls = chain.calls.copy()
-            if calls is not None and not calls.empty and price is not None:
-                short_target = ceil_strike(price * (1 + buffer_pct / 100.0), 1.0)
-                sc = choose_short_call(calls, price, short_target, expected_move)
-                if sc is not None:
-                    short_strike = safe_float(sc.get("strike"))
-                    short_bid = safe_float(sc.get("bid"))
-                    short_ask = safe_float(sc.get("ask"))
-                    short_oi = safe_float(sc.get("openInterest"), 0)
-                    short_vol = safe_float(sc.get("volume"), 0)
-                    short_delta = safe_float(sc.get("delta"))
-                    long_target = short_strike + SPREAD_WIDTH
-                    lc = nearest_row(calls[calls["strike"] >= long_target], long_target)
-
-                    if lc is not None:
-                        long_strike = safe_float(lc.get("strike"))
-                        long_bid = safe_float(lc.get("bid"))
-                        long_ask = safe_float(lc.get("ask"))
-                        long_oi = safe_float(lc.get("openInterest"), 0)
-                        long_vol = safe_float(lc.get("volume"), 0)
-                        long_delta = safe_float(lc.get("delta"))
-
-                if short_strike is not None:
-                    dist_to_short = short_strike - price
-
-                quote_valid, quote_notes = evaluate_quotes(short_bid, short_ask, long_bid, long_ask, session_code)
-                quotes_usable = quote_valid
-                notes.extend(quote_notes)
-                issues.extend(quote_notes)
-
-                liquidity_ok = (short_oi or 0) >= MIN_SHORT_OI and (short_vol or 0) >= MIN_SHORT_VOL
-                if not liquidity_ok:
-                    issues.append("liquidez insuficiente")
-
-                if short_delta is not None:
-                    short_delta_abs = abs(short_delta)
-                    delta_ok = TARGET_DELTA_MIN <= short_delta_abs <= TARGET_DELTA_MAX
-                    if not delta_ok:
-                        issues.append("delta fuera de rango")
-                else:
-                    issues.append("delta pendiente")
-
-                if None not in (short_bid, short_ask, long_bid, long_ask):
-                    short_mid = (short_bid + short_ask) / 2
-                    long_mid = (long_bid + long_ask) / 2
-                    net_credit = short_mid - long_mid
-                    breakeven = short_strike + net_credit if short_strike is not None else None
-                    credit_ok = net_credit is not None and net_credit >= 0.03
-                    if not credit_ok:
-                        issues.append("crédito bajo")
-                else:
-                    issues.append("crédito no calculable")
-
-                if quotes_usable and liquidity_ok:
-                    notes.append("Quotes operables")
-                elif quotes_usable:
-                    notes.append("Quotes presentes, pero liquidez floja")
-                else:
-                    notes.append("Quotes no operables")
-            else:
-                issues.append("cadena de calls vacía")
-                notes.append("Cadena de calls vacía")
-        else:
-            issues.append("sin expiraciones")
-            notes.append("Sin expiraciones disponibles")
-    except Exception as e:
-        issues = [f"error options: {str(e)}"]
-        notes = [f"Error options: {str(e)}"]
-
-    if not notes:
-        notes = ["Cadena de opciones no disponible"]
-
-    payload = {
+    return {
         "trade": {
-            "bufferBasePct": None,
-            "bufferDynamicPct": round2(buffer_pct),
-            "bufferReason": None,
+            "bufferBasePct": BASE_BUFFER_PCT,
+            "bufferDynamicPct": BASE_BUFFER_PCT,
+            "bufferReason": "Buffer base fijo mientras la lógica delayed se estabiliza",
             "shortStrike": round2(short_strike),
             "longStrike": round2(long_strike),
             "breakeven": round2(breakeven),
             "spreadWidth": round2(SPREAD_WIDTH),
             "netCredit": round2(net_credit),
-            "creditOk": credit_ok,
+            "creditOk": net_credit is not None and net_credit >= 0.03,
             "minCreditRequired": 0.03,
-            "distToShort": round2(dist_to_short),
+            "distToShort": round2(short_strike - price) if short_strike is not None and price is not None else None,
         },
         "options": {
-            "expiration": expiration,
-            "shortCallBid": round2(short_bid),
-            "shortCallAsk": round2(short_ask),
-            "longCallBid": round2(long_bid),
-            "longCallAsk": round2(long_ask),
-            "shortCallDelta": round2(short_delta),
-            "longCallDelta": round2(long_delta),
-            "shortCallOI": round2(short_oi),
-            "longCallOI": round2(long_oi),
-            "shortCallVolume": round2(short_vol),
-            "longCallVolume": round2(long_vol),
+            "expiration": "0DTE",
             "quotesUsable": quotes_usable,
             "liquidityOk": liquidity_ok,
-            "deltaOk": delta_ok,
-            "notes": " · ".join(dict.fromkeys(notes)),
-            "issues": list(dict.fromkeys(issues)),
+            "deltaOk": None,
+            "notes": os_in.get("liquidityNote") or "Sin nota",
+            "issues": [],
+        },
+        "optionStrat": {
+            "used": True,
+            "updatedAt": os_in.get("updatedAt"),
+            "shortStrike": round2(short_strike),
+            "longStrike": round2(long_strike),
+            "shortVolume": round2(short_volume),
+            "longVolume": round2(long_volume),
+            "shortOI": round2(short_oi),
+            "longOI": round2(long_oi),
+            "volumeBias": volume_bias,
+            "strikeConfirmed": strike_confirmed,
+            "liquidityNote": os_in.get("liquidityNote"),
         },
     }
-    return json_safe(payload)
 
 
-def compute_freshness(last_bar_at, updated_at_iso, session_code):
+def compute_freshness(last_bar_at, updated_at_iso):
     if not last_bar_at:
         return {
             "ageMinutes": None,
-            "thresholdMinutes": STALE_THRESHOLD_MINUTES,
+            "thresholdMinutes": 20,
             "isStale": True,
             "status": "Sin timestamp",
         }
 
     try:
-        ts = pd.Timestamp(last_bar_at)
-        ts = ts.tz_convert("UTC") if ts.tzinfo else ts.tz_localize("UTC")
-        nowu = pd.Timestamp(updated_at_iso).tz_convert("UTC") if pd.Timestamp(updated_at_iso).tzinfo else pd.Timestamp(updated_at_iso).tz_localize("UTC")
-        age = (nowu - ts).total_seconds() / 60
-
-        if session_code == "premarket":
-            ts_ny = ts.tz_convert(NY_ZONE)
-            now_ny_ts = nowu.tz_convert(NY_ZONE)
-            if ts_ny.date() < now_ny_ts.date():
-                return {
-                    "ageMinutes": round2(age),
-                    "thresholdMinutes": STALE_THRESHOLD_MINUTES,
-                    "isStale": False,
-                    "status": "Prev session close",
-                }
-
+        last_dt = datetime.fromisoformat(last_bar_at)
+        now_dt = datetime.fromisoformat(updated_at_iso)
+        age = (now_dt - last_dt).total_seconds() / 60.0
         return {
             "ageMinutes": round2(age),
-            "thresholdMinutes": STALE_THRESHOLD_MINUTES,
-            "isStale": age > STALE_THRESHOLD_MINUTES,
-            "status": "Stale" if age > STALE_THRESHOLD_MINUTES else "OK",
+            "thresholdMinutes": 20,
+            "isStale": age > 20,
+            "status": "Stale" if age > 20 else "OK",
         }
     except Exception:
         return {
             "ageMinutes": None,
-            "thresholdMinutes": STALE_THRESHOLD_MINUTES,
+            "thresholdMinutes": 20,
             "isStale": True,
-            "status": "Error timestamp",
+            "status": "Error",
         }
 
 
 def compute_score(state):
-    score = 52
+    score = 55
     reasons = []
 
-    if (state["change"] or 0) < 0:
+    if state["price"] is not None:
+        score += 5
+        reasons.append("Precio disponible")
+
+    if state["optionStrat"]["strikeConfirmed"]:
+        score += 10
+        reasons.append("Strike confirmado con OptionStrat")
+
+    if state["options"]["liquidityOk"]:
         score += 8
-        reasons.append("Sesgo bajista favorable")
-    if safe_float(state["vwap"].get("distPct")) is not None and state["vwap"]["distPct"] < 0:
-        score += 8
-        reasons.append("Precio por debajo de VWAP")
-    if state["session"]["code"] in ("overnight", "premarket", "afterhours"):
-        score -= 9
-        reasons.append("Sesión extendida")
-    if state["freshness"]["isStale"]:
-        score -= 18
-        reasons.append("Dato no fresco")
-    if not state["options"].get("quotesUsable"):
-        score -= 18
-        reasons.append("Quotes no operables")
-    if not state["options"].get("liquidityOk"):
+        reasons.append("Liquidez aceptable en strike objetivo")
+    else:
         score -= 12
-        reasons.append("Liquidez insuficiente")
-    if not state["options"].get("deltaOk"):
+        reasons.append("Liquidez floja en strike objetivo")
+
+    if state["macro"]["next"]["isVeto"]:
+        score -= 15
+        reasons.append("Evento macro cercano")
+
+    if state["session"]["code"] != "regular":
         score -= 8
-        reasons.append("Delta fuera de rango")
-    if not state["trade"].get("creditOk"):
-        score -= 4
-        reasons.append("Crédito bajo")
-    nxt = state["macro"].get("next")
-    if nxt and nxt.get("isVeto"):
-        score -= 12
-        reasons.append(f"Macro cercana: {nxt['evento']}")
+        reasons.append("Sesión fuera de regular hours")
 
     score = max(0, min(100, int(round(score))))
 
-    hard_block = (
-        state["freshness"]["isStale"] or
-        not state["options"].get("quotesUsable") or
-        not state["options"].get("liquidityOk") or
-        (nxt and nxt.get("isVeto"))
-    )
-
-    if hard_block:
+    if state["macro"]["next"]["isVeto"]:
         decision = "no entrar"
         tone = "red"
         label = "no entrar"
@@ -750,8 +381,8 @@ def build_error_state(msg):
         "session": {"code": "error", "label": "Error"},
         "summary": f"Error generando estado: {msg}",
         "trade": {
-            "bufferBasePct": None,
-            "bufferDynamicPct": None,
+            "bufferBasePct": BASE_BUFFER_PCT,
+            "bufferDynamicPct": BASE_BUFFER_PCT,
             "bufferReason": "error",
             "shortStrike": None,
             "longStrike": None,
@@ -762,30 +393,32 @@ def build_error_state(msg):
             "minCreditRequired": 0.03,
             "distToShort": None,
         },
-        "bufferDebug": {},
         "options": {
             "expiration": None,
-            "shortCallBid": None,
-            "shortCallAsk": None,
-            "longCallBid": None,
-            "longCallAsk": None,
-            "shortCallDelta": None,
-            "longCallDelta": None,
-            "shortCallOI": None,
-            "longCallOI": None,
-            "shortCallVolume": None,
-            "longCallVolume": None,
             "quotesUsable": False,
             "liquidityOk": False,
-            "deltaOk": False,
+            "deltaOk": None,
             "notes": msg,
             "issues": [msg],
         },
+        "optionStrat": {
+            "used": False,
+            "updatedAt": None,
+            "shortStrike": None,
+            "longStrike": None,
+            "shortVolume": None,
+            "longVolume": None,
+            "shortOI": None,
+            "longOI": None,
+            "volumeBias": None,
+            "strikeConfirmed": False,
+            "liquidityNote": msg,
+        },
         "vwap": {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No disponible"},
-        "openingRange": {"available": False, "status": "Error", "message": "Opening Range no disponible"},
-        "premarketRange": {"available": False, "status": "Error", "message": "Premarket Range no disponible"},
-        "expectedMove": {"method": "unavailable", "dailyVolPct": None, "move": None, "movePct": None, "upper": None, "lower": None, "status": "No disponible"},
-        "freshness": {"ageMinutes": None, "thresholdMinutes": STALE_THRESHOLD_MINUTES, "isStale": True, "status": "Error"},
+        "openingRange": {"available": False, "status": "No disponible", "message": "No usado"},
+        "premarketRange": {"available": False, "status": "No disponible", "message": "No usado"},
+        "expectedMove": compute_expected_move_simple(None),
+        "freshness": {"ageMinutes": None, "thresholdMinutes": 20, "isStale": True, "status": "Error"},
         "score": 0,
         "decision": "no entrar",
         "decisionTone": "red",
@@ -807,8 +440,8 @@ def append_history(state):
         "decision": state.get("decisionLabel"),
         "session": state.get("session", {}).get("label"),
         "shortStrike": state.get("trade", {}).get("shortStrike"),
-        "netCredit": state.get("trade", {}).get("netCredit"),
-        "freshness": state.get("freshness", {}).get("status"),
+        "longStrike": state.get("trade", {}).get("longStrike"),
+        "optionStratConfirmed": state.get("optionStrat", {}).get("strikeConfirmed"),
     }
 
     history = []
@@ -827,44 +460,33 @@ def append_history(state):
 
 def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+
     try:
         ny = now_ny()
         nowu = now_utc()
 
-        hist_5m, px = get_price_data(TICKER)
-        tk = yf.Ticker(TICKER)
-
+        px = get_price_data(TICKER)
         session = get_session_label(ny)
-        vwap = compute_vwap(hist_5m)
-        opening_range = compute_opening_range(hist_5m)
-        pm_range = compute_premarket_range(hist_5m)
-        expected_move = compute_expected_move(tk, px["price"])
         macro = get_macro_block()
         earnings = get_earnings_block()
-
-        dyn_buffer_pct, buffer_reason, buffer_debug = compute_conservative_buffer_pct(
-            expected_move, pm_range, session["code"], macro, vwap
-        )
-
-        opt = get_options_trade(tk, px["price"], dyn_buffer_pct, session["code"], expected_move)
-        opt["trade"]["bufferReason"] = buffer_reason
-        updated_at_iso = nowu.isoformat()
-        freshness = compute_freshness(px.get("lastBarAt"), updated_at_iso, session["code"])
+        expected_move = compute_expected_move_simple(px["price"])
+        option_block = build_optionstrat_block(px["price"])
+        freshness = compute_freshness(px.get("lastBarAt"), nowu.isoformat())
 
         state = {
             "ticker": TICKER,
             **px,
-            "updatedAt": updated_at_iso,
+            "updatedAt": nowu.isoformat(),
             "updatedAtText": nowu.strftime("%Y-%m-%d %H:%M:%S UTC"),
             "updatedAtNY": ny.strftime("%Y-%m-%d %H:%M:%S ET"),
             "session": session,
             "summary": "",
-            "trade": opt["trade"],
-            "bufferDebug": buffer_debug,
-            "options": opt["options"],
-            "vwap": vwap,
-            "openingRange": opening_range,
-            "premarketRange": pm_range,
+            "trade": option_block["trade"],
+            "options": option_block["options"],
+            "optionStrat": option_block["optionStrat"],
+            "vwap": {"value": None, "distPct": None, "zScore": None, "sigma": None, "bias": "No usado"},
+            "openingRange": {"available": False, "status": "No usado", "message": "No usado"},
+            "premarketRange": {"available": False, "status": "No usado", "message": "No usado"},
             "expectedMove": expected_move,
             "freshness": freshness,
             "score": 0,
@@ -879,9 +501,15 @@ def main():
         }
 
         short_txt = f"${state['trade']['shortStrike']:.2f}" if state["trade"]["shortStrike"] is not None else "--"
+        long_txt = f"${state['trade']['longStrike']:.2f}" if state["trade"]["longStrike"] is not None else "--"
         macro_txt = state["macro"]["next"]["countdown"] if state["macro"].get("next") else "--"
-        credit_txt = f"${state['trade']['netCredit']:.2f}" if state["trade"]["netCredit"] is not None else "--"
-        state["summary"] = f"buffer {state['trade']['bufferDynamicPct']:.2f}% · short {short_txt} · crédito {credit_txt} · macro {macro_txt} · tramo {state['session']['code']}"
+
+        state["summary"] = (
+            f"precio {('$' + str(state['price'])) if state['price'] is not None else '--'} · "
+            f"short {short_txt} · long {long_txt} · "
+            f"OptionStrat {'confirmado' if state['optionStrat']['strikeConfirmed'] else 'sin confirmar'} · "
+            f"macro {macro_txt}"
+        )
 
         score, decision, decision_tone, decision_label, risk_label, reasons = compute_score(state)
         state["score"] = score
@@ -890,6 +518,7 @@ def main():
         state["decisionLabel"] = decision_label
         state["riskLabel"] = risk_label
         state["reasons"] = reasons
+
     except Exception as e:
         state = build_error_state(str(e))
 
