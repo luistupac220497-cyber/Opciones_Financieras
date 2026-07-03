@@ -262,5 +262,17 @@
     "longStrike": null,
     "notes": "Sin snapshot de opciones disponible en esta ejecución",
     "source": "finnhub_quote"
+  },
+  {
+    "updatedAt": "2026-07-03T11:18:46.130077+00:00",
+    "updatedAtNY": "2026-07-03 07:18:46 ET",
+    "price": 712.6,
+    "score": 0,
+    "decision": "no entrar",
+    "session": "Premarket",
+    "shortStrike": null,
+    "longStrike": null,
+    "notes": "Sin snapshot de opciones disponible en esta ejecución",
+    "source": "finnhub_quote"
   }
 ]
