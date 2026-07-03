@@ -5,49 +5,70 @@ on:
   schedule:
     - cron: "*/15 * * * 1-5"
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 concurrency:
-  group: update-dashboard
+  group: qqq-dashboard-pages
   cancel-in-progress: true
 
 jobs:
-  update:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    permissions:
-      contents: write
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run dashboard builder
+      - name: Build dashboard data
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
         run: |
           python scripts/build_data.py
 
-      - name: Verify generated files
+      - name: Verify files
         run: |
+          test -f index.html
           test -f data/state.json
           test -f data/history.json
 
-      - name: Commit generated files
+      - name: Commit generated JSON
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/state.json data/history.json
           git diff --staged --quiet || git commit -m "Auto-update dashboard data"
+          git push || true
 
-      - name: Push changes
-        run: git push
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
