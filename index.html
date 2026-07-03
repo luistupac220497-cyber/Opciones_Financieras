@@ -159,7 +159,7 @@
       </article>
       <article class="card">
         <div class="card-title">Operabilidad</div>
-        <div class="card-subtitle">Crédito, quotes y filtros</div>
+        <div class="card-subtitle">Quotes, liquidez y validación</div>
         <div id="operabilityAlert"></div>
         <div id="liquidityBox" class="section-stack"></div>
         <div id="issuesBox" class="issues-inline" style="margin-top:1rem;"></div>
@@ -182,6 +182,7 @@
             <tr><td>Short bid/ask</td><td id="osBidAsk" class="num">--</td></tr>
             <tr><td>Long bid/ask</td><td id="osLongBidAsk" class="num">--</td></tr>
             <tr><td>Quotes válidas</td><td id="osReliable">--</td></tr>
+            <tr><td>Liquidez OK</td><td id="osLiq">--</td></tr>
             <tr><td>Short OI</td><td id="osOI" class="num">--</td></tr>
             <tr><td>Short volume</td><td id="osVol" class="num">--</td></tr>
             <tr><td>Short delta</td><td id="osDelta" class="num">--</td></tr>
@@ -208,7 +209,6 @@
         <div class="card-subtitle">Detalle rápido del spread</div>
         <div class="table-wrap">
           <table><tbody>
-            <tr><td>Buffer base</td><td id="tsBufferBase" class="num">--</td></tr>
             <tr><td>Buffer dinámico</td><td id="tsBufferDyn" class="num">--</td></tr>
             <tr><td>Motivo buffer</td><td id="tsBufferReason" class="buffer-reason-cell">--</td></tr>
             <tr><td>Short strike</td><td id="tsShortSel" class="num">--</td></tr>
@@ -216,7 +216,7 @@
             <tr><td>Breakeven</td><td id="tsBreakeven" class="num">--</td></tr>
             <tr><td>Spread width</td><td id="tsWidth" class="num">--</td></tr>
             <tr><td>Net credit</td><td id="tsCredit" class="num">--</td></tr>
-            <tr><td>Crédito mínimo</td><td id="tsMinCredit" class="num">--</td></tr>
+            <tr><td>Crédito referencia</td><td id="tsMinCredit" class="num">--</td></tr>
             <tr><td>Crédito OK</td><td id="tsCreditOk">--</td></tr>
             <tr><td>Distancia al short</td><td id="tsDistance" class="num">--</td></tr>
           </tbody></table>
@@ -277,9 +277,10 @@
       if (raw.includes("macro")) return "macro cercana";
       if (raw.includes("vwap")) return "bajo VWAP";
       if (raw.includes("sesgo bajista")) return "sesgo bajista";
-      if (raw.includes("crédito")) return "crédito insuficiente";
+      if (raw.includes("crédito")) return "crédito bajo";
+      if (raw.includes("delta")) return "delta fuera";
+      if (raw.includes("liquidez")) return "liquidez débil";
       if (raw.includes("stale") || raw.includes("dato no fresco")) return "dato no fresco";
-      if (raw.includes("buffer")) return "buffer ampliado";
       return String(s).trim();
     }
 
@@ -327,29 +328,30 @@
 
       qs("liquidityBox").innerHTML = [
         lineItem("Quotes válidas", reliable),
-        lineItem("Crédito mínimo", money(t.minCreditRequired)),
-        lineItem("Crédito OK", t.creditOk ? "Sí" : "No"),
-        lineItem("Short OI / Vol", `${intFmt(os.shortCallOI)} / ${intFmt(os.shortCallVolume)}`),
-        lineItem("Delta short", deltaText)
+        lineItem("Liquidez", os.liquidityOk ? "OK" : "Débil"),
+        lineItem("Delta short", deltaText),
+        lineItem("Delta OK", os.deltaOk ? "Sí" : "No"),
+        lineItem("Short OI / Vol", `${intFmt(os.shortCallOI)} / ${intFmt(os.shortCallVolume)}`)
       ].join("");
 
       qs("osExpiry").textContent = text(os.expiration);
       qs("osBidAsk").textContent = `${money(os.shortCallBid)} / ${money(os.shortCallAsk)}`;
       qs("osLongBidAsk").textContent = `${money(os.longCallBid)} / ${money(os.longCallAsk)}`;
       qs("osReliable").textContent = reliable;
+      qs("osLiq").textContent = os.liquidityOk ? "Sí" : "No";
       qs("osOI").textContent = intFmt(os.shortCallOI);
       qs("osVol").textContent = intFmt(os.shortCallVolume);
       qs("osDelta").textContent = deltaText;
 
       const note = text(os.notes);
-      qs("optionsAlert").innerHTML = note !== "--" ? `<div class="alert ${os.quotesUsable ? (t.creditOk ? "alert-success" : "alert-warning") : "alert-error"}">${note}</div>` : "";
-      qs("operabilityAlert").innerHTML = `<div class="alert ${os.quotesUsable && t.creditOk ? "alert-success" : "alert-error"}">${os.quotesUsable ? (t.creditOk ? "Quotes operables y crédito suficiente." : "Quotes presentes, pero crédito insuficiente.") : "No hay validación operativa suficiente."}</div>`;
+      qs("optionsAlert").innerHTML = note !== "--" ? `<div class="alert ${os.quotesUsable ? (os.liquidityOk ? "alert-success" : "alert-warning") : "alert-error"}">${note}</div>` : "";
+      qs("operabilityAlert").innerHTML = `<div class="alert ${os.quotesUsable && os.liquidityOk ? "alert-success" : "alert-error"}">${os.quotesUsable ? (os.liquidityOk ? "Quotes y liquidez operables." : "Quotes presentes, pero liquidez floja.") : "No hay validación operativa suficiente."}</div>`;
 
       const issuesBox = qs("issuesBox");
       issuesBox.innerHTML = "";
       (os.issues || []).forEach(it => {
         const s = document.createElement("span");
-        s.className = "issue-chip " + (String(it).toLowerCase().includes("crédito") || String(it).toLowerCase().includes("vacío") || String(it).toLowerCase().includes("ask <= bid") ? "issue-critical" : "issue-warn");
+        s.className = "issue-chip " + (String(it).toLowerCase().includes("vacío") || String(it).toLowerCase().includes("spread amplio") || String(it).toLowerCase().includes("liquidez") ? "issue-critical" : "issue-warn");
         s.textContent = it;
         issuesBox.appendChild(s);
       });
@@ -412,7 +414,7 @@
     function renderSetup(state) {
       const t = state.trade || {};
       qs("setupBox").innerHTML = [
-        lineItem("Buffer activo", `${pct(t.bufferDynamicPct)} · base ${pct(t.bufferBasePct)}`),
+        lineItem("Buffer activo", `${pct(t.bufferDynamicPct)}`),
         lineItem("Short strike", money(t.shortStrike)),
         lineItem("Breakeven", money(t.breakeven)),
         lineItem("Distancia al short", money(t.distToShort))
@@ -421,7 +423,6 @@
       qs("shortStrikeValue").textContent = money(t.shortStrike);
       qs("creditValue").textContent = money(t.netCredit);
       qs("macroCountdownValue").textContent = text(state.macro?.next?.countdown);
-      qs("tsBufferBase").textContent = pct(t.bufferBasePct);
       qs("tsBufferDyn").textContent = pct(t.bufferDynamicPct);
       const factors = parseBufferFactors(t.bufferReason);
       qs("tsBufferReason").innerHTML = factors.length ? `<div class="factors-inline">${factors.map(f => `<span class="factor-chip">${f}</span>`).join("")}</div>` : "--";
