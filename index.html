@@ -135,6 +135,7 @@
     async function loadDashboard(){
       try{
         const state = await fetchFresh("./data/state.json");
+
         qs("headerMeta").textContent = fmtText(state.updatedAtNY || state.updatedAtText);
         qs("decisionText").textContent = fmtText(state.decisionLabel);
         qs("scoreValue").textContent = state.score ?? "--";
