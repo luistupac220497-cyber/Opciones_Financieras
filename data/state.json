@@ -1,14 +1,14 @@
 {
-  "updatedAtNY": "2026-07-06 15:50 ET",
-  "updatedAtText": "2026-07-06 15:50 ET",
-  "price": 724.59,
-  "change": 11.99,
-  "changePct": 1.6826,
+  "updatedAtNY": "2026-07-06 16:00 ET",
+  "updatedAtText": "2026-07-06 16:00 ET",
+  "price": 722.91,
+  "change": 10.31,
+  "changePct": 1.4468,
   "prevClose": 712.6,
   "source": "finnhub_quote",
   "session": {
-    "code": "regular",
-    "label": "Sesión regular"
+    "code": "afterhours",
+    "label": "After hours"
   },
   "vwap": {
     "value": null,
@@ -20,9 +20,9 @@
   },
   "trade": {
     "bufferDynamicPct": 1.07,
-    "shortStrike": 733,
+    "shortStrike": null,
     "breakeven": null,
-    "distToShort": 8.41,
+    "distToShort": null,
     "netCredit": null
   },
   "tradeQuality": {
@@ -40,23 +40,23 @@
     "entryStartET": "10:30 ET",
     "entryCutoffET": "13:30 ET",
     "hardExitET": "15:15 ET",
-    "minutesToEntryStart": -320,
-    "minutesToEntryCutoff": -140,
-    "minutesToHardExit": -35,
+    "minutesToEntryStart": -330,
+    "minutesToEntryCutoff": -150,
+    "minutesToHardExit": -45,
     "maxHoldMinutes": 60,
     "entryWindowOpen": false,
-    "timeStopTriggered": true,
-    "phase": "Fuera de ventana de entrada"
+    "timeStopTriggered": false,
+    "phase": "Fuera de sesión regular"
   },
   "options": {
     "expiration": "0dte_or_nearest",
     "quotesUsable": false,
     "liquidityOk": false,
-    "shortCallDelta": 0.2,
-    "notes": "Sesión regular activa, pero la cadena pública de Nasdaq no devolvió datos utilizables; no se fabrican strikes/créditos operables"
+    "shortCallDelta": null,
+    "notes": "Mercado fuera de sesión regular; cadena de opciones desactivada"
   },
   "optionsMeta": {
-    "source": "nasdaq_option_chain"
+    "source": "market_closed_guard"
   },
   "macro": {
     "todayHighImpact": false,
@@ -69,7 +69,7 @@
       "impact": "alto",
       "datetimeNY": "2026-07-08 14:00 ET",
       "dateNY": "2026-07-08",
-      "countdown": "1d 22h",
+      "countdown": "1d 21h",
       "veto": true
     },
     "summary": "Próximo gran evento · Actas del FOMC"
@@ -98,17 +98,12 @@
     "spotReason": null,
     "staleFromPreviousState": false
   },
-  "decisionLabel": "cerrar o no abrir",
-  "decisionTone": "red",
-  "score": -65,
-  "riskLabel": "Riesgo alto",
+  "decisionLabel": "esperar apertura",
+  "decisionTone": "yellow",
+  "score": 15,
+  "riskLabel": "Riesgo medio",
   "reasons": [
-    "Fuera de ventana de entrada",
-    "Hora de salida alcanzada",
-    "Quotes no operables",
-    "Liquidez insuficiente",
-    "OI no disponible",
-    "Spread no disponible"
+    "Esperar apertura"
   ],
   "alerts": []
 }
