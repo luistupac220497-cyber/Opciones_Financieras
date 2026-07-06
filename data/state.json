@@ -1,201 +1,113 @@
 {
-  "ticker": "QQQ",
-  "price": 712.6,
-  "prevClose": 725.17,
-  "change": -12.57,
-  "changePct": -1.73,
-  "tone": "down",
+  "updatedAtNY": "2026-07-06 11:41 ET",
+  "updatedAtText": "2026-07-06 11:41 ET",
+  "price": null,
+  "change": null,
+  "changePct": null,
+  "prevClose": null,
   "source": "finnhub_quote",
-  "lastBarAt": "2026-07-02T20:00:00+00:00",
-  "updatedAt": "2026-07-03T11:53:27.846188+00:00",
-  "updatedAtText": "2026-07-03 11:53:27 UTC",
-  "updatedAtNY": "2026-07-03 07:53:27 ET",
   "session": {
-    "code": "closed",
-    "label": "Market closed"
-  },
-  "market": {
-    "isHoliday": true,
-    "name": "Independence Day (Observed)",
-    "date": "2026-07-03",
-    "source": "Nasdaq holiday calendar"
-  },
-  "summary": "buffer 1.23% · short -- · crédito -- · macro 36m · tramo closed",
-  "trade": {
-    "bufferBasePct": null,
-    "bufferDynamicPct": 1.23,
-    "bufferReason": "exp move +0.85% · pm range +0.00% · vwap dist +0.00% · sesión +0.00% · macro +0.18% · market closed +0.20%",
-    "shortStrike": null,
-    "longStrike": null,
-    "breakeven": null,
-    "spreadWidth": 1.0,
-    "netCredit": null,
-    "creditOk": false,
-    "minCreditRequired": 0.03,
-    "distToShort": null
-  },
-  "bufferDebug": {
-    "expectedMovePct": 1.73,
-    "premarketRangePct": 0.0,
-    "vwapDistPctAbs": 0.0,
-    "emComponent": 0.85,
-    "pmComponent": 0.0,
-    "vwapComponent": 0.0,
-    "sessionBoost": 0.0,
-    "macroBoost": 0.18,
-    "marketClosedBoost": 0.2,
-    "rawBeforeClamp": 1.23,
-    "final": 1.23
-  },
-  "options": {
-    "expiration": "market_closed",
-    "shortCallBid": null,
-    "shortCallAsk": null,
-    "longCallBid": null,
-    "longCallAsk": null,
-    "shortCallDelta": null,
-    "longCallDelta": null,
-    "shortCallOI": null,
-    "longCallOI": null,
-    "shortCallVolume": null,
-    "longCallVolume": null,
-    "quotesUsable": false,
-    "liquidityOk": false,
-    "deltaOk": false,
-    "notes": "Mercado cerrado en EE. UU.; options chain operativa desactivada",
-    "issues": [
-      "market_closed_us_holiday"
-    ]
+    "code": "regular",
+    "label": "Sesión regular"
   },
   "vwap": {
     "value": null,
-    "distPct": null,
-    "zScore": null,
-    "sigma": null,
-    "bias": "No usado"
-  },
-  "openingRange": {
-    "available": false,
-    "status": "No aplica",
-    "message": "Mercado cerrado"
-  },
-  "premarketRange": {
-    "available": false,
-    "status": "No aplica",
-    "message": "Mercado cerrado"
+    "distPct": null
   },
   "expectedMove": {
-    "method": "historical_vol_proxy",
-    "dailyVolPct": 1.73,
-    "move": 12.33,
-    "movePct": 1.73,
-    "upper": 724.93,
-    "lower": 700.27,
-    "status": "OK"
+    "move": null,
+    "movePct": null
   },
-  "freshness": {
-    "ageMinutes": 953.46,
-    "thresholdMinutes": 3,
-    "isStale": false,
-    "status": "Quote timestamp"
+  "trade": {
+    "bufferDynamicPct": 1.07,
+    "shortStrike": null,
+    "breakeven": null,
+    "distToShort": null,
+    "netCredit": null
   },
-  "score": 0,
-  "decision": "no entrar",
-  "decisionTone": "red",
-  "decisionLabel": "no entrar",
-  "riskLabel": "Riesgo alto",
-  "reasons": [
-    "Mercado cerrado: Independence Day (Observed)",
-    "No hay sesión operable de opciones"
-  ],
-  "alerts": [
-    {
-      "level": "warning",
-      "title": "Mercado cerrado",
-      "text": "EE. UU. cerrado por Independence Day (Observed)"
-    }
-  ],
+  "tradeQuality": {
+    "targetDelta": 0.2,
+    "creditPerRisk": 0.25,
+    "minOpenInterest": 0,
+    "shortStrikeOI": null,
+    "longStrikeOI": null,
+    "width": 5,
+    "bidAskWidth": null,
+    "spreadWidthPct": null,
+    "strikeSpacingOk": true
+  },
+  "execution": {
+    "entryStartET": "10:30 ET",
+    "entryCutoffET": "13:30 ET",
+    "hardExitET": "15:15 ET",
+    "minutesToEntryStart": 0,
+    "minutesToEntryCutoff": 109,
+    "minutesToHardExit": 214,
+    "maxHoldMinutes": 60,
+    "entryWindowOpen": true,
+    "timeStopTriggered": false,
+    "phase": "Ventana de entrada abierta"
+  },
+  "options": {
+    "expiration": "0dte_or_nearest",
+    "quotesUsable": false,
+    "liquidityOk": false,
+    "shortCallDelta": 0.2,
+    "notes": "Sesión regular activa, pero la cadena pública de Nasdaq no devolvió datos utilizables; no se fabrican strikes/créditos operables"
+  },
+  "optionsMeta": {
+    "source": "nasdaq_option_chain"
+  },
   "macro": {
-    "status": "OK",
-    "next": {
-      "evento": "Nóminas no agrícolas (NFP)",
-      "impacto": "alto",
-      "datetimeNY": "2026-07-03 08:30 ET",
-      "datetimeUTC": "2026-07-03 12:30 UTC",
-      "dateNY": "2026-07-03",
-      "timeNY": "08:30",
-      "dias": 0,
-      "horas": 0,
-      "totalHoras": 0.61,
-      "countdown": "36m",
-      "momento": "Antes de la apertura",
-      "status": "upcoming",
-      "isVeto": true
+    "todayHighImpact": false,
+    "windowCritical": false,
+    "score": -5,
+    "todayList": [],
+    "windowList": [],
+    "nextBig": {
+      "label": "Actas del FOMC",
+      "impact": "alto",
+      "datetimeNY": "2026-07-08 14:00 ET",
+      "dateNY": "2026-07-08",
+      "countdown": "1d 2h",
+      "veto": true
     },
-    "items": [
-      {
-        "evento": "Nóminas no agrícolas (NFP)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-03 08:30 ET",
-        "datetimeUTC": "2026-07-03 12:30 UTC",
-        "dateNY": "2026-07-03",
-        "timeNY": "08:30",
-        "dias": 0,
-        "horas": 0,
-        "totalHoras": 0.61,
-        "countdown": "36m",
-        "momento": "Antes de la apertura",
-        "status": "upcoming",
-        "isVeto": true
-      }
-    ],
-    "all": [
-      {
-        "evento": "Nóminas no agrícolas (NFP)",
-        "impacto": "alto",
-        "datetimeNY": "2026-07-03 08:30 ET",
-        "datetimeUTC": "2026-07-03 12:30 UTC",
-        "dateNY": "2026-07-03",
-        "timeNY": "08:30",
-        "dias": 0,
-        "horas": 0,
-        "totalHoras": 0.61,
-        "countdown": "36m",
-        "momento": "Antes de la apertura",
-        "status": "upcoming",
-        "isVeto": true
-      }
-    ]
+    "summary": "Próximo gran evento · Actas del FOMC"
+  },
+  "flags": {
+    "opexDay": false,
+    "opexQuarterly": false
   },
   "earnings": {
-    "status": "OK",
     "next": {
       "empresa": "Tesla",
       "ticker": "TSLA",
       "fecha": "2026-07-22",
-      "dias": 20,
-      "momento": "Hora no especificada",
-      "status": "OK"
-    },
-    "items": [
-      {
-        "empresa": "Tesla",
-        "ticker": "TSLA",
-        "fecha": "2026-07-22",
-        "dias": 20,
-        "momento": "Hora no especificada",
-        "status": "OK"
-      }
-    ]
+      "dias": 16,
+      "momento": "Hora no especificada"
+    }
   },
-  "optionsMeta": {
-    "used": false,
-    "source": "market_closed_guard",
-    "sourceUrl": null,
-    "updatedAt": "2026-07-03T11:53:27.846174+00:00",
-    "shortStrike": null,
-    "longStrike": null,
-    "netCredit": null,
-    "breakeven": null
-  }
+  "market": {
+    "isHoliday": false,
+    "name": "Sesión normal",
+    "date": "2026-07-06",
+    "source": "--"
+  },
+  "dataHealth": {
+    "spotDegraded": false,
+    "spotReason": null,
+    "staleFromPreviousState": false
+  },
+  "decisionLabel": "esperar confirmación",
+  "decisionTone": "yellow",
+  "score": -25,
+  "riskLabel": "Riesgo medio",
+  "reasons": [
+    "Próximo gran evento · Actas del FOMC",
+    "Quotes no operables",
+    "Liquidez insuficiente",
+    "OI no disponible",
+    "Spread no disponible"
+  ],
+  "alerts": []
 }
