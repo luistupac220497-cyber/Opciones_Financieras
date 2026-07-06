@@ -40,71 +40,342 @@
     }
 
     *{box-sizing:border-box}
-    body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
-    .wrap{width:min(1120px,calc(100% - 24px));margin:24px auto 48px}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
-    .title{margin:0;font-size:clamp(1.5rem,2vw,2rem);font-weight:900}
-    .meta{color:var(--muted);font-size:.95rem}
-    .toolbar{display:flex;gap:10px}
-    .iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer}
-    .alert{margin-bottom:18px;padding:14px 16px;border-radius:14px;border:1px solid rgba(221,105,116,.35);background:rgba(221,105,116,.12);color:var(--text);display:none}
-    .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin-bottom:18px}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .hero-main{padding:22px}
-    .eyebrow{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.12em}
-    .decision{margin:.35rem 0 .45rem;font-size:clamp(2rem,4vw,3.2rem);line-height:1;font-weight:900}
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .wrap{
+      width:min(1120px,calc(100% - 24px));
+      margin:24px auto 48px;
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .title{
+      margin:0;
+      font-size:clamp(1.5rem,2vw,2rem);
+      font-weight:900;
+    }
+
+    .meta{
+      color:var(--muted);
+      font-size:.95rem;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+    }
+
+    .iconbtn{
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--surface);
+      color:var(--text);
+      cursor:pointer;
+    }
+
+    .alert{
+      margin-bottom:18px;
+      padding:14px 16px;
+      border-radius:14px;
+      border:1px solid rgba(221,105,116,.35);
+      background:rgba(221,105,116,.12);
+      color:var(--text);
+      display:none;
+      font-weight:700;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.25fr .75fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .hero-main{
+      padding:22px;
+    }
+
+    .eyebrow{
+      color:var(--muted);
+      font-size:.8rem;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+    }
+
+    .decision{
+      margin:.35rem 0 .45rem;
+      font-size:clamp(2rem,4vw,3.2rem);
+      line-height:1;
+      font-weight:900;
+    }
+
     .decision.green{color:var(--green)}
     .decision.yellow{color:var(--yellow)}
     .decision.red{color:var(--red)}
-    .score{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);font-weight:800}
-    .summary{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
-    .summary-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid rgba(127,127,127,.16);background:var(--surface-2);font-size:.84rem;color:var(--text)}
-    .summary-chip span{color:var(--muted)}
-    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
-    .mini{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:14px}
-    .mini-label{color:var(--muted);font-size:.82rem;margin-bottom:6px}
-    .mini-value{font-size:1.15rem;font-weight:800}
-    .side-premium{padding:18px}
-    .status-panel{display:grid;gap:14px}
-    .status-top{display:grid;grid-template-columns:1fr;gap:12px}
-    .status-item,.status-block{background:var(--surface-2);border:1px solid rgba(127,127,127,.16);border-radius:16px;padding:14px}
-    .status-label{font-size:.78rem;text-transform:uppercase;letter-spacing:.10em;color:var(--muted);margin-bottom:8px}
-    .status-badge{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:10px 12px;border-radius:999px;font-size:.95rem;font-weight:800;border:1px solid transparent}
-    .status-badge.danger{color:#fff;background:linear-gradient(180deg, rgba(221,105,116,.95), rgba(161,53,68,.95));border-color:rgba(221,105,116,.28)}
-    .status-badge.warning{color:#2b2200;background:linear-gradient(180deg, rgba(237,179,54,.98), rgba(209,153,0,.95));border-color:rgba(237,179,54,.30)}
-    .status-badge.success{color:#fff;background:linear-gradient(180deg, rgba(109,170,69,.98), rgba(67,122,34,.98));border-color:rgba(109,170,69,.30)}
-    .status-badge.neutral{color:var(--text);background:rgba(127,127,127,.10);border-color:rgba(127,127,127,.18)}
-    .status-divider{height:1px;background:linear-gradient(90deg, transparent, rgba(127,127,127,.22), transparent)}
-    .status-mainline{display:flex;align-items:center;gap:10px;font-size:1rem;font-weight:800}
-    .status-subline{margin-top:6px;color:var(--muted);font-size:.92rem}
-    .status-dot{width:10px;height:10px;border-radius:999px;background:var(--yellow);box-shadow:0 0 0 4px rgba(237,179,54,.14);flex:none}
-    .status-dot.good{background:var(--green);box-shadow:0 0 0 4px rgba(109,170,69,.14)}
-    .status-dot.bad{background:var(--red);box-shadow:0 0 0 4px rgba(221,105,116,.14)}
-    .status-dot.info{background:var(--blue);box-shadow:0 0 0 4px rgba(85,145,199,.14)}
-    .source-list{display:grid;gap:10px}
-    .source-row{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center}
-    .source-key{color:var(--muted);font-size:.92rem}
-    .source-pill{display:inline-flex;align-items:center;justify-content:flex-start;width:100%;padding:8px 10px;border-radius:999px;border:1px solid rgba(127,127,127,.18);background:rgba(127,127,127,.08);font-size:.84rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
-    .panel{padding:18px}
-    .panel h3{margin:0 0 14px;font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-    .kv{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-top:1px solid rgba(127,127,127,.18)}
-    .kv:first-of-type{border-top:none;padding-top:0}
-    .k{color:var(--muted)}
-    .v{font-weight:700;text-align:right;max-width:320px}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);font-size:.85rem}
+
+    .score{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:var(--surface-2);
+      font-weight:800;
+    }
+
+    .summary{
+      margin-top:14px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .summary-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(127,127,127,.16);
+      background:var(--surface-2);
+      font-size:.84rem;
+      color:var(--text);
+    }
+
+    .summary-chip span{
+      color:var(--muted);
+    }
+
+    .grid4{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .mini{
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .mini-label{
+      color:var(--muted);
+      font-size:.82rem;
+      margin-bottom:6px;
+    }
+
+    .mini-value{
+      font-size:1.15rem;
+      font-weight:800;
+    }
+
+    .side-premium{
+      padding:18px;
+    }
+
+    .status-panel{
+      display:grid;
+      gap:14px;
+    }
+
+    .status-top{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .status-item,.status-block{
+      background:var(--surface-2);
+      border:1px solid rgba(127,127,127,.16);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .status-label{
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.10em;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .status-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:38px;
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:.95rem;
+      font-weight:800;
+      border:1px solid transparent;
+    }
+
+    .status-badge.danger{
+      color:#fff;
+      background:linear-gradient(180deg, rgba(221,105,116,.95), rgba(161,53,68,.95));
+      border-color:rgba(221,105,116,.28);
+    }
+
+    .status-badge.warning{
+      color:#2b2200;
+      background:linear-gradient(180deg, rgba(237,179,54,.98), rgba(209,153,0,.95));
+      border-color:rgba(237,179,54,.30);
+    }
+
+    .status-badge.success{
+      color:#fff;
+      background:linear-gradient(180deg, rgba(109,170,69,.98), rgba(67,122,34,.98));
+      border-color:rgba(109,170,69,.30);
+    }
+
+    .status-badge.neutral{
+      color:var(--text);
+      background:rgba(127,127,127,.10);
+      border-color:rgba(127,127,127,.18);
+    }
+
+    .status-divider{
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(127,127,127,.22), transparent);
+    }
+
+    .source-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .source-row{
+      display:grid;
+      grid-template-columns:56px 1fr;
+      gap:10px;
+      align-items:center;
+    }
+
+    .source-key{
+      color:var(--muted);
+      font-size:.92rem;
+    }
+
+    .source-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:flex-start;
+      width:100%;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(127,127,127,.18);
+      background:rgba(127,127,127,.08);
+      font-size:.84rem;
+      font-weight:700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .grid3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .panel{
+      padding:18px;
+    }
+
+    .panel h3{
+      margin:0 0 14px;
+      font-size:1rem;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px solid rgba(127,127,127,.18);
+    }
+
+    .kv:first-of-type{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .k{
+      color:var(--muted);
+    }
+
+    .v{
+      font-weight:700;
+      text-align:right;
+      max-width:320px;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .chip{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      font-size:.85rem;
+    }
 
     @media (min-width:981px){
-      .status-top{grid-template-columns:1fr 1fr}
+      .status-top{
+        grid-template-columns:1fr 1fr;
+      }
     }
+
     @media (max-width:980px){
-      .hero,.grid3{grid-template-columns:1fr}
-      .grid4{grid-template-columns:repeat(2,1fr)}
+      .hero,.grid3{
+        grid-template-columns:1fr;
+      }
+      .grid4{
+        grid-template-columns:repeat(2,1fr);
+      }
     }
+
     @media (max-width:560px){
-      .grid4{grid-template-columns:1fr}
-      .top{align-items:flex-start;flex-direction:column}
+      .grid4{
+        grid-template-columns:1fr;
+      }
+      .top{
+        align-items:flex-start;
+        flex-direction:column;
+      }
     }
   </style>
 </head>
@@ -173,17 +444,6 @@
               <div class="status-label">Sesión</div>
               <div class="status-badge neutral" id="sessionBadge">--</div>
             </div>
-          </div>
-
-          <div class="status-divider"></div>
-
-          <div class="status-block">
-            <div class="status-label">Freshness</div>
-            <div class="status-mainline">
-              <span class="status-dot" id="freshnessDot"></span>
-              <span id="freshnessStatusPretty">--</span>
-            </div>
-            <div class="status-subline" id="freshnessPretty">--</div>
           </div>
 
           <div class="status-divider"></div>
@@ -364,83 +624,6 @@
       };
     }
 
-    function humanizeFreshness(state) {
-      const f = state.freshness || {};
-      const guard = state.spotGuard || {};
-      const age = f.ageMinutes;
-      const label = guard.label || f.label || f.status || "Sin referencia";
-
-      if (state.market?.isHoliday) {
-        return {
-          title: "Mercado cerrado",
-          detail: "Sin necesidad de update intradía",
-          dot: "info"
-        };
-      }
-
-      if (label === "Spot heredado") {
-        return {
-          title: "Spot heredado",
-          detail: guard.reason || (age == null ? "Referencia demasiado antigua" : `${age}m desde último update`),
-          dot: "bad"
-        };
-      }
-
-      if (label === "Spot retrasado") {
-        return {
-          title: "Spot retrasado",
-          detail: guard.reason || (age == null ? "Referencia con retraso" : `${age}m desde último update`),
-          dot: "warning"
-        };
-      }
-
-      if (label === "Dato reciente") {
-        return {
-          title: "Dato reciente",
-          detail: age == null ? "Actualización reciente" : `${age}m desde último update`,
-          dot: "good"
-        };
-      }
-
-      if (label === "Dato fuera de sesión regular") {
-        return {
-          title: "Fuera de sesión regular",
-          detail: age == null ? "Última referencia fuera de sesión" : `${age}m desde último update`,
-          dot: "warning"
-        };
-      }
-
-      if (label === "Dato retrasado") {
-        return {
-          title: "Dato retrasado",
-          detail: age == null ? "Actualización retrasada" : `${age}m desde último update`,
-          dot: "bad"
-        };
-      }
-
-      if (label === "Sin timestamp") {
-        return {
-          title: "Sin timestamp",
-          detail: "No hay timestamp disponible",
-          dot: "bad"
-        };
-      }
-
-      if (label === "Error de timestamp") {
-        return {
-          title: "Error de timestamp",
-          detail: "No se pudo interpretar la referencia temporal",
-          dot: "bad"
-        };
-      }
-
-      return {
-        title: fmtText(label),
-        detail: age == null ? "Sin detalle temporal" : `${age}m desde último update`,
-        dot: f.isStale ? "bad" : "warning"
-      };
-    }
-
     function buildSummary(state, macroView) {
       $("summaryBuffer").textContent = fmtPct(state.trade?.bufferDynamicPct);
       $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
@@ -500,29 +683,29 @@
 
         const riskText = humanizeRisk(state.riskLabel);
         const sessionText = humanizeSession(state.session?.code, state.session?.label);
-        const freshness = humanizeFreshness(state);
 
         $("riskBadge").textContent = riskText;
         $("sessionBadge").textContent = sessionText;
-        $("freshnessStatusPretty").textContent = freshness.title;
-        $("freshnessPretty").textContent = freshness.detail;
         $("sourceValue").textContent = humanizeSource(state.source);
         $("optionsSourceValue").textContent = humanizeSource(state.optionsMeta?.source);
 
         $("riskBadge").className = "status-badge";
-        if ((riskText || "").toLowerCase().includes("alto")) $("riskBadge").classList.add("danger");
-        else if ((riskText || "").toLowerCase().includes("medio")) $("riskBadge").classList.add("warning");
-        else $("riskBadge").classList.add("success");
+        if ((riskText || "").toLowerCase().includes("alto")) {
+          $("riskBadge").classList.add("danger");
+        } else if ((riskText || "").toLowerCase().includes("medio")) {
+          $("riskBadge").classList.add("warning");
+        } else {
+          $("riskBadge").classList.add("success");
+        }
 
         $("sessionBadge").className = "status-badge";
-        if ((state.session?.code || "") === "closed") $("sessionBadge").classList.add("neutral");
-        else if ((state.session?.code || "") === "regular") $("sessionBadge").classList.add("success");
-        else $("sessionBadge").classList.add("warning");
-
-        $("freshnessDot").className = "status-dot";
-        if (freshness.dot === "good") $("freshnessDot").classList.add("good");
-        else if (freshness.dot === "bad") $("freshnessDot").classList.add("bad");
-        else if (freshness.dot === "info") $("freshnessDot").classList.add("info");
+        if ((state.session?.code || "") === "closed") {
+          $("sessionBadge").classList.add("neutral");
+        } else if ((state.session?.code || "") === "regular") {
+          $("sessionBadge").classList.add("success");
+        } else {
+          $("sessionBadge").classList.add("warning");
+        }
 
         $("spotValue").textContent = fmtMoney(state.price);
         $("changeValue").textContent = `${fmtMoney(state.change)} · ${fmtPct(state.changePct)}`;
