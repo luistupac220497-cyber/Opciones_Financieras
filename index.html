@@ -324,6 +324,10 @@
       gap:8px;
     }
 
+    .loading{
+      opacity:.7;
+    }
+
     @media (min-width:981px){
       .status-top{grid-template-columns:1fr 1fr}
     }
@@ -513,13 +517,10 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-    let dashboardInterval = null;
-    let clockInterval = null;
 
     const fmtMoney = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`;
-    const fmtPct = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${(Number(v) * 100).toFixed(2)}%`;
     const fmtPctRaw = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`;
-    const fmtDelta = (v) => v == null || Number.isNaN(Number(v)) ? "--" : Number(v).toFixed(2);
+    const fmtNumber = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v)}`;
     const fmtText = (v, fallback="--") => v == null || v === "" ? fallback : String(v);
     const yesNo = (v) => v === true ? "Sí" : v === false ? "No" : "--";
 
@@ -528,13 +529,7 @@
       const map = {
         "finnhub_quote":"Finnhub",
         "nasdaq_option_chain":"Nasdaq",
-        "yahoo_option_chain":"Yahoo Finance",
         "market_closed_guard":"Mercado cerrado",
-        "no_options_source_available":"Sin fuente activa",
-        "missing_finnhub_api_key":"API no configurada",
-        "finnhub_http_502":"Finnhub degradado",
-        "finnhub_http_503":"Finnhub degradado",
-        "finnhub_http_504":"Finnhub degradado",
         "finnhub_rate_limited":"Finnhub limitado",
         "finnhub_timeout":"Finnhub timeout",
         "finnhub_request_error":"Finnhub error",
@@ -572,273 +567,202 @@
       return yesNo(value);
     }
 
-    function humanizeRisk(value){
-      const v = String(value || "").toLowerCase();
-      if(v.includes("alto")) return "Riesgo alto";
-      if(v.includes("medio")) return "Riesgo medio";
-      if(v.includes("controlado")) return "Riesgo controlado";
-      return value || "--";
-    }
-
     function humanizeOpex(flags){
       if (flags?.opexQuarterly) return "Trimestral";
       if (flags?.opexDay) return "Mensual";
       return "No";
     }
 
-    function macroTodayText(macro){
-      if (macro?.todayHighImpact && Array.isArray(macro?.todayList) && macro.todayList.length){
-        return macro.todayList.map(x => x.label).join(", ");
-      }
-      return "Sin macro alta hoy";
-    }
+    function phaseMessage(state){
+      const degraded = state?.dataHealth?.spotDegraded;
+      const sessionCode = state?.session?.code;
+      const execution = state?.execution;
 
-    function phaseMessage(execution, sessionCode, degraded){
       if (degraded) {
-        return "Dato spot degradado. El dashboard sigue activo, pero conviene tratar la decisión como provisional hasta recuperar el proveedor.";
+        return "Dato spot degradado. La decisión es provisional hasta recuperar el proveedor.";
       }
       if (sessionCode !== "regular") {
-        return "Aún no estás en sesión regular. El panel solo observa y no debería intentar validar una entrada real.";
+        return "Aún no estás en sesión regular. El panel observa, no valida entrada real.";
       }
       if (execution?.minutesToEntryStart > 0) {
-        return `Esperando primera hora completa de mercado. Faltan ${execution.minutesToEntryStart} min para empezar a evaluar entradas.`;
+        return `Esperando primera hora completa. Faltan ${execution.minutesToEntryStart} min para evaluar entradas.`;
       }
       if (execution?.entryWindowOpen) {
-        return "Ventana operativa abierta. Ya puedes evaluar entrada, pero solo si macro, liquidez y spread acompañan.";
+        return "Ventana operativa abierta. Solo entrar si macro, liquidez y spread acompañan.";
       }
       if (execution?.timeStopTriggered) {
-        return "Zona de salida dura activada. Ya no tiene sentido abrir nuevas posiciones intradía.";
+        return "Zona de salida dura activada. No tiene sentido abrir nuevas posiciones intradía.";
       }
-      return "Fuera de ventana de entrada. El sistema prioriza disciplina temporal antes que forzar operaciones.";
+      return "Fuera de ventana de entrada. El sistema prioriza disciplina temporal.";
     }
 
     function renderReasons(list){
       const box = $("reasonsBox");
       box.innerHTML = "";
-      (Array.isArray(list) && list.length ? list : ["Sin motivos"]).forEach(item => {
-        const span = document.createElement("span");
-        span.className = "chip";
-        span.textContent = String(item).replaceAll("_"," ");
-        box.appendChild(span);
+      (list || []).forEach(item => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = item;
+        box.appendChild(chip);
       });
+      if (!box.innerHTML) {
+        box.innerHTML = '<span class="chip">Sin motivos cargados</span>';
+      }
     }
 
-    function applyThemeToggle(){
-      const root = document.documentElement;
-      let current = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-      root.setAttribute("data-theme", current);
-      $("themeBtn").addEventListener("click", () => {
-        current = current === "dark" ? "light" : "dark";
-        root.setAttribute("data-theme", current);
-      });
+    function setBadge(el, text, type){
+      el.textContent = text || "--";
+      el.className = `status-badge ${type || "neutral"}`;
     }
 
-    function setDecisionTone(tone){
-      $("decisionText").className = `decision ${tone || "yellow"}`;
-    }
+    function renderAlert(state){
+      const alertBox = $("marketAlert");
+      const firstAlert = state?.alerts?.[0];
 
-    function formatETNow(){
-      const now = new Date();
-      return new Intl.DateTimeFormat("es-ES", {
-        timeZone: "America/New_York",
-        weekday: "short",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-      }).format(now) + " ET";
-    }
+      if (firstAlert) {
+        alertBox.style.display = "block";
+        alertBox.textContent = `${firstAlert.title}: ${firstAlert.text}`;
+        return;
+      }
 
-    function formatLocalNow(){
-      const now = new Date();
-      return new Intl.DateTimeFormat("es-ES", {
-        weekday: "short",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-      }).format(now);
+      if (state?.market?.isHoliday) {
+        alertBox.style.display = "block";
+        alertBox.textContent = `Mercado cerrado: ${state.market.name || "festivo"}`;
+        return;
+      }
+
+      alertBox.style.display = "none";
+      alertBox.textContent = "";
     }
 
     function updateClocks(){
-      $("liveClock").textContent = `Hora ET: ${formatETNow()}`;
-      $("browserClock").textContent = `Hora local: ${formatLocalNow()}`;
+      const now = new Date();
+      const et = new Intl.DateTimeFormat("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZone: "America/New_York"
+      }).format(now);
+      $("liveClock").textContent = `Hora ET: ${et}`;
+      $("browserClock").textContent = `Hora local: ${now.toLocaleTimeString()}`;
     }
 
-    async function fetchState(){
-      const url = `./data/state.json?t=${Date.now()}`;
-      const res = await fetch(url, { cache: "no-store" });
-      if(!res.ok) throw new Error(`No se pudo cargar state.json (${res.status})`);
-      return res.json();
-    }
-
-    function renderFreshness(state){
-      const degraded = !!state.dataHealth?.spotDegraded;
-      const stale = !!state.dataHealth?.staleFromPreviousState;
-      const sessionCode = state.session?.code || "";
-
-      if (degraded && stale) {
-        $("freshnessValue").textContent = "Dato retrasado";
-        $("snapshotStatusValue").textContent = "Usando snapshot previo";
-        return;
+    async function loadState(){
+      document.body.classList.add("loading");
+      try {
+        const res = await fetch(`./data/state.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const state = await res.json();
+        renderState(state);
+      } catch (err) {
+        $("headerMeta").textContent = `Error cargando snapshot: ${err.message}`;
+        $("decisionText").textContent = "error";
+        $("decisionText").className = "decision red";
+        $("phaseNote").textContent = "No se pudo cargar data/state.json";
+        renderReasons(["Fallo de carga del JSON"]);
+      } finally {
+        document.body.classList.remove("loading");
       }
-      if (degraded) {
-        $("freshnessValue").textContent = "Dato degradado";
-        $("snapshotStatusValue").textContent = "Proveedor con incidencia";
-        return;
-      }
-      if (sessionCode !== "regular") {
-        $("freshnessValue").textContent = "Mercado fuera de sesión";
-        $("snapshotStatusValue").textContent = "Sin necesidad intradía";
-        return;
-      }
-      $("freshnessValue").textContent = "Dato reciente";
-      $("snapshotStatusValue").textContent = "Snapshot actual";
     }
 
     function renderState(state){
-      const degraded = !!state.dataHealth?.spotDegraded;
+      const sessionCode = state?.session?.code || "";
+      const decisionTone = state?.decisionTone || "yellow";
+      const macroNext = state?.macro?.nextBig?.label || state?.macro?.summary || "--";
 
-      $("headerMeta").textContent = `Última actualización del snapshot: ${fmtText(state.updatedAtNY || state.updatedAtText)}`;
-      $("decisionText").textContent = fmtText(state.decisionLabel);
-      $("scoreValue").textContent = state.score ?? "--";
-      setDecisionTone(state.decisionTone);
+      $("headerMeta").textContent = `Última actualización del snapshot: ${fmtText(state.updatedAtText || state.updatedAtNY)}`;
+      $("decisionText").textContent = fmtText(state.decisionLabel, "sin señal");
+      $("decisionText").className = `decision ${decisionTone}`;
+      $("scoreValue").textContent = fmtText(state.score, "--");
 
-      $("summaryBuffer").textContent = fmtPctRaw(state.trade?.bufferDynamicPct);
-      $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
-      $("summaryCredit").textContent = fmtMoney(state.trade?.netCredit);
-      $("summaryMacro").textContent = fmtText(state.macro?.summary);
-      $("summaryOpex").textContent = humanizeOpex(state.flags);
-      $("summaryPhase").textContent = fmtText(state.execution?.phase);
+      $("summaryBuffer").textContent = state?.trade?.bufferDynamicPct != null ? fmtPctRaw(state.trade.bufferDynamicPct) : "--";
+      $("summaryShort").textContent = fmtText(state?.trade?.shortStrike);
+      $("summaryCredit").textContent = fmtMoney(state?.trade?.netCredit);
+      $("summaryMacro").textContent = fmtText(state?.macro?.summary);
+      $("summaryOpex").textContent = humanizeOpex(state?.flags);
+      $("summaryPhase").textContent = fmtText(state?.execution?.phase);
 
-      $("phaseNote").textContent = phaseMessage(state.execution, state.session?.code, degraded);
+      $("phaseNote").textContent = phaseMessage(state);
 
       $("priceValue").textContent = fmtMoney(state.price);
-      $("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
-      $("creditValueTop").textContent = fmtMoney(state.trade?.netCredit);
-      $("macroNextTop").textContent = fmtText(state.macro?.nextBig?.label, "—");
-
-      const riskText = humanizeRisk(state.riskLabel);
-      const sessionText = humanizeSession(state.session?.code, state.session?.label);
-
-      $("riskBadge").textContent = riskText;
-      $("sessionBadge").textContent = sessionText;
-      $("sourceValue").textContent = humanizeSource(state.source);
-      $("optionsSourceValue").textContent = humanizeSource(state.optionsMeta?.source);
-
-      $("riskBadge").className = "status-badge";
-      if((riskText || "").toLowerCase().includes("alto")) $("riskBadge").classList.add("danger");
-      else if((riskText || "").toLowerCase().includes("medio")) $("riskBadge").classList.add("warning");
-      else $("riskBadge").classList.add("success");
-
-      $("sessionBadge").className = "status-badge";
-      if((state.session?.code || "") === "closed") $("sessionBadge").classList.add("neutral");
-      else if((state.session?.code || "") === "regular") $("sessionBadge").classList.add("success");
-      else $("sessionBadge").classList.add("warning");
+      $("shortStrikeValue").textContent = fmtText(state?.trade?.shortStrike);
+      $("creditValueTop").textContent = fmtMoney(state?.trade?.netCredit);
+      $("macroNextTop").textContent = fmtText(macroNext);
 
       $("spotValue").textContent = fmtMoney(state.price);
-      $("changeValue").textContent = `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`;
-      $("vwapValue").textContent = `${fmtMoney(state.vwap?.value)} · ${fmtPctRaw(state.vwap?.distPct)}`;
-      $("sessionValue").textContent = sessionText;
-      $("prevCloseValue").textContent = fmtMoney(state.prevClose);
+      $("changeValue").textContent = state?.change != null && state?.changePct != null
+        ? `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`
+        : "--";
+      $("vwapValue").textContent = fmtMoney(state?.vwap?.value);
+      $("sessionValue").textContent = humanizeSession(state?.session?.code, state?.session?.label);
+      $("prevCloseValue").textContent = fmtMoney(state?.prevClose);
 
-      $("bufferValue").textContent = fmtPctRaw(state.trade?.bufferDynamicPct);
-      $("shortStrikeValue2").textContent = fmtMoney(state.trade?.shortStrike);
-      $("breakevenValue").textContent = fmtMoney(state.trade?.breakeven);
-      $("distToShortValue").textContent = state.trade?.distToShort == null ? "--" : fmtMoney(state.trade?.distToShort);
-      $("expectedMoveValue").textContent = `${fmtMoney(state.expectedMove?.move)} (${fmtPctRaw(state.expectedMove?.movePct)})`;
+      $("bufferValue").textContent = state?.trade?.bufferDynamicPct != null ? fmtPctRaw(state.trade.bufferDynamicPct) : "--";
+      $("shortStrikeValue2").textContent = fmtText(state?.trade?.shortStrike);
+      $("breakevenValue").textContent = fmtMoney(state?.trade?.breakeven);
+      $("distToShortValue").textContent = state?.trade?.distToShort != null ? fmtMoney(state.trade.distToShort) : "--";
+      $("expectedMoveValue").textContent = state?.expectedMove?.movePct != null ? fmtPctRaw(state.expectedMove.movePct) : "--";
+      $("tradeQualityValue").textContent = fmtText(state?.score);
 
-      const tqDelta = fmtDelta(state.tradeQuality?.targetDelta);
-      const tqCr = state.tradeQuality?.creditPerRisk == null ? "--" : Number(state.tradeQuality.creditPerRisk).toFixed(2);
-      const tqOi = state.tradeQuality?.minOpenInterest == null ? "--" : state.tradeQuality.minOpenInterest;
-      $("tradeQualityValue").textContent = `Δ ${tqDelta} · Cr/R ${tqCr} · OI ${tqOi}`;
+      $("expirationValue").textContent = humanizeExpiration(state?.options?.expiration);
+      $("quotesValue").textContent = humanizeQuotes(state?.options?.quotesUsable, sessionCode);
+      $("liquidityValue").textContent = humanizeLiquidity(state?.options?.liquidityOk, sessionCode);
+      $("deltaValue").textContent = state?.options?.shortCallDelta != null ? fmtNumber(state.options.shortCallDelta) : "--";
+      $("notesValue").textContent = fmtText(state?.options?.notes);
 
-      $("expirationValue").textContent = humanizeExpiration(state.options?.expiration);
-      $("quotesValue").textContent = humanizeQuotes(state.options?.quotesUsable, state.session?.code);
-      $("liquidityValue").textContent = humanizeLiquidity(state.options?.liquidityOk, state.session?.code);
-      $("deltaValue").textContent = fmtDelta(state.options?.shortCallDelta);
-      $("notesValue").textContent = fmtText(state.options?.notes);
+      $("macroTodayValue").textContent = state?.macro?.todayHighImpact ? "Sí" : "No";
+      $("macroCriticalValue").textContent = state?.macro?.windowCritical ? "Sí" : "No";
+      $("macroScoreValue").textContent = fmtText(state?.macro?.score);
+      $("macroNextValue").textContent = fmtText(state?.macro?.nextBig?.label || state?.macro?.summary);
+      $("macroDateValue").textContent = fmtText(state?.macro?.nextBig?.datetimeNY);
+      $("macroCountdownValue").textContent = fmtText(state?.macro?.nextBig?.countdown);
 
-      $("macroTodayValue").textContent = macroTodayText(state.macro);
-      $("macroCriticalValue").textContent = yesNo(state.macro?.windowCritical);
-      $("macroScoreValue").textContent = fmtText(state.macro?.score);
-      $("macroNextValue").textContent = fmtText(state.macro?.nextBig?.label, "—");
-      $("macroDateValue").textContent = fmtText(state.macro?.nextBig?.datetimeNY, "—");
-      $("macroCountdownValue").textContent = fmtText(state.macro?.nextBig?.countdown, "—");
+      $("phaseValue").textContent = fmtText(state?.execution?.phase);
+      $("entryStartValue").textContent = fmtText(state?.execution?.entryStartET);
+      $("minutesStartValue").textContent = fmtText(state?.execution?.minutesToEntryStart);
+      $("entryCutoffValue").textContent = fmtText(state?.execution?.entryCutoffET);
+      $("minutesCutoffValue").textContent = fmtText(state?.execution?.minutesToEntryCutoff);
+      $("hardExitValue").textContent = fmtText(state?.execution?.hardExitET);
+      $("timeStopValue").textContent = state?.execution?.timeStopTriggered ? "Sí" : "No";
+      $("maxHoldValue").textContent = state?.execution?.maxHoldMinutes != null ? `${state.execution.maxHoldMinutes} min` : "--";
 
-      $("phaseValue").textContent = fmtText(state.execution?.phase);
-      $("entryStartValue").textContent = fmtText(state.execution?.entryStartET);
-      $("minutesStartValue").textContent = fmtText(state.execution?.minutesToEntryStart);
-      $("entryCutoffValue").textContent = fmtText(state.execution?.entryCutoffET);
-      $("minutesCutoffValue").textContent = fmtText(state.execution?.minutesToEntryCutoff);
-      $("hardExitValue").textContent = fmtText(state.execution?.hardExitET);
-      $("timeStopValue").textContent = yesNo(state.execution?.timeStopTriggered);
-      $("maxHoldValue").textContent = `${state.execution?.maxHoldMinutes ?? "--"} min`;
+      $("bidAskValue").textContent = fmtText(state?.tradeQuality?.bidAskWidth);
+      $("spreadWidthPctValue").textContent = state?.tradeQuality?.spreadWidthPct != null ? fmtPctRaw(state.tradeQuality.spreadWidthPct) : "--";
+      $("shortOIValue").textContent = fmtText(state?.tradeQuality?.shortStrikeOI);
+      $("longOIValue").textContent = fmtText(state?.tradeQuality?.longStrikeOI);
+      $("spacingValue").textContent = state?.tradeQuality?.strikeSpacingOk === true ? "OK" : state?.tradeQuality?.strikeSpacingOk === false ? "No ideal" : "--";
+      $("opexValue").textContent = humanizeOpex(state?.flags);
 
-      $("bidAskValue").textContent = fmtMoney(state.tradeQuality?.bidAskWidth);
-      $("spreadWidthPctValue").textContent = fmtPct(state.tradeQuality?.spreadWidthPct);
-      $("shortOIValue").textContent = fmtText(state.tradeQuality?.shortStrikeOI);
-      $("longOIValue").textContent = fmtText(state.tradeQuality?.longStrikeOI);
-      $("spacingValue").textContent = yesNo(state.tradeQuality?.strikeSpacingOk);
-      $("opexValue").textContent = humanizeOpex(state.flags);
+      setBadge($("riskBadge"), fmtText(state?.riskLabel), state?.riskLabel?.toLowerCase().includes("alto") ? "danger" : "warning");
+      setBadge($("sessionBadge"), humanizeSession(state?.session?.code, state?.session?.label), sessionCode === "regular" ? "success" : sessionCode === "premarket" ? "info" : "neutral");
 
-      renderFreshness(state);
-      renderReasons(state.reasons);
+      $("sourceValue").textContent = humanizeSource(state?.source);
+      $("optionsSourceValue").textContent = humanizeSource(state?.optionsMeta?.source);
+      $("freshnessValue").textContent = state?.dataHealth?.spotDegraded ? "Degradado" : "OK";
+      $("snapshotStatusValue").textContent = state?.dataHealth?.staleFromPreviousState ? "Previo" : "Actual";
 
-      const alertBox = $("marketAlert");
-      const alertTexts = [];
-
-      if (Array.isArray(state.alerts) && state.alerts.length) {
-        alertTexts.push(...state.alerts.map(a => `${a.title}: ${a.text}`));
-      }
-      if (degraded && state.dataHealth?.spotReason) {
-        alertTexts.push(`Dato spot degradado: ${state.dataHealth.spotReason}`);
-      }
-
-      if (alertTexts.length) {
-        alertBox.style.display = "block";
-        alertBox.textContent = alertTexts.join(" · ");
-      } else {
-        alertBox.style.display = "none";
-        alertBox.textContent = "";
-      }
+      renderReasons(state?.reasons || []);
+      renderAlert(state);
     }
 
-    async function loadDashboard(){
-      try{
-        const state = await fetchState();
-        renderState(state);
-      } catch(err){
-        $("headerMeta").textContent = "Última actualización del snapshot: error";
-        $("decisionText").textContent = "Error";
-        $("phaseNote").textContent = "No se pudo cargar el estado del dashboard.";
-        $("freshnessValue").textContent = "Sin datos";
-        $("snapshotStatusValue").textContent = "Error de carga";
-        renderReasons([err.message || "Error"]);
-      }
+    function setupTheme(){
+      const root = document.documentElement;
+      let theme = root.getAttribute("data-theme") || "dark";
+      $("themeBtn").addEventListener("click", () => {
+        theme = theme === "dark" ? "light" : "dark";
+        root.setAttribute("data-theme", theme);
+      });
     }
 
-    function startTimers(){
-      updateClocks();
-      if (clockInterval) clearInterval(clockInterval);
-      clockInterval = setInterval(updateClocks, 1000);
-
-      if (dashboardInterval) clearInterval(dashboardInterval);
-      dashboardInterval = setInterval(loadDashboard, 60000);
+    function setupRefresh(){
+      $("refreshBtn").addEventListener("click", loadState);
     }
 
-    $("refreshBtn").addEventListener("click", loadDashboard);
-
-    applyThemeToggle();
+    setupTheme();
+    setupRefresh();
     updateClocks();
-    loadDashboard();
-    startTimers();
+    loadState();
+    setInterval(updateClocks, 1000);
   </script>
 </body>
 </html>
