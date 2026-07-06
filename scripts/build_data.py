@@ -148,9 +148,7 @@ def get_finnhub_api_key():
     if not api_key:
         raise RuntimeError("FINNHUB_API_KEY no está configurada")
     return api_key
-
-
-def load_previous_state():
+    def load_previous_state():
     if not os.path.exists(STATE_PATH):
         return None
     try:
@@ -158,7 +156,9 @@ def load_previous_state():
             return json.load(f)
     except Exception:
         return None
-        def fallback_quote_from_previous(previous_state, reason_code, reason_text):
+
+
+def fallback_quote_from_previous(previous_state, reason_code, reason_text):
     current_dt = now_ny()
 
     if previous_state:
@@ -250,8 +250,9 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
                 "degraded": False,
                 "degradedReason": None,
                 "staleFromPreviousState": False,
-        }
-                    except requests.exceptions.Timeout:
+    }
+
+        except requests.exceptions.Timeout:
             last_error = "timeout"
             if attempt < retries:
                 time_module.sleep(sleep_seconds)
@@ -339,7 +340,7 @@ def round_to_strike(price, step=1):
     if price is None:
         return None
     return math.ceil(price / step) * step
-def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, session_code: str):
+    def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, session_code: str):
     regular_open = time(9, 30)
     qqq_opt_close = QQQ_OPTIONS_CLOSE_ET
 
@@ -470,9 +471,7 @@ def score_trade_quality(q, session_code):
         reasons.append("Spacing de strikes no ideal")
 
     return score, reasons
-
-
-def decide_trade(base_state):
+    def decide_trade(base_state):
     reasons = []
     alerts = []
     score = 0
@@ -639,4 +638,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-            
+    
