@@ -423,6 +423,20 @@
               </div>
             </div>
           </div>
+
+          <div class="status-block">
+            <div class="status-label">Freshness</div>
+            <div class="source-list">
+              <div class="source-row">
+                <span class="source-key">Estado</span>
+                <span class="source-pill" id="freshnessValue">--</span>
+              </div>
+              <div class="source-row">
+                <span class="source-key">Dato</span>
+                <span class="source-pill" id="snapshotStatusValue">--</span>
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
     </section>
@@ -499,7 +513,6 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-    let lastState = null;
     let dashboardInterval = null;
     let clockInterval = null;
 
@@ -518,7 +531,15 @@
         "yahoo_option_chain":"Yahoo Finance",
         "market_closed_guard":"Mercado cerrado",
         "no_options_source_available":"Sin fuente activa",
-        "missing_finnhub_api_key":"API no configurada"
+        "missing_finnhub_api_key":"API no configurada",
+        "finnhub_http_502":"Finnhub degradado",
+        "finnhub_http_503":"Finnhub degradado",
+        "finnhub_http_504":"Finnhub degradado",
+        "finnhub_rate_limited":"Finnhub limitado",
+        "finnhub_timeout":"Finnhub timeout",
+        "finnhub_request_error":"Finnhub error",
+        "finnhub_unexpected_error":"Finnhub error",
+        "finnhub_unknown_error":"Finnhub error"
       };
       return map[v] || (value ? String(value).replaceAll("_"," ") : "--");
     }
@@ -572,7 +593,10 @@
       return "Sin macro alta hoy";
     }
 
-    function phaseMessage(execution, sessionCode){
+    function phaseMessage(execution, sessionCode, degraded){
+      if (degraded) {
+        return "Dato spot degradado. El dashboard sigue activo, pero conviene tratar la decisión como provisional hasta recuperar el proveedor.";
+      }
       if (sessionCode !== "regular") {
         return "Aún no estás en sesión regular. El panel solo observa y no debería intentar validar una entrada real.";
       }
@@ -649,13 +673,37 @@
 
     async function fetchState(){
       const url = `./data/state.json?t=${Date.now()}`;
-      const res = await fetch(url, { cache:"no-store" });
+      const res = await fetch(url, { cache: "no-store" });
       if(!res.ok) throw new Error(`No se pudo cargar state.json (${res.status})`);
       return res.json();
     }
 
+    function renderFreshness(state){
+      const degraded = !!state.dataHealth?.spotDegraded;
+      const stale = !!state.dataHealth?.staleFromPreviousState;
+      const sessionCode = state.session?.code || "";
+
+      if (degraded && stale) {
+        $("freshnessValue").textContent = "Dato retrasado";
+        $("snapshotStatusValue").textContent = "Usando snapshot previo";
+        return;
+      }
+      if (degraded) {
+        $("freshnessValue").textContent = "Dato degradado";
+        $("snapshotStatusValue").textContent = "Proveedor con incidencia";
+        return;
+      }
+      if (sessionCode !== "regular") {
+        $("freshnessValue").textContent = "Mercado fuera de sesión";
+        $("snapshotStatusValue").textContent = "Sin necesidad intradía";
+        return;
+      }
+      $("freshnessValue").textContent = "Dato reciente";
+      $("snapshotStatusValue").textContent = "Snapshot actual";
+    }
+
     function renderState(state){
-      lastState = state;
+      const degraded = !!state.dataHealth?.spotDegraded;
 
       $("headerMeta").textContent = `Última actualización del snapshot: ${fmtText(state.updatedAtNY || state.updatedAtText)}`;
       $("decisionText").textContent = fmtText(state.decisionLabel);
@@ -669,7 +717,7 @@
       $("summaryOpex").textContent = humanizeOpex(state.flags);
       $("summaryPhase").textContent = fmtText(state.execution?.phase);
 
-      $("phaseNote").textContent = phaseMessage(state.execution, state.session?.code);
+      $("phaseNote").textContent = phaseMessage(state.execution, state.session?.code, degraded);
 
       $("priceValue").textContent = fmtMoney(state.price);
       $("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
@@ -740,12 +788,22 @@
       $("spacingValue").textContent = yesNo(state.tradeQuality?.strikeSpacingOk);
       $("opexValue").textContent = humanizeOpex(state.flags);
 
+      renderFreshness(state);
       renderReasons(state.reasons);
 
       const alertBox = $("marketAlert");
-      if(Array.isArray(state.alerts) && state.alerts.length){
+      const alertTexts = [];
+
+      if (Array.isArray(state.alerts) && state.alerts.length) {
+        alertTexts.push(...state.alerts.map(a => `${a.title}: ${a.text}`));
+      }
+      if (degraded && state.dataHealth?.spotReason) {
+        alertTexts.push(`Dato spot degradado: ${state.dataHealth.spotReason}`);
+      }
+
+      if (alertTexts.length) {
         alertBox.style.display = "block";
-        alertBox.textContent = state.alerts.map(a => `${a.title}: ${a.text}`).join(" · ");
+        alertBox.textContent = alertTexts.join(" · ");
       } else {
         alertBox.style.display = "none";
         alertBox.textContent = "";
@@ -760,6 +818,8 @@
         $("headerMeta").textContent = "Última actualización del snapshot: error";
         $("decisionText").textContent = "Error";
         $("phaseNote").textContent = "No se pudo cargar el estado del dashboard.";
+        $("freshnessValue").textContent = "Sin datos";
+        $("snapshotStatusValue").textContent = "Error de carga";
         renderReasons([err.message || "Error"]);
       }
     }
