@@ -27,6 +27,9 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
+SPOT_STALE_WARN_MIN = 30
+SPOT_STALE_HARD_MIN = 180
+
 
 def now_utc():
     return datetime.now(UTC_ZONE)
@@ -707,6 +710,15 @@ def compute_freshness(last_bar_at, market_holiday=None, session=None):
                 "label": "Mercado cerrado",
             }
 
+        if age >= SPOT_STALE_HARD_MIN:
+            return {
+                "ageMinutes": round2(age),
+                "thresholdMinutes": threshold,
+                "isStale": True,
+                "status": "Very stale",
+                "label": "Spot heredado",
+            }
+
         if session and session.get("code") in {"closed", "premarket", "afterhours"} and is_stale:
             return {
                 "ageMinutes": round2(age),
@@ -733,7 +745,49 @@ def compute_freshness(last_bar_at, market_holiday=None, session=None):
         }
 
 
-def compute_score_and_reasons(price_data, options, trade, macro, session, market_holiday):
+def compute_spot_guard(freshness, market_holiday, session):
+    age = freshness.get("ageMinutes")
+    if market_holiday.get("isHoliday"):
+        return {
+            "isUsable": True,
+            "level": "info",
+            "label": "Mercado cerrado",
+            "reason": "No se exige spot intradía por festivo",
+        }
+
+    if age is None:
+        return {
+            "isUsable": False,
+            "level": "hard",
+            "label": "Spot sin timestamp",
+            "reason": "No hay referencia temporal válida para el spot",
+        }
+
+    if age >= SPOT_STALE_HARD_MIN:
+        return {
+            "isUsable": False,
+            "level": "hard",
+            "label": "Spot heredado",
+            "reason": f"Spot con {round2(age)}m de antigüedad; no usable para 0DTE",
+        }
+
+    if age >= SPOT_STALE_WARN_MIN:
+        return {
+            "isUsable": True,
+            "level": "warn",
+            "label": "Spot retrasado",
+            "reason": f"Spot con {round2(age)}m de antigüedad; usar con cautela",
+        }
+
+    return {
+        "isUsable": True,
+        "level": "ok",
+        "label": "Spot reciente",
+        "reason": "Spot con frescura aceptable",
+    }
+
+
+def compute_score_and_reasons(price_data, options, trade, macro, session, market_holiday, spot_guard):
     reasons = []
     score = 50
 
@@ -741,6 +795,10 @@ def compute_score_and_reasons(price_data, options, trade, macro, session, market
         reasons.append(f"Mercado cerrado: {market_holiday['name']}")
         reasons.append("No hay sesión operable de opciones")
         return 0, "no entrar", "red", "no entrar", "Riesgo alto", reasons
+
+    if not spot_guard["isUsable"]:
+        reasons.append(spot_guard["reason"])
+        score -= 30
 
     if price_data["changePct"] is not None and price_data["changePct"] < 0:
         reasons.append("Sesgo bajista favorable")
@@ -771,6 +829,8 @@ def compute_score_and_reasons(price_data, options, trade, macro, session, market
 
     score = max(0, min(100, int(round(score))))
 
+    if not spot_guard["isUsable"]:
+        return score, "no entrar", "red", "no entrar", "Riesgo alto", reasons
     if macro.get("next") and macro["next"]["isVeto"]:
         return score, "no entrar", "red", "no entrar", "Riesgo alto", reasons
     if score >= 70:
@@ -793,6 +853,7 @@ def append_history(state):
         "optionsSource": state["optionsMeta"]["source"],
         "marketClosed": state["market"]["isHoliday"],
         "marketHolidayName": state["market"]["name"],
+        "spotGuardLabel": state["spotGuard"]["label"],
     }
 
     history = []
@@ -860,8 +921,19 @@ def main():
         session=session,
     )
 
+    spot_guard = compute_spot_guard(
+        freshness=freshness,
+        market_holiday=market_holiday,
+        session=session,
+    )
+
+    if not spot_guard["isUsable"]:
+        options["quotesUsable"] = False
+        options["notes"] = f"{options['notes']} · Spot no usable para 0DTE por antigüedad"
+        options["issues"] = options.get("issues", []) + ["spot_stale_guard"]
+
     score, decision, tone, label, risk, reasons = compute_score_and_reasons(
-        price_data, options, trade, macro, session, market_holiday
+        price_data, options, trade, macro, session, market_holiday, spot_guard
     )
 
     if macro.get("next"):
@@ -873,6 +945,21 @@ def main():
     else:
         macro_text = "--"
         macro_status_label = "--"
+
+    alerts = []
+    if market_holiday["isHoliday"]:
+        alerts.append({
+            "level": "warning",
+            "title": "Mercado cerrado",
+            "text": f"EE. UU. cerrado por {market_holiday['name']}"
+        })
+
+    if not spot_guard["isUsable"]:
+        alerts.append({
+            "level": "warning",
+            "title": "Spot heredado",
+            "text": spot_guard["reason"]
+        })
 
     state = {
         "ticker": TICKER,
@@ -905,19 +992,14 @@ def main():
         },
         "expectedMove": expected_move,
         "freshness": freshness,
+        "spotGuard": spot_guard,
         "score": score,
         "decision": decision,
         "decisionTone": tone,
         "decisionLabel": label,
         "riskLabel": risk,
         "reasons": reasons,
-        "alerts": [
-            {
-                "level": "warning",
-                "title": "Mercado cerrado",
-                "text": f"EE. UU. cerrado por {market_holiday['name']}"
-            }
-        ] if market_holiday["isHoliday"] else [],
+        "alerts": alerts,
         "macro": macro,
         "macroLabel": macro_status_label,
         "earnings": earnings,
