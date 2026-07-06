@@ -22,17 +22,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install pandas requests lxml html5lib beautifulsoup4
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Verify secret presence
@@ -52,19 +53,42 @@ jobs:
           mkdir -p data
           python scripts/build_data.py
 
+      - name: Verify generated files
+        run: |
+          if [ ! -f index.html ]; then
+            echo "ERROR: falta index.html en la raíz del repo"
+            exit 1
+          fi
+
+          if [ ! -f data/state.json ]; then
+            echo "ERROR: falta data/state.json tras ejecutar build_data.py"
+            exit 1
+          fi
+
+          echo "Contenido generado:"
+          find data -maxdepth 3 -type f | sort
+          echo "Preview state.json:"
+          head -n 40 data/state.json || true
+
       - name: Prepare site
         run: |
+          rm -rf _site
           mkdir -p _site
+
           cp index.html _site/index.html
-          if [ -d data ]; then cp -r data _site/data; fi
+          cp -r data _site/data
+
           if [ -f favicon.ico ]; then cp favicon.ico _site/favicon.ico; fi
           if [ -f CNAME ]; then cp CNAME _site/CNAME; fi
-          find _site -maxdepth 3 -type f | sort
+          if [ -f .nojekyll ]; then cp .nojekyll _site/.nojekyll; else touch _site/.nojekyll; fi
+
+          echo "Archivos finales en _site:"
+          find _site -maxdepth 4 -type f | sort
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: _site
+          path: ./_site
 
   deploy:
     environment:
