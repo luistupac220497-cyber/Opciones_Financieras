@@ -65,7 +65,9 @@ def macro_events_2026():
         parse_event("2026-07-29 14:30", "Rueda de prensa FOMC", "alto", veto=True),
         parse_event("2026-08-07 08:30", "Nóminas no agrícolas (NFP)", "alto", veto=True),
     ]
-    def build_macro_block(current_dt):
+
+
+def build_macro_block(current_dt):
     events = [e for e in macro_events_2026() if e["dt"] >= current_dt - timedelta(hours=6)]
     events.sort(key=lambda x: x["dt"])
 
@@ -148,7 +150,9 @@ def get_finnhub_api_key():
     if not api_key:
         raise RuntimeError("FINNHUB_API_KEY no está configurada")
     return api_key
-    def load_previous_state():
+
+
+def load_previous_state():
     if not os.path.exists(STATE_PATH):
         return None
     try:
@@ -250,7 +254,7 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
                 "degraded": False,
                 "degradedReason": None,
                 "staleFromPreviousState": False,
-    }
+            }
 
         except requests.exceptions.Timeout:
             last_error = "timeout"
@@ -340,7 +344,9 @@ def round_to_strike(price, step=1):
     if price is None:
         return None
     return math.ceil(price / step) * step
-    def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, session_code: str):
+
+
+def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, session_code: str):
     regular_open = time(9, 30)
     qqq_opt_close = QQQ_OPTIONS_CLOSE_ET
 
@@ -471,7 +477,9 @@ def score_trade_quality(q, session_code):
         reasons.append("Spacing de strikes no ideal")
 
     return score, reasons
-    def decide_trade(base_state):
+
+
+def decide_trade(base_state):
     reasons = []
     alerts = []
     score = 0
@@ -638,4 +646,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
