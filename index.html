@@ -8,375 +8,61 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
   <style>
     :root,[data-theme="light"]{
-      --bg:#f7f6f2;
-      --surface:#f9f8f5;
-      --surface-2:#fbfbf9;
-      --border:#d4d1ca;
-      --text:#28251d;
-      --muted:#7a7974;
-      --green:#437a22;
-      --yellow:#d19900;
-      --red:#a13544;
-      --blue:#006494;
-      --radius:18px;
-      --shadow:0 12px 32px rgba(0,0,0,.08);
+      --bg:#f7f6f2; --surface:#f9f8f5; --surface-2:#fbfbf9; --border:#d4d1ca;
+      --text:#28251d; --muted:#7a7974; --green:#437a22; --yellow:#d19900;
+      --red:#a13544; --radius:18px; --shadow:0 12px 32px rgba(0,0,0,.08);
       --font:"Satoshi",system-ui,sans-serif;
     }
-
     [data-theme="dark"]{
-      --bg:#171614;
-      --surface:#1c1b19;
-      --surface-2:#201f1d;
-      --border:#393836;
-      --text:#cdccca;
-      --muted:#797876;
-      --green:#6daa45;
-      --yellow:#edb336;
-      --red:#dd6974;
-      --blue:#5591c7;
-      --radius:18px;
-      --shadow:0 12px 32px rgba(0,0,0,.35);
+      --bg:#171614; --surface:#1c1b19; --surface-2:#201f1d; --border:#393836;
+      --text:#cdccca; --muted:#797876; --green:#6daa45; --yellow:#edb336;
+      --red:#dd6974; --radius:18px; --shadow:0 12px 32px rgba(0,0,0,.35);
       --font:"Satoshi",system-ui,sans-serif;
     }
-
     *{box-sizing:border-box}
-
-    body{
-      margin:0;
-      font-family:var(--font);
-      background:var(--bg);
-      color:var(--text);
-    }
-
-    .wrap{
-      width:min(1120px,calc(100% - 24px));
-      margin:24px auto 48px;
-    }
-
-    .top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:18px;
-    }
-
-    .title{
-      margin:0;
-      font-size:clamp(1.5rem,2vw,2rem);
-      font-weight:900;
-    }
-
-    .meta{
-      color:var(--muted);
-      font-size:.95rem;
-    }
-
-    .toolbar{
-      display:flex;
-      gap:10px;
-    }
-
-    .iconbtn{
-      width:44px;
-      height:44px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:var(--surface);
-      color:var(--text);
-      cursor:pointer;
-    }
-
-    .alert{
-      margin-bottom:18px;
-      padding:14px 16px;
-      border-radius:14px;
-      border:1px solid rgba(221,105,116,.35);
-      background:rgba(221,105,116,.12);
-      color:var(--text);
-      display:none;
-      font-weight:700;
-    }
-
-    .hero{
-      display:grid;
-      grid-template-columns:1.25fr .75fr;
-      gap:18px;
-      margin-bottom:18px;
-    }
-
-    .card{
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-    }
-
-    .hero-main{
-      padding:22px;
-    }
-
-    .eyebrow{
-      color:var(--muted);
-      font-size:.8rem;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-    }
-
-    .decision{
-      margin:.35rem 0 .45rem;
-      font-size:clamp(2rem,4vw,3.2rem);
-      line-height:1;
-      font-weight:900;
-    }
-
-    .decision.green{color:var(--green)}
-    .decision.yellow{color:var(--yellow)}
-    .decision.red{color:var(--red)}
-
-    .score{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 14px;
-      border:1px solid var(--border);
-      border-radius:999px;
-      background:var(--surface-2);
-      font-weight:800;
-    }
-
-    .summary{
-      margin-top:14px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-
-    .summary-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(127,127,127,.16);
-      background:var(--surface-2);
-      font-size:.84rem;
-      color:var(--text);
-    }
-
-    .summary-chip span{
-      color:var(--muted);
-    }
-
-    .grid4{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:12px;
-      margin-top:18px;
-    }
-
-    .mini{
-      background:var(--surface-2);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:14px;
-    }
-
-    .mini-label{
-      color:var(--muted);
-      font-size:.82rem;
-      margin-bottom:6px;
-    }
-
-    .mini-value{
-      font-size:1.15rem;
-      font-weight:800;
-    }
-
-    .side-premium{
-      padding:18px;
-    }
-
-    .status-panel{
-      display:grid;
-      gap:14px;
-    }
-
-    .status-top{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-    }
-
-    .status-item,.status-block{
-      background:var(--surface-2);
-      border:1px solid rgba(127,127,127,.16);
-      border-radius:16px;
-      padding:14px;
-    }
-
-    .status-label{
-      font-size:.78rem;
-      text-transform:uppercase;
-      letter-spacing:.10em;
-      color:var(--muted);
-      margin-bottom:8px;
-    }
-
-    .status-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:38px;
-      padding:10px 12px;
-      border-radius:999px;
-      font-size:.95rem;
-      font-weight:800;
-      border:1px solid transparent;
-    }
-
-    .status-badge.danger{
-      color:#fff;
-      background:linear-gradient(180deg, rgba(221,105,116,.95), rgba(161,53,68,.95));
-      border-color:rgba(221,105,116,.28);
-    }
-
-    .status-badge.warning{
-      color:#2b2200;
-      background:linear-gradient(180deg, rgba(237,179,54,.98), rgba(209,153,0,.95));
-      border-color:rgba(237,179,54,.30);
-    }
-
-    .status-badge.success{
-      color:#fff;
-      background:linear-gradient(180deg, rgba(109,170,69,.98), rgba(67,122,34,.98));
-      border-color:rgba(109,170,69,.30);
-    }
-
-    .status-badge.neutral{
-      color:var(--text);
-      background:rgba(127,127,127,.10);
-      border-color:rgba(127,127,127,.18);
-    }
-
-    .status-divider{
-      height:1px;
-      background:linear-gradient(90deg, transparent, rgba(127,127,127,.22), transparent);
-    }
-
-    .source-list{
-      display:grid;
-      gap:10px;
-    }
-
-    .source-row{
-      display:grid;
-      grid-template-columns:56px 1fr;
-      gap:10px;
-      align-items:center;
-    }
-
-    .source-key{
-      color:var(--muted);
-      font-size:.92rem;
-    }
-
-    .source-pill{
-      display:inline-flex;
-      align-items:center;
-      justify-content:flex-start;
-      width:100%;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(127,127,127,.18);
-      background:rgba(127,127,127,.08);
-      font-size:.84rem;
-      font-weight:700;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .grid3{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:18px;
-      margin-bottom:18px;
-    }
-
-    .panel{
-      padding:18px;
-    }
-
-    .panel h3{
-      margin:0 0 14px;
-      font-size:1rem;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.08em;
-    }
-
-    .kv{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:10px;
-      padding:10px 0;
-      border-top:1px solid rgba(127,127,127,.18);
-    }
-
-    .kv:first-of-type{
-      border-top:none;
-      padding-top:0;
-    }
-
-    .k{
-      color:var(--muted);
-    }
-
-    .v{
-      font-weight:700;
-      text-align:right;
-      max-width:320px;
-    }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-
-    .chip{
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:var(--surface-2);
-      font-size:.85rem;
-    }
-
-    @media (min-width:981px){
-      .status-top{
-        grid-template-columns:1fr 1fr;
-      }
-    }
-
-    @media (max-width:980px){
-      .hero,.grid3{
-        grid-template-columns:1fr;
-      }
-      .grid4{
-        grid-template-columns:repeat(2,1fr);
-      }
-    }
-
-    @media (max-width:560px){
-      .grid4{
-        grid-template-columns:1fr;
-      }
-      .top{
-        align-items:flex-start;
-        flex-direction:column;
-      }
-    }
+    body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
+    .wrap{width:min(1120px,calc(100% - 24px));margin:24px auto 48px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+    .title{margin:0;font-size:clamp(1.5rem,2vw,2rem);font-weight:900}
+    .meta{color:var(--muted);font-size:.95rem}
+    .toolbar{display:flex;gap:10px}
+    .iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer}
+    .alert{margin-bottom:18px;padding:14px 16px;border-radius:14px;border:1px solid rgba(221,105,116,.35);background:rgba(221,105,116,.12);color:var(--text);display:none;font-weight:700}
+    .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin-bottom:18px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .hero-main,.panel,.side-premium{padding:18px}
+    .eyebrow,.status-label,.panel h3{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.1em}
+    .panel h3{margin:0 0 14px;font-size:1rem}
+    .decision{margin:.35rem 0 .45rem;font-size:clamp(2rem,4vw,3.2rem);line-height:1;font-weight:900}
+    .decision.green{color:var(--green)} .decision.yellow{color:var(--yellow)} .decision.red{color:var(--red)}
+    .score{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);font-weight:800}
+    .summary{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+    .summary-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid rgba(127,127,127,.16);background:var(--surface-2);font-size:.84rem}
+    .summary-chip span{color:var(--muted)}
+    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+    .mini,.status-item,.status-block{background:var(--surface-2);border:1px solid rgba(127,127,127,.16);border-radius:14px;padding:14px}
+    .mini-label{color:var(--muted);font-size:.82rem;margin-bottom:6px}
+    .mini-value{font-size:1.15rem;font-weight:800}
+    .status-panel{display:grid;gap:14px}
+    .status-top{display:grid;grid-template-columns:1fr;gap:12px}
+    .status-badge{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:10px 12px;border-radius:999px;font-size:.95rem;font-weight:800;border:1px solid transparent}
+    .status-badge.danger{color:#fff;background:linear-gradient(180deg, rgba(221,105,116,.95), rgba(161,53,68,.95))}
+    .status-badge.warning{color:#2b2200;background:linear-gradient(180deg, rgba(237,179,54,.98), rgba(209,153,0,.95))}
+    .status-badge.success{color:#fff;background:linear-gradient(180deg, rgba(109,170,69,.98), rgba(67,122,34,.98))}
+    .status-badge.neutral{color:var(--text);background:rgba(127,127,127,.10)}
+    .status-divider{height:1px;background:linear-gradient(90deg, transparent, rgba(127,127,127,.22), transparent)}
+    .source-list{display:grid;gap:10px}
+    .source-row{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center}
+    .source-key,.k{color:var(--muted)}
+    .source-pill,.chip{display:inline-flex;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(127,127,127,.18);background:rgba(127,127,127,.08);font-size:.84rem;font-weight:700}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
+    .kv{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-top:1px solid rgba(127,127,127,.18)}
+    .kv:first-of-type{border-top:none;padding-top:0}
+    .v{text-align:right;font-weight:700;max-width:320px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    @media (min-width:981px){.status-top{grid-template-columns:1fr 1fr}}
+    @media (max-width:980px){.hero,.grid3{grid-template-columns:1fr}.grid4{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:560px){.grid4{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
 <body>
@@ -386,7 +72,6 @@
         <h1 class="title">QQQ 0DTE Dashboard</h1>
         <div class="meta" id="headerMeta">Cargando...</div>
       </div>
-
       <div class="toolbar">
         <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema">◐</button>
         <button class="iconbtn" id="refreshBtn" aria-label="Actualizar">↻</button>
@@ -401,7 +86,7 @@
         <div class="decision yellow" id="decisionText">Cargando...</div>
         <div class="score">Score <span id="scoreValue">--</span></div>
 
-        <div class="summary" id="summaryRow">
+        <div class="summary">
           <div class="summary-chip"><span>Buffer</span><strong id="summaryBuffer">--</strong></div>
           <div class="summary-chip"><span>Short</span><strong id="summaryShort">--</strong></div>
           <div class="summary-chip"><span>Crédito</span><strong id="summaryCredit">--</strong></div>
@@ -410,25 +95,10 @@
         </div>
 
         <div class="grid4">
-          <div class="mini">
-            <div class="mini-label">Precio</div>
-            <div class="mini-value" id="priceValue">--</div>
-          </div>
-
-          <div class="mini">
-            <div class="mini-label">Short strike</div>
-            <div class="mini-value" id="shortStrikeValue">--</div>
-          </div>
-
-          <div class="mini">
-            <div class="mini-label">Net credit</div>
-            <div class="mini-value" id="creditValueTop">--</div>
-          </div>
-
-          <div class="mini">
-            <div class="mini-label">Macro</div>
-            <div class="mini-value" id="macroCountdownTop">--</div>
-          </div>
+          <div class="mini"><div class="mini-label">Precio</div><div class="mini-value" id="priceValue">--</div></div>
+          <div class="mini"><div class="mini-label">Short strike</div><div class="mini-value" id="shortStrikeValue">--</div></div>
+          <div class="mini"><div class="mini-label">Net credit</div><div class="mini-value" id="creditValueTop">--</div></div>
+          <div class="mini"><div class="mini-label">Próximo gran evento</div><div class="mini-value" id="macroNextTop">--</div></div>
         </div>
       </article>
 
@@ -439,7 +109,6 @@
               <div class="status-label">Riesgo</div>
               <div class="status-badge danger" id="riskBadge">--</div>
             </div>
-
             <div class="status-item">
               <div class="status-label">Sesión</div>
               <div class="status-badge neutral" id="sessionBadge">--</div>
@@ -451,14 +120,8 @@
           <div class="status-block">
             <div class="status-label">Fuentes</div>
             <div class="source-list">
-              <div class="source-row">
-                <span class="source-key">Spot</span>
-                <span class="source-pill" id="sourceValue">--</span>
-              </div>
-              <div class="source-row">
-                <span class="source-key">Options</span>
-                <span class="source-pill" id="optionsSourceValue">--</span>
-              </div>
+              <div class="source-row"><span class="source-key">Spot</span><span class="source-pill" id="sourceValue">--</span></div>
+              <div class="source-row"><span class="source-key">Options</span><span class="source-pill" id="optionsSourceValue">--</span></div>
             </div>
           </div>
         </div>
@@ -497,11 +160,11 @@
     <section class="grid3">
       <article class="card panel">
         <h3>Macro</h3>
-        <div class="kv"><div class="k">Evento</div><div class="v" id="macroEventValue">--</div></div>
-        <div class="kv"><div class="k">Impacto</div><div class="v" id="macroImpactValue">--</div></div>
+        <div class="kv"><div class="k">Macro hoy</div><div class="v" id="macroTodayValue">--</div></div>
+        <div class="kv"><div class="k">Ventana crítica</div><div class="v" id="macroCriticalValue">--</div></div>
+        <div class="kv"><div class="k">Próximo gran evento</div><div class="v" id="macroNextValue">--</div></div>
         <div class="kv"><div class="k">Fecha ET</div><div class="v" id="macroDateValue">--</div></div>
         <div class="kv"><div class="k">Countdown</div><div class="v" id="macroCountdownValue">--</div></div>
-        <div class="kv"><div class="k">Veto</div><div class="v" id="macroVetoValue">--</div></div>
       </article>
 
       <article class="card panel">
@@ -531,165 +194,113 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-
     const fmtMoney = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`;
     const fmtPct = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`;
     const fmtDelta = (v) => v == null || Number.isNaN(Number(v)) ? "--" : Number(v).toFixed(2);
     const fmtText = (v, fallback="--") => v == null || v === "" ? fallback : String(v);
     const yesNo = (v) => v === true ? "Sí" : v === false ? "No" : "--";
 
-    function humanizeSource(value) {
+    function humanizeSource(value){
       const v = String(value || "").trim().toLowerCase();
       const map = {
-        "finnhub_quote": "Finnhub",
-        "nasdaq_option_chain": "Nasdaq",
-        "yahoo_option_chain": "Yahoo Finance",
-        "market_closed_guard": "Mercado cerrado",
-        "no_options_source_available": "Sin fuente activa",
-        "missing_finnhub_api_key": "API no configurada"
+        "finnhub_quote":"Finnhub",
+        "nasdaq_option_chain":"Nasdaq",
+        "yahoo_option_chain":"Yahoo Finance",
+        "market_closed_guard":"Mercado cerrado",
+        "no_options_source_available":"Sin fuente activa",
+        "missing_finnhub_api_key":"API no configurada"
       };
-      return map[v] || (value ? String(value).replaceAll("_", " ") : "--");
+      return map[v] || (value ? String(value).replaceAll("_"," ") : "--");
     }
 
-    function humanizeSession(code, label) {
+    function humanizeSession(code,label){
       const v = String(code || "").toLowerCase();
-      if (v === "closed") return "Mercado cerrado";
-      if (v === "regular") return "Sesión regular";
-      if (v === "premarket") return "Premarket";
-      if (v === "afterhours") return "After hours";
+      if(v==="closed") return "Mercado cerrado";
+      if(v==="regular") return "Sesión regular";
+      if(v==="premarket") return "Premarket";
+      if(v==="afterhours") return "After hours";
       return label || "--";
     }
 
-    function humanizeExpiration(value) {
+    function humanizeExpiration(value){
       const v = String(value || "").toLowerCase();
-      if (v === "market_closed") return "Mercado cerrado";
-      if (v === "0dte_or_nearest") return "0DTE o vencimiento más cercano";
+      if(v==="market_closed") return "Mercado cerrado";
+      if(v==="0dte_or_nearest") return "0DTE o vencimiento más cercano";
       return value || "--";
     }
 
-    function humanizeLiquidity(value) {
-      if (value === true) return "Adecuada";
-      if (value === false) return "Débil";
+    function humanizeLiquidity(value){
+      if(value===true) return "Adecuada";
+      if(value===false) return "Débil";
       return "--";
     }
 
-    function humanizeOptionsNotes(value) {
-      if (!value) return "--";
-      return String(value)
-        .replaceAll("market_closed", "mercado cerrado")
-        .replaceAll("_", " ");
-    }
-
-    function humanizeRisk(value) {
+    function humanizeRisk(value){
       const v = String(value || "").toLowerCase();
-      if (v.includes("alto")) return "Riesgo alto";
-      if (v.includes("medio")) return "Riesgo medio";
-      if (v.includes("controlado")) return "Riesgo controlado";
+      if(v.includes("alto")) return "Riesgo alto";
+      if(v.includes("medio")) return "Riesgo medio";
+      if(v.includes("controlado")) return "Riesgo controlado";
       return value || "--";
     }
 
-    function getMacroView(state) {
-      const next = state.macro?.next;
-      const last = state.macro?.last;
-
-      if (next) {
-        return {
-          event: fmtText(next.evento),
-          impact: fmtText(next.impacto),
-          date: fmtText(next.datetimeNY),
-          countdown: fmtText(next.countdown),
-          veto: yesNo(next.isVeto),
-          summary: fmtText(next.countdown)
-        };
+    function macroTodayText(macro){
+      if (macro?.todayHighImpact && Array.isArray(macro?.todayList) && macro.todayList.length){
+        return macro.todayList.map(x => x.label).join(", ");
       }
-
-      if (last) {
-        return {
-          event: fmtText(last.evento),
-          impact: fmtText(last.impacto),
-          date: fmtText(last.datetimeNY),
-          countdown: "ya ocurrido",
-          veto: "No",
-          summary: `último ${fmtText(last.dateNY)}`
-        };
-      }
-
-      return {
-        event: "--",
-        impact: "--",
-        date: "--",
-        countdown: "--",
-        veto: "--",
-        summary: "--"
-      };
+      return "Sin macro alta hoy";
     }
 
-    function buildSummary(state, macroView) {
-      $("summaryBuffer").textContent = fmtPct(state.trade?.bufferDynamicPct);
-      $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
-      $("summaryCredit").textContent = fmtMoney(state.trade?.netCredit);
-      $("summaryMacro").textContent = macroView.summary;
-      $("summarySession").textContent = humanizeSession(state.session?.code, state.session?.label);
+    function renderReasons(list){
+      const box = $("reasonsBox");
+      box.innerHTML = "";
+      (Array.isArray(list) && list.length ? list : ["Sin motivos"]).forEach(item => {
+        const span = document.createElement("span");
+        span.className = "chip";
+        span.textContent = String(item).replaceAll("_"," ");
+        box.appendChild(span);
+      });
     }
 
-    function applyThemeToggle() {
+    function applyThemeToggle(){
       const root = document.documentElement;
       let current = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
       root.setAttribute("data-theme", current);
-
       $("themeBtn").addEventListener("click", () => {
         current = current === "dark" ? "light" : "dark";
         root.setAttribute("data-theme", current);
       });
     }
 
-    function setDecisionTone(tone) {
+    function setDecisionTone(tone){
       $("decisionText").className = `decision ${tone || "yellow"}`;
     }
 
-    function renderReasons(list) {
-      const box = $("reasonsBox");
-      box.innerHTML = "";
-
-      const cleaned = (Array.isArray(list) ? list : [])
-        .filter(item => {
-          const text = String(item || "").toLowerCase();
-          if (text.includes("spot con")) return false;
-          if (text.includes("spot heredado")) return false;
-          if (text.includes("antigüedad")) return false;
-          return true;
-        });
-
-      (cleaned.length ? cleaned : ["Sin motivos"]).forEach(item => {
-        const span = document.createElement("span");
-        span.className = "chip";
-        span.textContent = String(item).replaceAll("_", " ");
-        box.appendChild(span);
-      });
-    }
-
-    async function fetchState() {
+    async function fetchState(){
       const url = `./data/state.json?t=${Date.now()}`;
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`No se pudo cargar state.json (${res.status})`);
+      const res = await fetch(url,{cache:"no-store"});
+      if(!res.ok) throw new Error(`No se pudo cargar state.json (${res.status})`);
       return res.json();
     }
 
-    async function loadDashboard() {
-      try {
+    async function loadDashboard(){
+      try{
         const state = await fetchState();
-        const macroView = getMacroView(state);
 
         $("headerMeta").textContent = fmtText(state.updatedAtNY || state.updatedAtText);
         $("decisionText").textContent = fmtText(state.decisionLabel);
         $("scoreValue").textContent = state.score ?? "--";
         setDecisionTone(state.decisionTone);
-        buildSummary(state, macroView);
+
+        $("summaryBuffer").textContent = fmtPct(state.trade?.bufferDynamicPct);
+        $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
+        $("summaryCredit").textContent = fmtMoney(state.trade?.netCredit);
+        $("summaryMacro").textContent = fmtText(state.macro?.summary);
+        $("summarySession").textContent = humanizeSession(state.session?.code, state.session?.label);
 
         $("priceValue").textContent = fmtMoney(state.price);
         $("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
         $("creditValueTop").textContent = fmtMoney(state.trade?.netCredit);
-        $("macroCountdownTop").textContent = macroView.summary;
+        $("macroNextTop").textContent = fmtText(state.macro?.nextBig?.label, "—");
 
         const riskText = humanizeRisk(state.riskLabel);
         const sessionText = humanizeSession(state.session?.code, state.session?.label);
@@ -700,22 +311,14 @@
         $("optionsSourceValue").textContent = humanizeSource(state.optionsMeta?.source);
 
         $("riskBadge").className = "status-badge";
-        if ((riskText || "").toLowerCase().includes("alto")) {
-          $("riskBadge").classList.add("danger");
-        } else if ((riskText || "").toLowerCase().includes("medio")) {
-          $("riskBadge").classList.add("warning");
-        } else {
-          $("riskBadge").classList.add("success");
-        }
+        if((riskText || "").toLowerCase().includes("alto")) $("riskBadge").classList.add("danger");
+        else if((riskText || "").toLowerCase().includes("medio")) $("riskBadge").classList.add("warning");
+        else $("riskBadge").classList.add("success");
 
         $("sessionBadge").className = "status-badge";
-        if ((state.session?.code || "") === "closed") {
-          $("sessionBadge").classList.add("neutral");
-        } else if ((state.session?.code || "") === "regular") {
-          $("sessionBadge").classList.add("success");
-        } else {
-          $("sessionBadge").classList.add("warning");
-        }
+        if((state.session?.code || "") === "closed") $("sessionBadge").classList.add("neutral");
+        else if((state.session?.code || "") === "regular") $("sessionBadge").classList.add("success");
+        else $("sessionBadge").classList.add("warning");
 
         $("spotValue").textContent = fmtMoney(state.price);
         $("changeValue").textContent = `${fmtMoney(state.change)} · ${fmtPct(state.changePct)}`;
@@ -733,13 +336,13 @@
         $("quotesValue").textContent = yesNo(state.options?.quotesUsable);
         $("liquidityValue").textContent = humanizeLiquidity(state.options?.liquidityOk);
         $("deltaValue").textContent = fmtDelta(state.options?.shortCallDelta);
-        $("notesValue").textContent = humanizeOptionsNotes(state.options?.notes);
+        $("notesValue").textContent = fmtText(state.options?.notes);
 
-        $("macroEventValue").textContent = macroView.event;
-        $("macroImpactValue").textContent = macroView.impact;
-        $("macroDateValue").textContent = macroView.date;
-        $("macroCountdownValue").textContent = macroView.countdown;
-        $("macroVetoValue").textContent = macroView.veto;
+        $("macroTodayValue").textContent = macroTodayText(state.macro);
+        $("macroCriticalValue").textContent = yesNo(state.macro?.windowCritical);
+        $("macroNextValue").textContent = fmtText(state.macro?.nextBig?.label, "—");
+        $("macroDateValue").textContent = fmtText(state.macro?.nextBig?.datetimeNY, "—");
+        $("macroCountdownValue").textContent = fmtText(state.macro?.nextBig?.countdown, "—");
 
         $("earningsCompanyValue").textContent = fmtText(state.earnings?.next?.empresa);
         $("earningsTickerValue").textContent = fmtText(state.earnings?.next?.ticker);
@@ -756,23 +359,14 @@
         renderReasons(state.reasons);
 
         const alertBox = $("marketAlert");
-        const visibleAlerts = (Array.isArray(state.alerts) ? state.alerts : []).filter(a => {
-          const title = String(a?.title || "").toLowerCase();
-          const text = String(a?.text || "").toLowerCase();
-          if (title.includes("spot heredado")) return false;
-          if (text.includes("no usable para 0dte")) return false;
-          return true;
-        });
-
-        if (visibleAlerts.length) {
+        if(Array.isArray(state.alerts) && state.alerts.length){
           alertBox.style.display = "block";
-          alertBox.textContent = visibleAlerts.map(a => `${a.title}: ${a.text}`).join(" · ");
+          alertBox.textContent = state.alerts.map(a => `${a.title}: ${a.text}`).join(" · ");
         } else {
           alertBox.style.display = "none";
           alertBox.textContent = "";
         }
-
-      } catch (err) {
+      } catch(err){
         $("headerMeta").textContent = "Error cargando datos";
         $("decisionText").textContent = "Error";
         renderReasons([err.message || "Error"]);
