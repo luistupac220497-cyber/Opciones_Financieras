@@ -650,7 +650,17 @@
     function renderReasons(list) {
       const box = $("reasonsBox");
       box.innerHTML = "";
-      (Array.isArray(list) && list.length ? list : ["Sin motivos"]).forEach(item => {
+
+      const cleaned = (Array.isArray(list) ? list : [])
+        .filter(item => {
+          const text = String(item || "").toLowerCase();
+          if (text.includes("spot con")) return false;
+          if (text.includes("spot heredado")) return false;
+          if (text.includes("antigüedad")) return false;
+          return true;
+        });
+
+      (cleaned.length ? cleaned : ["Sin motivos"]).forEach(item => {
         const span = document.createElement("span");
         span.className = "chip";
         span.textContent = String(item).replaceAll("_", " ");
@@ -746,9 +756,17 @@
         renderReasons(state.reasons);
 
         const alertBox = $("marketAlert");
-        if (Array.isArray(state.alerts) && state.alerts.length) {
+        const visibleAlerts = (Array.isArray(state.alerts) ? state.alerts : []).filter(a => {
+          const title = String(a?.title || "").toLowerCase();
+          const text = String(a?.text || "").toLowerCase();
+          if (title.includes("spot heredado")) return false;
+          if (text.includes("no usable para 0dte")) return false;
+          return true;
+        });
+
+        if (visibleAlerts.length) {
           alertBox.style.display = "block";
-          alertBox.textContent = state.alerts.map(a => `${a.title}: ${a.text}`).join(" · ");
+          alertBox.textContent = visibleAlerts.map(a => `${a.title}: ${a.text}`).join(" · ");
         } else {
           alertBox.style.display = "none";
           alertBox.textContent = "";
