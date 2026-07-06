@@ -40,9 +40,9 @@
     "entryStartET": "10:30 ET",
     "entryCutoffET": "13:30 ET",
     "hardExitET": "15:15 ET",
-    "minutesToEntryStart": -500,
-    "minutesToEntryCutoff": -320,
-    "minutesToHardExit": -215,
+    "minutesToEntryStart": -511,
+    "minutesToEntryCutoff": -331,
+    "minutesToHardExit": -226,
     "maxHoldMinutes": 60,
     "entryWindowOpen": false,
     "timeStopTriggered": false,
@@ -69,7 +69,7 @@
       "impact": "alto",
       "datetimeNY": "2026-07-08 14:00 ET",
       "dateNY": "2026-07-08",
-      "countdown": "1d 19h",
+      "countdown": "1d 18h",
       "veto": true
     },
     "summary": "Próximo gran evento · Actas del FOMC"
