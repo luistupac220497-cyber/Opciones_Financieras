@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import time as time_module
 from datetime import datetime, timedelta, time
 from zoneinfo import ZoneInfo
 
@@ -11,7 +12,6 @@ UTC = ZoneInfo("UTC")
 
 DATA_DIR = "data"
 STATE_PATH = os.path.join(DATA_DIR, "state.json")
-
 QQQ_OPTIONS_CLOSE_ET = time(16, 15)
 
 
@@ -71,7 +71,8 @@ def build_macro_block(current_dt):
     events = [e for e in macro_events_2026() if e["dt"] >= current_dt - timedelta(hours=6)]
     events.sort(key=lambda x: x["dt"])
 
-    today_high, window_critical = [], []
+    today_high = []
+    window_critical = []
     next_big = None
 
     for e in events:
@@ -86,13 +87,17 @@ def build_macro_block(current_dt):
         next_big = high_future[0]
 
     if window_critical:
-        macro_summary, macro_score = f"Ventana crítica · {window_critical[0]['label']}", -40
+        macro_summary = f"Ventana crítica · {window_critical[0]['label']}"
+        macro_score = -40
     elif today_high:
-        macro_summary, macro_score = f"Macro hoy · {', '.join(e['label'] for e in today_high[:2])}", -15
+        macro_summary = f"Macro hoy · {', '.join(e['label'] for e in today_high[:2])}"
+        macro_score = -15
     elif next_big:
-        macro_summary, macro_score = f"Próximo gran evento · {next_big['label']}", -5
+        macro_summary = f"Próximo gran evento · {next_big['label']}"
+        macro_score = -5
     else:
-        macro_summary, macro_score = "Sin macro alta hoy", 0
+        macro_summary = "Sin macro alta hoy"
+        macro_score = 0
 
     return {
         "todayHighImpact": len(today_high) > 0,
@@ -132,7 +137,10 @@ def get_opex_flags(current_dt):
     monthly_opex = {"2026-07-17", "2026-08-21", "2026-09-18", "2026-10-16", "2026-11-20", "2026-12-18"}
     quarterly_opex = {"2026-09-18", "2026-12-18"}
     today = fmt_date(current_dt)
-    return {"opexDay": today in monthly_opex, "opexQuarterly": today in quarterly_opex}
+    return {
+        "opexDay": today in monthly_opex,
+        "opexQuarterly": today in quarterly_opex
+    }
 
 
 def get_finnhub_api_key():
@@ -142,29 +150,145 @@ def get_finnhub_api_key():
     return api_key
 
 
-def fetch_quote_finnhub(symbol: str):
+def load_previous_state():
+    if not os.path.exists(STATE_PATH):
+        return None
+    try:
+        with open(STATE_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def fallback_quote_from_previous(previous_state, reason_code, reason_text):
+    current_dt = now_ny()
+
+    if previous_state:
+        prev_price = previous_state.get("price")
+        prev_change = previous_state.get("change")
+        prev_change_pct = previous_state.get("changePct")
+        prev_close = previous_state.get("prevClose")
+        prev_updated = previous_state.get("updatedAtNY") or previous_state.get("updatedAtText") or fmt_dt(current_dt)
+
+        return {
+            "price": prev_price,
+            "change": prev_change,
+            "changePct": prev_change_pct,
+            "prevClose": prev_close,
+            "updatedAt": current_dt,
+            "updatedAtText": prev_updated,
+            "source": reason_code,
+            "degraded": True,
+            "degradedReason": reason_text,
+            "staleFromPreviousState": True,
+        }
+
+    return {
+        "price": None,
+        "change": None,
+        "changePct": None,
+        "prevClose": None,
+        "updatedAt": current_dt,
+        "updatedAtText": fmt_dt(current_dt),
+        "source": reason_code,
+        "degraded": True,
+        "degradedReason": reason_text,
+        "staleFromPreviousState": False,
+    }
+
+
+def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.0):
     api_key = get_finnhub_api_key()
     url = "https://finnhub.io/api/v1/quote"
     params = {"symbol": symbol, "token": api_key}
-    resp = requests.get(url, params=params, timeout=15)
-    resp.raise_for_status()
-    data = resp.json()
+    previous_state = load_previous_state()
+    last_error = None
 
-    price = float(data.get("c") or 0.0)
-    change = float(data.get("d") or 0.0)
-    change_pct = float(data.get("dp") or 0.0)
-    prev_close = float(data.get("pc") or 0.0)
-    ts = data.get("t") or 0
-    updated_dt = datetime.fromtimestamp(ts, tz=NY) if ts else now_ny()
+    for attempt in range(1, retries + 1):
+        try:
+            resp = requests.get(url, params=params, timeout=15)
+            status = resp.status_code
 
-    return {
-        "price": price,
-        "change": change,
-        "changePct": change_pct,
-        "prevClose": prev_close,
-        "updatedAt": updated_dt,
-        "source": "finnhub_quote",
-    }
+            if status >= 500:
+                last_error = f"Finnhub {status}"
+                if attempt < retries:
+                    time_module.sleep(sleep_seconds)
+                    continue
+                return fallback_quote_from_previous(
+                    previous_state,
+                    f"finnhub_http_{status}",
+                    f"Finnhub devolvió HTTP {status}"
+                )
+
+            if status == 429:
+                last_error = "Finnhub 429"
+                if attempt < retries:
+                    time_module.sleep(sleep_seconds)
+                    continue
+                return fallback_quote_from_previous(
+                    previous_state,
+                    "finnhub_rate_limited",
+                    "Finnhub devolvió 429 rate limit"
+                )
+
+            resp.raise_for_status()
+            data = resp.json()
+
+            price = float(data.get("c") or 0.0)
+            change = float(data.get("d") or 0.0)
+            change_pct = float(data.get("dp") or 0.0)
+            prev_close = float(data.get("pc") or 0.0)
+            ts = data.get("t") or 0
+            updated_dt = datetime.fromtimestamp(ts, tz=NY) if ts else now_ny()
+
+            return {
+                "price": price,
+                "change": change,
+                "changePct": change_pct,
+                "prevClose": prev_close,
+                "updatedAt": updated_dt,
+                "updatedAtText": fmt_dt(updated_dt),
+                "source": "finnhub_quote",
+                "degraded": False,
+                "degradedReason": None,
+                "staleFromPreviousState": False,
+            }
+
+        except requests.exceptions.Timeout:
+            last_error = "timeout"
+            if attempt < retries:
+                time_module.sleep(sleep_seconds)
+                continue
+            return fallback_quote_from_previous(
+                previous_state,
+                "finnhub_timeout",
+                "Timeout consultando Finnhub"
+            )
+
+        except requests.exceptions.RequestException as e:
+            last_error = str(e)
+            if attempt < retries:
+                time_module.sleep(sleep_seconds)
+                continue
+            return fallback_quote_from_previous(
+                previous_state,
+                "finnhub_request_error",
+                f"Error consultando Finnhub: {str(e)[:140]}"
+            )
+
+        except Exception as e:
+            last_error = str(e)
+            return fallback_quote_from_previous(
+                previous_state,
+                "finnhub_unexpected_error",
+                f"Error inesperado en Finnhub: {str(e)[:140]}"
+            )
+
+    return fallback_quote_from_previous(
+        previous_state,
+        "finnhub_unknown_error",
+        f"Error desconocido en Finnhub: {last_error or 'sin detalle'}"
+    )
 
 
 def infer_session_from_time(current_dt: datetime):
@@ -214,20 +338,6 @@ def build_execution_block(current_dt, session_code):
     }
 
 
-def safe_float(v):
-    try:
-        if v is None:
-            return None
-        if isinstance(v, (int, float)):
-            return float(v)
-        s = str(v).replace("$", "").replace(",", "").strip()
-        if s in {"", "--", "N/A", "None"}:
-            return None
-        return float(s)
-    except Exception:
-        return None
-
-
 def round_to_strike(price, step=1):
     if price is None:
         return None
@@ -237,6 +347,26 @@ def round_to_strike(price, step=1):
 def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, session_code: str):
     regular_open = time(9, 30)
     qqq_opt_close = QQQ_OPTIONS_CLOSE_ET
+
+    base_trade = {
+        "bufferDynamicPct": 1.07,
+        "shortStrike": None,
+        "breakeven": None,
+        "distToShort": None,
+        "netCredit": None,
+    }
+
+    base_quality = {
+        "targetDelta": 0.20,
+        "creditPerRisk": 0.25,
+        "minOpenInterest": 0,
+        "shortStrikeOI": None,
+        "longStrikeOI": None,
+        "width": 5,
+        "bidAskWidth": None,
+        "spreadWidthPct": None,
+        "strikeSpacingOk": True,
+    }
 
     if session_code != "regular":
         return {
@@ -248,24 +378,8 @@ def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, s
                 "notes": "Mercado fuera de sesión regular; cadena de opciones desactivada",
             },
             "optionsMeta": {"source": "market_closed_guard"},
-            "trade": {
-                "bufferDynamicPct": 1.07,
-                "shortStrike": None,
-                "breakeven": None,
-                "distToShort": None,
-                "netCredit": None,
-            },
-            "tradeQuality": {
-                "targetDelta": 0.20,
-                "creditPerRisk": 0.25,
-                "minOpenInterest": 0,
-                "shortStrikeOI": None,
-                "longStrikeOI": None,
-                "width": 5,
-                "bidAskWidth": None,
-                "spreadWidthPct": None,
-                "strikeSpacingOk": True,
-            }
+            "trade": base_trade,
+            "tradeQuality": base_quality,
         }
 
     if not (regular_open <= current_dt.time() <= qqq_opt_close):
@@ -278,29 +392,11 @@ def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, s
                 "notes": "Fuera de horario operable de opciones para QQQ",
             },
             "optionsMeta": {"source": "market_closed_guard"},
-            "trade": {
-                "bufferDynamicPct": 1.07,
-                "shortStrike": None,
-                "breakeven": None,
-                "distToShort": None,
-                "netCredit": None,
-            },
-            "tradeQuality": {
-                "targetDelta": 0.20,
-                "creditPerRisk": 0.25,
-                "minOpenInterest": 0,
-                "shortStrikeOI": None,
-                "longStrikeOI": None,
-                "width": 5,
-                "bidAskWidth": None,
-                "spreadWidthPct": None,
-                "strikeSpacingOk": True,
-            }
+            "trade": base_trade,
+            "tradeQuality": base_quality,
         }
 
-    # Nasdaq público no está entregando una cadena usable de forma fiable en fetch simple.
-    # Dejamos la rama preparada sin inventar quotes.
-    short_strike = round_to_strike((spot_price or 0) * 1.0107, 1)
+    short_strike = round_to_strike((spot_price or 0) * 1.0107, 1) if spot_price is not None else None
 
     return {
         "options": {
@@ -308,7 +404,7 @@ def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, s
             "quotesUsable": False,
             "liquidityOk": False,
             "shortCallDelta": 0.20,
-            "notes": "Sesión regular activa, pero la cadena pública de Nasdaq no devolvió datos utilizables; no se fabrican strikes/creditos operables",
+            "notes": "Sesión regular activa, pero la cadena pública de Nasdaq no devolvió datos utilizables; no se fabrican strikes/créditos operables",
         },
         "optionsMeta": {"source": "nasdaq_option_chain"},
         "trade": {
@@ -318,17 +414,7 @@ def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, s
             "distToShort": None if short_strike is None or spot_price is None else round(short_strike - spot_price, 2),
             "netCredit": None,
         },
-        "tradeQuality": {
-            "targetDelta": 0.20,
-            "creditPerRisk": 0.25,
-            "minOpenInterest": 0,
-            "shortStrikeOI": None,
-            "longStrikeOI": None,
-            "width": 5,
-            "bidAskWidth": None,
-            "spreadWidthPct": None,
-            "strikeSpacingOk": True,
-        }
+        "tradeQuality": base_quality,
     }
 
 
@@ -442,6 +528,11 @@ def decide_trade(base_state):
     score += tq_score
     reasons.extend(tq_reasons)
 
+    if base_state.get("dataHealth", {}).get("spotDegraded"):
+        reasons.append("Spot degradado")
+        alerts.append({"title": "Dato degradado", "text": base_state["dataHealth"]["spotReason"]})
+        score -= 15
+
     if base_state["macro"]["windowCritical"]:
         decision_label, decision_tone, risk_label = "no entrar", "red", "Riesgo alto"
     elif execution["timeStopTriggered"]:
@@ -488,12 +579,11 @@ def build_state():
     flags = get_opex_flags(current_dt)
     macro = build_macro_block(current_dt)
     execution = build_execution_block(current_dt, session_code)
-
     options_bundle = fetch_options_source("QQQ", price, current_dt, session_code)
 
     state = {
         "updatedAtNY": fmt_dt(updated_at),
-        "updatedAtText": fmt_dt(updated_at),
+        "updatedAtText": quote.get("updatedAtText", fmt_dt(updated_at)),
         "price": price,
         "change": change,
         "changePct": change_pct,
@@ -524,6 +614,11 @@ def build_state():
             "date": fmt_date(current_dt),
             "source": "--",
         },
+        "dataHealth": {
+            "spotDegraded": quote.get("degraded", False),
+            "spotReason": quote.get("degradedReason"),
+            "staleFromPreviousState": quote.get("staleFromPreviousState", False),
+        }
     }
 
     decision = decide_trade(state)
