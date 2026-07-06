@@ -4,66 +4,175 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>QQQ 0DTE Dashboard</title>
-  <link rel="preconnect" href://api.fontshare.com" />
+  <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
   <style>
     :root,[data-theme="light"]{
-      --bg:#f7f6f2; --surface:#f9f8f5; --surface-2:#fbfbf9; --border:#d4d1ca;
-      --text:#28251d; --muted:#7a7974; --green:#437a22; --yellow:#d19900;
-      --red:#a13544; --blue:#006494; --radius:18px; --shadow:0 12px 32px rgba(0,0,0,.08);
+      --bg:#f7f6f2;
+      --surface:#f9f8f5;
+      --surface-2:#fbfbf9;
+      --border:#d4d1ca;
+      --text:#28251d;
+      --muted:#7a7974;
+      --green:#437a22;
+      --yellow:#d19900;
+      --red:#a13544;
+      --blue:#006494;
+      --radius:18px;
+      --shadow:0 12px 32px rgba(0,0,0,.08);
       --font:"Satoshi",system-ui,sans-serif;
     }
+
     [data-theme="dark"]{
-      --bg:#171614; --surface:#1c1b19; --surface-2:#201f1d; --border:#393836;
-      --text:#cdccca; --muted:#797876; --green:#6daa45; --yellow:#edb336;
-      --red:#dd6974; --blue:#5591c7; --radius:18px; --shadow:0 12px 32px rgba(0,0,0,.35);
+      --bg:#171614;
+      --surface:#1c1b19;
+      --surface-2:#201f1d;
+      --border:#393836;
+      --text:#cdccca;
+      --muted:#797876;
+      --green:#6daa45;
+      --yellow:#edb336;
+      --red:#dd6974;
+      --blue:#5591c7;
+      --radius:18px;
+      --shadow:0 12px 32px rgba(0,0,0,.35);
       --font:"Satoshi",system-ui,sans-serif;
     }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
-    .wrap{width:min(1180px,calc(100% - 24px));margin:24px auto 48px}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
-    .title{margin:0;font-size:clamp(1.5rem,2vw,2rem);font-weight:900}
-    .meta{color:var(--muted);font-size:.95rem}
-    .toolbar{display:flex;gap:10px}
-    .iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer}
-    .alert{margin-bottom:18px;padding:14px 16px;border-radius:14px;border:1px solid rgba(221,105,116,.35);background:rgba(221,105,116,.12);color:var(--text);display:none;font-weight:700}
-    .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin-bottom:18px}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .hero-main,.panel,.side-premium{padding:18px}
-    .eyebrow,.status-label,.panel h3{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.1em}
-    .panel h3{margin:0 0 14px;font-size:1rem}
-    .decision{margin:.35rem 0 .45rem;font-size:clamp(2rem,4vw,3.2rem);line-height:1;font-weight:900}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.5;
+    }
+
+    .wrap{
+      width:min(1180px,calc(100% - 24px));
+      margin:24px auto 48px;
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .title{
+      margin:0;
+      font-size:clamp(1.5rem,2vw,2rem);
+      font-weight:900;
+    }
+
+    .meta{
+      color:var(--muted);
+      font-size:.95rem;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+    }
+
+    .iconbtn{
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--surface);
+      color:var(--text);
+      cursor:pointer;
+      font-size:1rem;
+    }
+
+    .alert{
+      margin-bottom:18px;
+      padding:14px 16px;
+      border-radius:14px;
+      border:1px solid rgba(221,105,116,.35);
+      background:rgba(221,105,116,.12);
+      color:var(--text);
+      display:none;
+      font-weight:700;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.25fr .75fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .hero-main,.panel,.side-premium{
+      padding:18px;
+    }
+
+    .eyebrow,.status-label,.panel h3{
+      color:var(--muted);
+      font-size:.8rem;
+      text-transform:uppercase;
+      letter-spacing:.1em;
+    }
+
+    .panel h3{
+      margin:0 0 14px;
+      font-size:1rem;
+    }
+
+    .decision{
+      margin:.35rem 0 .45rem;
+      font-size:clamp(2rem,4vw,3.2rem);
+      line-height:1;
+      font-weight:900;
+    }
+
     .decision.green{color:var(--green)}
     .decision.yellow{color:var(--yellow)}
     .decision.red{color:var(--red)}
     .decision.blue{color:var(--blue)}
-    .score{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);font-weight:800}
-    .summary{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
-    .summary-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid rgba(127,127,127,.16);background:var(--surface-2);font-size:.84rem}
+
+    .score{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:var(--surface-2);
+      font-weight:800;
+    }
+
+    .summary{
+      margin-top:14px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .summary-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(127,127,127,.16);
+      background:var(--surface-2);
+      font-size:.84rem;
+    }
+
     .summary-chip span{color:var(--muted)}
-    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
-    .mini,.status-item,.status-block{background:var(--surface-2);border:1px solid rgba(127,127,127,.16);border-radius:14px;padding:14px}
-    .mini-label{color:var(--muted);font-size:.82rem;margin-bottom:6px}
-    .mini-value{font-size:1.05rem;font-weight:800}
-    .status-panel{display:grid;gap:14px}
-    .status-top{display:grid;grid-template-columns:1fr;gap:12px}
-    .status-badge{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:10px 12px;border-radius:999px;font-size:.95rem;font-weight:800;border:1px solid transparent}
-    .status-badge.danger{color:#fff;background:linear-gradient(180deg, rgba(221,105,116,.95), rgba(161,53,68,.95))}
-    .status-badge.warning{color:#2b2200;background:linear-gradient(180deg, rgba(237,179,54,.98), rgba(209,153,0,.95))}
-    .status-badge.success{color:#fff;background:linear-gradient(180deg, rgba(109,170,69,.98), rgba(67,122,34,.98))}
-    .status-badge.info{color:#fff;background:linear-gradient(180deg, rgba(85,145,199,.98), rgba(0,100,148,.98))}
-    .status-badge.neutral{color:var(--text);background:rgba(127,127,127,.10)}
-    .status-divider{height:1px;background:linear-gradient(90deg, transparent, rgba(127,127,127,.22), transparent)}
-    .source-list{display:grid;gap:10px}
-    .source-row{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center}
-    .source-key,.k{color:var(--muted)}
-    .source-pill,.chip{display:inline-flex;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(127,127,127,.18);background:rgba(127,127,127,.08);font-size:.84rem;font-weight:700}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
-    .kv{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-top:1px solid rgba(127,127,127,.18)}
-    .kv:first-of-type{border-top:none;padding-top:0}
-    .v{text-align:right;font-weight:700;max-width:320px}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
+
     .phase-note{
       margin-top:12px;
       padding:12px 14px;
@@ -71,11 +180,159 @@
       background:rgba(85,145,199,.12);
       border:1px solid rgba(85,145,199,.28);
       color:var(--text);
-      font-weight:700
+      font-weight:700;
     }
-    @media (min-width:981px){.status-top{grid-template-columns:1fr 1fr}}
-    @media (max-width:980px){.hero,.grid3{grid-template-columns:1fr}.grid4{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width:560px){.grid4{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+
+    .grid4{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .mini,.status-item,.status-block{
+      background:var(--surface-2);
+      border:1px solid rgba(127,127,127,.16);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .mini-label{
+      color:var(--muted);
+      font-size:.82rem;
+      margin-bottom:6px;
+    }
+
+    .mini-value{
+      font-size:1.05rem;
+      font-weight:800;
+    }
+
+    .status-panel{
+      display:grid;
+      gap:14px;
+    }
+
+    .status-top{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .status-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:38px;
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:.95rem;
+      font-weight:800;
+      border:1px solid transparent;
+    }
+
+    .status-badge.danger{
+      color:#fff;
+      background:linear-gradient(180deg, rgba(221,105,116,.95), rgba(161,53,68,.95));
+    }
+
+    .status-badge.warning{
+      color:#2b2200;
+      background:linear-gradient(180deg, rgba(237,179,54,.98), rgba(209,153,0,.95));
+    }
+
+    .status-badge.success{
+      color:#fff;
+      background:linear-gradient(180deg, rgba(109,170,69,.98), rgba(67,122,34,.98));
+    }
+
+    .status-badge.info{
+      color:#fff;
+      background:linear-gradient(180deg, rgba(85,145,199,.98), rgba(0,100,148,.98));
+    }
+
+    .status-badge.neutral{
+      color:var(--text);
+      background:rgba(127,127,127,.10);
+    }
+
+    .status-divider{
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(127,127,127,.22), transparent);
+    }
+
+    .source-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .source-row{
+      display:grid;
+      grid-template-columns:56px 1fr;
+      gap:10px;
+      align-items:center;
+    }
+
+    .source-key,.k{color:var(--muted)}
+
+    .source-pill,.chip{
+      display:inline-flex;
+      align-items:center;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(127,127,127,.18);
+      background:rgba(127,127,127,.08);
+      font-size:.84rem;
+      font-weight:700;
+    }
+
+    .grid3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px solid rgba(127,127,127,.18);
+    }
+
+    .kv:first-of-type{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .v{
+      text-align:right;
+      font-weight:700;
+      max-width:320px;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .muted{color:var(--muted)}
+
+    @media (min-width:981px){
+      .status-top{grid-template-columns:1fr 1fr}
+    }
+
+    @media (max-width:980px){
+      .hero,.grid3{grid-template-columns:1fr}
+      .grid4{grid-template-columns:repeat(2,1fr)}
+    }
+
+    @media (max-width:560px){
+      .grid4{grid-template-columns:1fr}
+      .top{align-items:flex-start;flex-direction:column}
+    }
   </style>
 </head>
 <body>
@@ -111,10 +368,22 @@
         <div class="phase-note" id="phaseNote">Esperando datos...</div>
 
         <div class="grid4">
-          <div class="mini"><div class="mini-label">Precio</div><div class="mini-value" id="priceValue">--</div></div>
-          <div class="mini"><div class="mini-label">Short strike</div><div class="mini-value" id="shortStrikeValue">--</div></div>
-          <div class="mini"><div class="mini-label">Net credit</div><div class="mini-value" id="creditValueTop">--</div></div>
-          <div class="mini"><div class="mini-label">Próximo gran evento</div><div class="mini-value" id="macroNextTop">--</div></div>
+          <div class="mini">
+            <div class="mini-label">Precio</div>
+            <div class="mini-value" id="priceValue">--</div>
+          </div>
+          <div class="mini">
+            <div class="mini-label">Short strike</div>
+            <div class="mini-value" id="shortStrikeValue">--</div>
+          </div>
+          <div class="mini">
+            <div class="mini-label">Net credit</div>
+            <div class="mini-value" id="creditValueTop">--</div>
+          </div>
+          <div class="mini">
+            <div class="mini-label">Próximo gran evento</div>
+            <div class="mini-value" id="macroNextTop">--</div>
+          </div>
         </div>
       </article>
 
@@ -136,8 +405,14 @@
           <div class="status-block">
             <div class="status-label">Fuentes</div>
             <div class="source-list">
-              <div class="source-row"><span class="source-key">Spot</span><span class="source-pill" id="sourceValue">--</span></div>
-              <div class="source-row"><span class="source-key">Options</span><span class="source-pill" id="optionsSourceValue">--</span></div>
+              <div class="source-row">
+                <span class="source-key">Spot</span>
+                <span class="source-pill" id="sourceValue">--</span>
+              </div>
+              <div class="source-row">
+                <span class="source-key">Options</span>
+                <span class="source-pill" id="optionsSourceValue">--</span>
+              </div>
             </div>
           </div>
         </div>
@@ -237,19 +512,19 @@
       return map[v] || (value ? String(value).replaceAll("_"," ") : "--");
     }
 
-    function humanizeSession(code,label){
+    function humanizeSession(code, label){
       const v = String(code || "").toLowerCase();
-      if(v==="closed") return "Mercado cerrado";
-      if(v==="regular") return "Sesión regular";
-      if(v==="premarket") return "Premarket";
-      if(v==="afterhours") return "After hours";
+      if(v === "closed") return "Mercado cerrado";
+      if(v === "regular") return "Sesión regular";
+      if(v === "premarket") return "Premarket";
+      if(v === "afterhours") return "After hours";
       return label || "--";
     }
 
     function humanizeExpiration(value){
       const v = String(value || "").toLowerCase();
-      if(v==="market_closed") return "Mercado cerrado";
-      if(v==="0dte_or_nearest") return "0DTE o vencimiento más cercano";
+      if(v === "market_closed") return "Mercado cerrado";
+      if(v === "0dte_or_nearest") return "0DTE o vencimiento más cercano";
       return value || "--";
     }
 
@@ -386,10 +661,11 @@
         $("breakevenValue").textContent = fmtMoney(state.trade?.breakeven);
         $("distToShortValue").textContent = state.trade?.distToShort == null ? "--" : fmtMoney(state.trade?.distToShort);
         $("expectedMoveValue").textContent = `${fmtMoney(state.expectedMove?.move)} (${fmtPctRaw(state.expectedMove?.movePct)})`;
-        $("tradeQualityValue").textContent =
-          `Δ ${fmtDelta(state.tradeQuality?.targetDelta)} · ` +
-          `Cr/R ${(state.tradeQuality?.creditPerRisk ?? 0).toFixed(2)} · ` +
-          `OI ${state.tradeQuality?.minOpenInterest ?? "--"}`;
+
+        const tqDelta = fmtDelta(state.tradeQuality?.targetDelta);
+        const tqCr = state.tradeQuality?.creditPerRisk == null ? "--" : Number(state.tradeQuality.creditPerRisk).toFixed(2);
+        const tqOi = state.tradeQuality?.minOpenInterest == null ? "--" : state.tradeQuality.minOpenInterest;
+        $("tradeQualityValue").textContent = `Δ ${tqDelta} · Cr/R ${tqCr} · OI ${tqOi}`;
 
         $("expirationValue").textContent = humanizeExpiration(state.options?.expiration);
         $("quotesValue").textContent = humanizeQuotes(state.options?.quotesUsable, state.session?.code);
