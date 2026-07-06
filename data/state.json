@@ -1,9 +1,9 @@
 {
-  "updatedAtNY": "2026-07-06 15:10 ET",
-  "updatedAtText": "2026-07-06 15:10 ET",
-  "price": 724.18,
-  "change": 11.58,
-  "changePct": 1.625,
+  "updatedAtNY": "2026-07-06 15:20 ET",
+  "updatedAtText": "2026-07-06 15:20 ET",
+  "price": 724.77,
+  "change": 12.17,
+  "changePct": 1.7078,
   "prevClose": 712.6,
   "source": "finnhub_quote",
   "session": {
@@ -20,9 +20,9 @@
   },
   "trade": {
     "bufferDynamicPct": 1.07,
-    "shortStrike": 732,
+    "shortStrike": 733,
     "breakeven": null,
-    "distToShort": 7.82,
+    "distToShort": 8.23,
     "netCredit": null
   },
   "tradeQuality": {
@@ -40,12 +40,12 @@
     "entryStartET": "10:30 ET",
     "entryCutoffET": "13:30 ET",
     "hardExitET": "15:15 ET",
-    "minutesToEntryStart": -280,
-    "minutesToEntryCutoff": -100,
-    "minutesToHardExit": 4,
+    "minutesToEntryStart": -290,
+    "minutesToEntryCutoff": -110,
+    "minutesToHardExit": -5,
     "maxHoldMinutes": 60,
     "entryWindowOpen": false,
-    "timeStopTriggered": false,
+    "timeStopTriggered": true,
     "phase": "Fuera de ventana de entrada"
   },
   "options": {
@@ -98,12 +98,13 @@
     "spotReason": null,
     "staleFromPreviousState": false
   },
-  "decisionLabel": "fuera de ventana",
-  "decisionTone": "yellow",
-  "score": -35,
-  "riskLabel": "Riesgo medio",
+  "decisionLabel": "cerrar o no abrir",
+  "decisionTone": "red",
+  "score": -65,
+  "riskLabel": "Riesgo alto",
   "reasons": [
     "Fuera de ventana de entrada",
+    "Hora de salida alcanzada",
     "Quotes no operables",
     "Liquidez insuficiente",
     "OI no disponible",
