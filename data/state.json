@@ -1,10 +1,10 @@
 {
-  "updatedAtNY": "2026-07-06 11:41 ET",
-  "updatedAtText": "2026-07-06 11:41 ET",
-  "price": null,
-  "change": null,
-  "changePct": null,
-  "prevClose": null,
+  "updatedAtNY": "2026-07-06 15:10 ET",
+  "updatedAtText": "2026-07-06 15:10 ET",
+  "price": 724.18,
+  "change": 11.58,
+  "changePct": 1.625,
+  "prevClose": 712.6,
   "source": "finnhub_quote",
   "session": {
     "code": "regular",
@@ -20,9 +20,9 @@
   },
   "trade": {
     "bufferDynamicPct": 1.07,
-    "shortStrike": null,
+    "shortStrike": 732,
     "breakeven": null,
-    "distToShort": null,
+    "distToShort": 7.82,
     "netCredit": null
   },
   "tradeQuality": {
@@ -40,13 +40,13 @@
     "entryStartET": "10:30 ET",
     "entryCutoffET": "13:30 ET",
     "hardExitET": "15:15 ET",
-    "minutesToEntryStart": 0,
-    "minutesToEntryCutoff": 109,
-    "minutesToHardExit": 214,
+    "minutesToEntryStart": -280,
+    "minutesToEntryCutoff": -100,
+    "minutesToHardExit": 4,
     "maxHoldMinutes": 60,
-    "entryWindowOpen": true,
+    "entryWindowOpen": false,
     "timeStopTriggered": false,
-    "phase": "Ventana de entrada abierta"
+    "phase": "Fuera de ventana de entrada"
   },
   "options": {
     "expiration": "0dte_or_nearest",
@@ -69,7 +69,7 @@
       "impact": "alto",
       "datetimeNY": "2026-07-08 14:00 ET",
       "dateNY": "2026-07-08",
-      "countdown": "1d 2h",
+      "countdown": "1d 22h",
       "veto": true
     },
     "summary": "Próximo gran evento · Actas del FOMC"
@@ -98,12 +98,12 @@
     "spotReason": null,
     "staleFromPreviousState": false
   },
-  "decisionLabel": "esperar confirmación",
+  "decisionLabel": "fuera de ventana",
   "decisionTone": "yellow",
-  "score": -25,
+  "score": -35,
   "riskLabel": "Riesgo medio",
   "reasons": [
-    "Próximo gran evento · Actas del FOMC",
+    "Fuera de ventana de entrada",
     "Quotes no operables",
     "Liquidez insuficiente",
     "OI no disponible",
