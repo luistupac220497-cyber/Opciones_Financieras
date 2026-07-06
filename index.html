@@ -42,7 +42,7 @@
     .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
     .mini,.status-item,.status-block{background:var(--surface-2);border:1px solid rgba(127,127,127,.16);border-radius:14px;padding:14px}
     .mini-label{color:var(--muted);font-size:.82rem;margin-bottom:6px}
-    .mini-value{font-size:1.15rem;font-weight:800}
+    .mini-value{font-size:1.05rem;font-weight:800}
     .status-panel{display:grid;gap:14px}
     .status-top{display:grid;grid-template-columns:1fr;gap:12px}
     .status-badge{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:10px 12px;border-radius:999px;font-size:.95rem;font-weight:800;border:1px solid transparent}
@@ -91,7 +91,7 @@
           <div class="summary-chip"><span>Short</span><strong id="summaryShort">--</strong></div>
           <div class="summary-chip"><span>Crédito</span><strong id="summaryCredit">--</strong></div>
           <div class="summary-chip"><span>Macro</span><strong id="summaryMacro">--</strong></div>
-          <div class="summary-chip"><span>Sesión</span><strong id="summarySession">--</strong></div>
+          <div class="summary-chip"><span>OPEX</span><strong id="summaryOpex">--</strong></div>
         </div>
 
         <div class="grid4">
@@ -162,18 +162,19 @@
         <h3>Macro</h3>
         <div class="kv"><div class="k">Macro hoy</div><div class="v" id="macroTodayValue">--</div></div>
         <div class="kv"><div class="k">Ventana crítica</div><div class="v" id="macroCriticalValue">--</div></div>
+        <div class="kv"><div class="k">Macro score</div><div class="v" id="macroScoreValue">--</div></div>
         <div class="kv"><div class="k">Próximo gran evento</div><div class="v" id="macroNextValue">--</div></div>
         <div class="kv"><div class="k">Fecha ET</div><div class="v" id="macroDateValue">--</div></div>
         <div class="kv"><div class="k">Countdown</div><div class="v" id="macroCountdownValue">--</div></div>
       </article>
 
       <article class="card panel">
-        <h3>Earnings</h3>
+        <h3>Earnings y OPEX</h3>
         <div class="kv"><div class="k">Empresa</div><div class="v" id="earningsCompanyValue">--</div></div>
         <div class="kv"><div class="k">Ticker</div><div class="v" id="earningsTickerValue">--</div></div>
-        <div class="kv"><div class="k">Fecha</div><div class="v" id="earningsDateValue">--</div></div>
+        <div class="kv"><div class="k">Fecha earnings</div><div class="v" id="earningsDateValue">--</div></div>
         <div class="kv"><div class="k">Días</div><div class="v" id="earningsDaysValue">--</div></div>
-        <div class="kv"><div class="k">Momento</div><div class="v" id="earningsMomentValue">--</div></div>
+        <div class="kv"><div class="k">OPEX</div><div class="v" id="opexValue">--</div></div>
       </article>
 
       <article class="card panel">
@@ -250,6 +251,12 @@
       return "Sin macro alta hoy";
     }
 
+    function humanizeOpex(flags){
+      if (flags?.opexQuarterly) return "Trimestral";
+      if (flags?.opexDay) return "Mensual";
+      return "No";
+    }
+
     function renderReasons(list){
       const box = $("reasonsBox");
       box.innerHTML = "";
@@ -295,7 +302,7 @@
         $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
         $("summaryCredit").textContent = fmtMoney(state.trade?.netCredit);
         $("summaryMacro").textContent = fmtText(state.macro?.summary);
-        $("summarySession").textContent = humanizeSession(state.session?.code, state.session?.label);
+        $("summaryOpex").textContent = humanizeOpex(state.flags);
 
         $("priceValue").textContent = fmtMoney(state.price);
         $("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
@@ -340,6 +347,7 @@
 
         $("macroTodayValue").textContent = macroTodayText(state.macro);
         $("macroCriticalValue").textContent = yesNo(state.macro?.windowCritical);
+        $("macroScoreValue").textContent = fmtText(state.macro?.score);
         $("macroNextValue").textContent = fmtText(state.macro?.nextBig?.label, "—");
         $("macroDateValue").textContent = fmtText(state.macro?.nextBig?.datetimeNY, "—");
         $("macroCountdownValue").textContent = fmtText(state.macro?.nextBig?.countdown, "—");
@@ -348,7 +356,7 @@
         $("earningsTickerValue").textContent = fmtText(state.earnings?.next?.ticker);
         $("earningsDateValue").textContent = fmtText(state.earnings?.next?.fecha);
         $("earningsDaysValue").textContent = fmtText(state.earnings?.next?.dias);
-        $("earningsMomentValue").textContent = fmtText(state.earnings?.next?.momento);
+        $("opexValue").textContent = humanizeOpex(state.flags);
 
         $("marketStatusValue").textContent = state.market?.isHoliday ? "Cerrado" : "Abierto";
         $("marketNameValue").textContent = fmtText(state.market?.name, "Sesión normal");
