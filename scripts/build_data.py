@@ -3,12 +3,18 @@ import os
 from datetime import datetime, timedelta, time
 from zoneinfo import ZoneInfo
 
+import requests
+
 NY = ZoneInfo("America/New_York")
 UTC = ZoneInfo("UTC")
 
 DATA_DIR = "data"
 STATE_PATH = os.path.join(DATA_DIR, "state.json")
 
+
+# ------------------------
+# Utilidades generales
+# ------------------------
 
 def ensure_dirs():
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -41,6 +47,10 @@ def fmt_countdown(target, current):
     return f"{minutes}m"
 
 
+# ------------------------
+# Macro
+# ------------------------
+
 def parse_event(dt_str, label, impact="alto", kind="macro", veto=False):
     dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(tzinfo=NY)
     return {
@@ -66,27 +76,6 @@ def macro_events_2026():
         parse_event("2026-07-29 14:30", "Rueda de prensa FOMC", "alto", veto=True),
         parse_event("2026-08-07 08:30", "Nóminas no agrícolas (NFP)", "alto", veto=True),
     ]
-
-
-def get_opex_flags(current_dt):
-    monthly_opex = {
-        "2026-07-17",
-        "2026-08-21",
-        "2026-09-18",
-        "2026-10-16",
-        "2026-11-20",
-        "2026-12-18",
-    }
-    quarterly_opex = {
-        "2026-09-18",
-        "2026-12-18",
-    }
-
-    today = fmt_date(current_dt)
-    return {
-        "opexDay": today in monthly_opex,
-        "opexQuarterly": today in quarterly_opex,
-    }
 
 
 def build_macro_block(current_dt):
@@ -161,7 +150,95 @@ def build_macro_block(current_dt):
     }
 
 
+# ------------------------
+# OPEX flags
+# ------------------------
+
+def get_opex_flags(current_dt):
+    monthly_opex = {
+        "2026-07-17",
+        "2026-08-21",
+        "2026-09-18",
+        "2026-10-16",
+        "2026-11-20",
+        "2026-12-18",
+    }
+    quarterly_opex = {
+        "2026-09-18",
+        "2026-12-18",
+    }
+
+    today = fmt_date(current_dt)
+    return {
+        "opexDay": today in monthly_opex,
+        "opexQuarterly": today in quarterly_opex,
+    }
+
+
+# ------------------------
+# Finnhub – precio y sesión
+# ------------------------
+
+def get_finnhub_api_key():
+    api_key = os.getenv("FINNHUB_API_KEY")
+    if not api_key:
+        raise RuntimeError("FINNHUB_API_KEY no está configurada en el entorno")
+    return api_key
+
+
+def fetch_quote_finnhub(symbol: str):
+    api_key = get_finnhub_api_key()
+    url = "https://finnhub.io/api/v1/quote"
+    params = {"symbol": symbol, "token": api_key}
+    resp = requests.get(url, params=params, timeout=10)
+    resp.raise_for_status()
+    data = resp.json()
+
+    price = float(data.get("c") or 0.0)   # current price
+    change = float(data.get("d") or 0.0)  # change
+    change_pct = float(data.get("dp") or 0.0)  # percent change
+    prev_close = float(data.get("pc") or 0.0)  # previous close
+    ts = data.get("t") or 0
+
+    if ts:
+        updated_dt = datetime.fromtimestamp(ts, tz=NY)
+    else:
+        updated_dt = now_ny()
+
+    return {
+        "price": price,
+        "change": change,
+        "changePct": change_pct,
+        "prevClose": prev_close,
+        "updatedAt": updated_dt,
+        "source": "finnhub_quote",
+    }
+
+
+def infer_session_from_time(current_dt: datetime):
+    # Horario regular US equities: 9:30–16:00 ET [web:415][web:45]
+    t = current_dt.time()
+    pre_start = time(4, 0)
+    regular_start = time(9, 30)
+    regular_end = time(16, 0)
+    after_end = time(20, 0)
+
+    if t < pre_start or t >= after_end:
+        return {"code": "closed", "label": "Mercado cerrado"}
+    if pre_start <= t < regular_start:
+        return {"code": "premarket", "label": "Premarket"}
+    if regular_start <= t < regular_end:
+        return {"code": "regular", "label": "Sesión regular"}
+    # 16:00–20:00
+    return {"code": "afterhours", "label": "After hours"}
+
+
+# ------------------------
+# Ventana temporal intradía (tu regla 1h)
+# ------------------------
+
 def build_execution_block(current_dt, session_code):
+    # 10:30 ET = ~15:30 Canarias ⇒ 1h tras apertura 9:30 ET [web:415]
     entry_start = datetime.combine(current_dt.date(), time(10, 30), tzinfo=NY)
     entry_cutoff = datetime.combine(current_dt.date(), time(13, 30), tzinfo=NY)
     hard_exit = datetime.combine(current_dt.date(), time(15, 15), tzinfo=NY)
@@ -201,6 +278,10 @@ def build_execution_block(current_dt, session_code):
         "phase": phase,
     }
 
+
+# ------------------------
+# Trade quality (de momento mock)
+# ------------------------
 
 def mock_trade_quality():
     return {
@@ -266,6 +347,10 @@ def score_trade_quality(q):
 
     return score, reasons
 
+
+# ------------------------
+# Decisión final
+# ------------------------
 
 def decide_trade(base_state):
     reasons = []
@@ -366,25 +451,41 @@ def decide_trade(base_state):
     }
 
 
+# ------------------------
+# Estado principal
+# ------------------------
+
 def build_state():
     current_dt = now_ny()
 
-    session_code = "premarket"
-    session_label = "Premarket"
+    # 1) Finnhub para QQQ
+    quote = fetch_quote_finnhub("QQQ")
+    price = quote["price"]
+    change = quote["change"]
+    change_pct = quote["changePct"]
+    prev_close = quote["prevClose"]
+    updated_at = quote["updatedAt"]
+    source = quote["source"]
 
+    # 2) Sesión real basada en hora NY
+    session_info = infer_session_from_time(current_dt)
+    session_code = session_info["code"]
+    session_label = session_info["label"]
+
+    # 3) Flags, macro, ejecución temporal
     flags = get_opex_flags(current_dt)
     macro = build_macro_block(current_dt)
     execution = build_execution_block(current_dt, session_code)
     trade_quality = mock_trade_quality()
 
     state = {
-        "updatedAtNY": fmt_dt(current_dt),
-        "updatedAtText": fmt_dt(current_dt),
-        "price": 712.60,
-        "change": -12.57,
-        "changePct": -1.73,
-        "prevClose": 725.17,
-        "source": "finnhub_quote",
+        "updatedAtNY": fmt_dt(updated_at),
+        "updatedAtText": fmt_dt(updated_at),
+        "price": price,
+        "change": change,
+        "changePct": change_pct,
+        "prevClose": prev_close,
+        "source": source,
         "session": {
             "code": session_code,
             "label": session_label,
@@ -394,8 +495,8 @@ def build_state():
             "distPct": None,
         },
         "expectedMove": {
-            "move": 12.33,
-            "movePct": 1.73,
+            "move": None,
+            "movePct": None,
         },
         "trade": {
             "bufferDynamicPct": 1.07,
@@ -411,7 +512,7 @@ def build_state():
             "quotesUsable": False,
             "liquidityOk": False,
             "shortCallDelta": trade_quality["targetDelta"],
-            "notes": "Esperando sesión regular y primera hora completa para validar cadena, spread y liquidez",
+            "notes": "Opciones en modo mock; validación real pendiente de conectar cadena",
         },
         "optionsMeta": {
             "source": "no_options_source_available",
@@ -428,7 +529,7 @@ def build_state():
             }
         },
         "market": {
-            "isHoliday": False,
+            "isHoliday": False,  # en fases posteriores puedes cruzar con calendario Nasdaq [web:43]
             "name": "Sesión normal",
             "date": fmt_date(current_dt),
             "source": "--",
