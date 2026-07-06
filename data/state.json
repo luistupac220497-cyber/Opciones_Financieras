@@ -1,9 +1,9 @@
 {
-  "updatedAtNY": "2026-07-06 15:30 ET",
-  "updatedAtText": "2026-07-06 15:30 ET",
-  "price": 724.77,
-  "change": 12.17,
-  "changePct": 1.7078,
+  "updatedAtNY": "2026-07-06 15:40 ET",
+  "updatedAtText": "2026-07-06 15:40 ET",
+  "price": 724.03,
+  "change": 11.43,
+  "changePct": 1.604,
   "prevClose": 712.6,
   "source": "finnhub_quote",
   "session": {
@@ -20,9 +20,9 @@
   },
   "trade": {
     "bufferDynamicPct": 1.07,
-    "shortStrike": 733,
+    "shortStrike": 732,
     "breakeven": null,
-    "distToShort": 8.23,
+    "distToShort": 7.97,
     "netCredit": null
   },
   "tradeQuality": {
@@ -40,9 +40,9 @@
     "entryStartET": "10:30 ET",
     "entryCutoffET": "13:30 ET",
     "hardExitET": "15:15 ET",
-    "minutesToEntryStart": -300,
-    "minutesToEntryCutoff": -120,
-    "minutesToHardExit": -15,
+    "minutesToEntryStart": -310,
+    "minutesToEntryCutoff": -130,
+    "minutesToHardExit": -25,
     "maxHoldMinutes": 60,
     "entryWindowOpen": false,
     "timeStopTriggered": true,
