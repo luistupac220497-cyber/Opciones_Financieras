@@ -150,9 +150,7 @@ def get_finnhub_api_key():
     if not api_key:
         raise RuntimeError("FINNHUB_API_KEY no está configurada")
     return api_key
-
-
-def load_previous_state():
+    def load_previous_state():
     if not os.path.exists(STATE_PATH):
         return None
     try:
@@ -290,10 +288,8 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
         previous_state,
         "finnhub_unknown_error",
         f"Error desconocido en Finnhub: {last_error or 'sin detalle'}",
-    )
-
-
-def infer_session_from_time(current_dt: datetime):
+                   )
+    def infer_session_from_time(current_dt: datetime):
     t = current_dt.time()
     if t < time(4, 0) or t >= time(20, 0):
         return {"code": "closed", "label": "Mercado cerrado"}
@@ -417,10 +413,8 @@ def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, s
             "netCredit": None,
         },
         "tradeQuality": base_quality,
-    }
-
-
-def score_trade_quality(q, session_code):
+            }
+    def score_trade_quality(q, session_code):
     score = 0
     reasons = []
 
@@ -591,17 +585,17 @@ def build_state():
         "changePct": change_pct,
         "prevClose": prev_close,
         "source": source,
-    session": {
+        "session": {
             "code": session_code,
-            "label": session_label
+            "label": session_label,
         },
         "vwap": {
             "value": None,
-            "distPct": None
+            "distPct": None,
         },
         "expectedMove": {
             "move": None,
-            "movePct": None
+            "movePct": None,
         },
         "trade": options_bundle["trade"],
         "tradeQuality": options_bundle["tradeQuality"],
@@ -616,20 +610,20 @@ def build_state():
                 "ticker": "TSLA",
                 "fecha": "2026-07-22",
                 "dias": 16,
-                "momento": "Hora no especificada"
+                "momento": "Hora no especificada",
             }
         },
         "market": {
             "isHoliday": False,
             "name": "Sesión normal",
             "date": fmt_date(current_dt),
-            "source": "--"
+            "source": "--",
         },
         "dataHealth": {
             "spotDegraded": quote.get("degraded", False),
             "spotReason": quote.get("degradedReason"),
-            "staleFromPreviousState": quote.get("staleFromPreviousState", False)
-        }
+            "staleFromPreviousState": quote.get("staleFromPreviousState", False),
+        },
     }
 
     decision = decide_trade(state)
