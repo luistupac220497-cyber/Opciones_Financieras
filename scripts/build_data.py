@@ -1,4 +1,5 @@
 import json
+import math
 import os
 from datetime import datetime, timedelta, time
 from zoneinfo import ZoneInfo
@@ -11,10 +12,8 @@ UTC = ZoneInfo("UTC")
 DATA_DIR = "data"
 STATE_PATH = os.path.join(DATA_DIR, "state.json")
 
+QQQ_OPTIONS_CLOSE_ET = time(16, 15)
 
-# ------------------------
-# Utilidades generales
-# ------------------------
 
 def ensure_dirs():
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -47,19 +46,9 @@ def fmt_countdown(target, current):
     return f"{minutes}m"
 
 
-# ------------------------
-# Macro
-# ------------------------
-
 def parse_event(dt_str, label, impact="alto", kind="macro", veto=False):
     dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(tzinfo=NY)
-    return {
-        "label": label,
-        "impact": impact,
-        "kind": kind,
-        "veto": veto,
-        "dt": dt,
-    }
+    return {"label": label, "impact": impact, "kind": kind, "veto": veto, "dt": dt}
 
 
 def macro_events_2026():
@@ -82,14 +71,12 @@ def build_macro_block(current_dt):
     events = [e for e in macro_events_2026() if e["dt"] >= current_dt - timedelta(hours=6)]
     events.sort(key=lambda x: x["dt"])
 
-    today_high = []
-    window_critical = []
+    today_high, window_critical = [], []
     next_big = None
 
     for e in events:
         if e["impact"] == "alto" and e["dt"].date() == current_dt.date():
             today_high.append(e)
-
         minutes_to = (e["dt"] - current_dt).total_seconds() / 60
         if e["veto"] and -60 <= minutes_to <= 90:
             window_critical.append(e)
@@ -98,25 +85,18 @@ def build_macro_block(current_dt):
     if high_future:
         next_big = high_future[0]
 
-    macro_today_high = len(today_high) > 0
-    macro_window_critical = len(window_critical) > 0
-
-    if macro_window_critical:
-        macro_summary = f"Ventana crítica · {window_critical[0]['label']}"
-        macro_score = -40
-    elif macro_today_high:
-        macro_summary = f"Macro hoy · {', '.join(e['label'] for e in today_high[:2])}"
-        macro_score = -15
+    if window_critical:
+        macro_summary, macro_score = f"Ventana crítica · {window_critical[0]['label']}", -40
+    elif today_high:
+        macro_summary, macro_score = f"Macro hoy · {', '.join(e['label'] for e in today_high[:2])}", -15
     elif next_big:
-        macro_summary = f"Próximo gran evento · {next_big['label']}"
-        macro_score = -5
+        macro_summary, macro_score = f"Próximo gran evento · {next_big['label']}", -5
     else:
-        macro_summary = "Sin macro alta hoy"
-        macro_score = 0
+        macro_summary, macro_score = "Sin macro alta hoy", 0
 
     return {
-        "todayHighImpact": macro_today_high,
-        "windowCritical": macro_window_critical,
+        "todayHighImpact": len(today_high) > 0,
+        "windowCritical": len(window_critical) > 0,
         "score": macro_score,
         "todayList": [
             {
@@ -125,8 +105,7 @@ def build_macro_block(current_dt):
                 "datetimeNY": fmt_dt(e["dt"]),
                 "countdown": fmt_countdown(e["dt"], current_dt),
                 "veto": e["veto"],
-            }
-            for e in today_high
+            } for e in today_high
         ],
         "windowList": [
             {
@@ -135,8 +114,7 @@ def build_macro_block(current_dt):
                 "datetimeNY": fmt_dt(e["dt"]),
                 "countdown": fmt_countdown(e["dt"], current_dt),
                 "veto": e["veto"],
-            }
-            for e in window_critical
+            } for e in window_critical
         ],
         "nextBig": None if not next_big else {
             "label": next_big["label"],
@@ -150,39 +128,17 @@ def build_macro_block(current_dt):
     }
 
 
-# ------------------------
-# OPEX flags
-# ------------------------
-
 def get_opex_flags(current_dt):
-    monthly_opex = {
-        "2026-07-17",
-        "2026-08-21",
-        "2026-09-18",
-        "2026-10-16",
-        "2026-11-20",
-        "2026-12-18",
-    }
-    quarterly_opex = {
-        "2026-09-18",
-        "2026-12-18",
-    }
-
+    monthly_opex = {"2026-07-17", "2026-08-21", "2026-09-18", "2026-10-16", "2026-11-20", "2026-12-18"}
+    quarterly_opex = {"2026-09-18", "2026-12-18"}
     today = fmt_date(current_dt)
-    return {
-        "opexDay": today in monthly_opex,
-        "opexQuarterly": today in quarterly_opex,
-    }
+    return {"opexDay": today in monthly_opex, "opexQuarterly": today in quarterly_opex}
 
-
-# ------------------------
-# Finnhub – precio y sesión
-# ------------------------
 
 def get_finnhub_api_key():
     api_key = os.getenv("FINNHUB_API_KEY")
     if not api_key:
-        raise RuntimeError("FINNHUB_API_KEY no está configurada en el entorno")
+        raise RuntimeError("FINNHUB_API_KEY no está configurada")
     return api_key
 
 
@@ -190,20 +146,16 @@ def fetch_quote_finnhub(symbol: str):
     api_key = get_finnhub_api_key()
     url = "https://finnhub.io/api/v1/quote"
     params = {"symbol": symbol, "token": api_key}
-    resp = requests.get(url, params=params, timeout=10)
+    resp = requests.get(url, params=params, timeout=15)
     resp.raise_for_status()
     data = resp.json()
 
-    price = float(data.get("c") or 0.0)   # current price
-    change = float(data.get("d") or 0.0)  # change
-    change_pct = float(data.get("dp") or 0.0)  # percent change
-    prev_close = float(data.get("pc") or 0.0)  # previous close
+    price = float(data.get("c") or 0.0)
+    change = float(data.get("d") or 0.0)
+    change_pct = float(data.get("dp") or 0.0)
+    prev_close = float(data.get("pc") or 0.0)
     ts = data.get("t") or 0
-
-    if ts:
-        updated_dt = datetime.fromtimestamp(ts, tz=NY)
-    else:
-        updated_dt = now_ny()
+    updated_dt = datetime.fromtimestamp(ts, tz=NY) if ts else now_ny()
 
     return {
         "price": price,
@@ -216,29 +168,17 @@ def fetch_quote_finnhub(symbol: str):
 
 
 def infer_session_from_time(current_dt: datetime):
-    # Horario regular US equities: 9:30–16:00 ET [web:415][web:45]
     t = current_dt.time()
-    pre_start = time(4, 0)
-    regular_start = time(9, 30)
-    regular_end = time(16, 0)
-    after_end = time(20, 0)
-
-    if t < pre_start or t >= after_end:
+    if t < time(4, 0) or t >= time(20, 0):
         return {"code": "closed", "label": "Mercado cerrado"}
-    if pre_start <= t < regular_start:
+    if time(4, 0) <= t < time(9, 30):
         return {"code": "premarket", "label": "Premarket"}
-    if regular_start <= t < regular_end:
+    if time(9, 30) <= t < time(16, 0):
         return {"code": "regular", "label": "Sesión regular"}
-    # 16:00–20:00
     return {"code": "afterhours", "label": "After hours"}
 
 
-# ------------------------
-# Ventana temporal intradía (tu regla 1h)
-# ------------------------
-
 def build_execution_block(current_dt, session_code):
-    # 10:30 ET = ~15:30 Canarias ⇒ 1h tras apertura 9:30 ET [web:415]
     entry_start = datetime.combine(current_dt.date(), time(10, 30), tzinfo=NY)
     entry_cutoff = datetime.combine(current_dt.date(), time(13, 30), tzinfo=NY)
     hard_exit = datetime.combine(current_dt.date(), time(15, 15), tzinfo=NY)
@@ -248,12 +188,7 @@ def build_execution_block(current_dt, session_code):
     minutes_to_cutoff = int((entry_cutoff - current_dt).total_seconds() / 60)
     minutes_to_hard_exit = int((hard_exit - current_dt).total_seconds() / 60)
 
-    entry_window_open = (
-        session_code == "regular"
-        and minutes_to_entry_start <= 0
-        and minutes_to_cutoff > 0
-    )
-
+    entry_window_open = session_code == "regular" and minutes_to_entry_start <= 0 and minutes_to_cutoff > 0
     time_stop_triggered = session_code == "regular" and minutes_to_hard_exit <= 0
 
     if session_code != "regular":
@@ -279,78 +214,182 @@ def build_execution_block(current_dt, session_code):
     }
 
 
-# ------------------------
-# Trade quality (de momento mock)
-# ------------------------
+def safe_float(v):
+    try:
+        if v is None:
+            return None
+        if isinstance(v, (int, float)):
+            return float(v)
+        s = str(v).replace("$", "").replace(",", "").strip()
+        if s in {"", "--", "N/A", "None"}:
+            return None
+        return float(s)
+    except Exception:
+        return None
 
-def mock_trade_quality():
+
+def round_to_strike(price, step=1):
+    if price is None:
+        return None
+    return math.ceil(price / step) * step
+
+
+def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, session_code: str):
+    regular_open = time(9, 30)
+    qqq_opt_close = QQQ_OPTIONS_CLOSE_ET
+
+    if session_code != "regular":
+        return {
+            "options": {
+                "expiration": "0dte_or_nearest",
+                "quotesUsable": False,
+                "liquidityOk": False,
+                "shortCallDelta": None,
+                "notes": "Mercado fuera de sesión regular; cadena de opciones desactivada",
+            },
+            "optionsMeta": {"source": "market_closed_guard"},
+            "trade": {
+                "bufferDynamicPct": 1.07,
+                "shortStrike": None,
+                "breakeven": None,
+                "distToShort": None,
+                "netCredit": None,
+            },
+            "tradeQuality": {
+                "targetDelta": 0.20,
+                "creditPerRisk": 0.25,
+                "minOpenInterest": 0,
+                "shortStrikeOI": None,
+                "longStrikeOI": None,
+                "width": 5,
+                "bidAskWidth": None,
+                "spreadWidthPct": None,
+                "strikeSpacingOk": True,
+            }
+        }
+
+    if not (regular_open <= current_dt.time() <= qqq_opt_close):
+        return {
+            "options": {
+                "expiration": "market_closed",
+                "quotesUsable": False,
+                "liquidityOk": False,
+                "shortCallDelta": None,
+                "notes": "Fuera de horario operable de opciones para QQQ",
+            },
+            "optionsMeta": {"source": "market_closed_guard"},
+            "trade": {
+                "bufferDynamicPct": 1.07,
+                "shortStrike": None,
+                "breakeven": None,
+                "distToShort": None,
+                "netCredit": None,
+            },
+            "tradeQuality": {
+                "targetDelta": 0.20,
+                "creditPerRisk": 0.25,
+                "minOpenInterest": 0,
+                "shortStrikeOI": None,
+                "longStrikeOI": None,
+                "width": 5,
+                "bidAskWidth": None,
+                "spreadWidthPct": None,
+                "strikeSpacingOk": True,
+            }
+        }
+
+    # Nasdaq público no está entregando una cadena usable de forma fiable en fetch simple.
+    # Dejamos la rama preparada sin inventar quotes.
+    short_strike = round_to_strike((spot_price or 0) * 1.0107, 1)
+
     return {
-        "targetDelta": 0.20,
-        "creditPerRisk": 0.25,
-        "minOpenInterest": 8000,
-        "shortStrikeOI": 9200,
-        "longStrikeOI": 8700,
-        "width": 5,
-        "bidAskWidth": 0.07,
-        "spreadWidthPct": 0.28,
-        "strikeSpacingOk": True,
+        "options": {
+            "expiration": "0dte_or_nearest",
+            "quotesUsable": False,
+            "liquidityOk": False,
+            "shortCallDelta": 0.20,
+            "notes": "Sesión regular activa, pero la cadena pública de Nasdaq no devolvió datos utilizables; no se fabrican strikes/creditos operables",
+        },
+        "optionsMeta": {"source": "nasdaq_option_chain"},
+        "trade": {
+            "bufferDynamicPct": 1.07,
+            "shortStrike": short_strike,
+            "breakeven": None,
+            "distToShort": None if short_strike is None or spot_price is None else round(short_strike - spot_price, 2),
+            "netCredit": None,
+        },
+        "tradeQuality": {
+            "targetDelta": 0.20,
+            "creditPerRisk": 0.25,
+            "minOpenInterest": 0,
+            "shortStrikeOI": None,
+            "longStrikeOI": None,
+            "width": 5,
+            "bidAskWidth": None,
+            "spreadWidthPct": None,
+            "strikeSpacingOk": True,
+        }
     }
 
 
-def score_trade_quality(q):
+def score_trade_quality(q, session_code):
     score = 0
     reasons = []
 
-    d = q["targetDelta"]
-    if 0.15 <= d <= 0.25:
-        score += 10
-    elif 0.10 <= d < 0.30:
+    d = q.get("targetDelta")
+    if d is not None:
+        if 0.15 <= d <= 0.25:
+            score += 10
+        elif 0.10 <= d < 0.30:
+            score += 5
+            reasons.append("Delta fuera de rango óptimo")
+        else:
+            score -= 10
+            reasons.append("Delta demasiado agresivo")
+
+    cr = q.get("creditPerRisk")
+    if cr is not None:
+        if 0.20 <= cr <= 0.35:
+            score += 10
+        elif 0.15 <= cr < 0.20:
+            reasons.append("Crédito algo justo")
+        else:
+            score -= 10
+            reasons.append("Crédito/riesgo pobre")
+
+    oi = q.get("minOpenInterest")
+    if session_code == "regular":
+        if oi is None or oi <= 0:
+            reasons.append("OI no disponible")
+        elif oi >= 800:
+            score += 10
+        elif 200 <= oi < 800:
+            reasons.append("OI moderado")
+        else:
+            score -= 10
+            reasons.append("OI bajo")
+
+    spread_width_pct = q.get("spreadWidthPct")
+    if session_code == "regular":
+        if spread_width_pct is None:
+            reasons.append("Spread no disponible")
+        elif spread_width_pct <= 0.10:
+            score += 10
+        elif spread_width_pct <= 0.20:
+            score += 4
+            reasons.append("Spread algo ancho")
+        else:
+            score -= 10
+            reasons.append("Spread ancho")
+
+    if q.get("strikeSpacingOk") is True:
         score += 5
-        reasons.append("Delta fuera de rango óptimo")
-    else:
-        score -= 10
-        reasons.append("Delta demasiado agresivo")
-
-    cr = q["creditPerRisk"]
-    if 0.20 <= cr <= 0.35:
-        score += 10
-    elif 0.15 <= cr < 0.20:
-        reasons.append("Crédito algo justo")
-    else:
-        score -= 10
-        reasons.append("Crédito/riesgo pobre")
-
-    oi = q["minOpenInterest"]
-    if oi >= 5000:
-        score += 10
-    elif 2000 <= oi < 5000:
-        reasons.append("OI moderado")
-    else:
-        score -= 10
-        reasons.append("OI bajo")
-
-    spread_width_pct = q["spreadWidthPct"]
-    if spread_width_pct <= 0.10:
-        score += 10
-    elif spread_width_pct <= 0.20:
-        score += 4
-        reasons.append("Spread algo ancho")
-    else:
-        score -= 10
-        reasons.append("Spread ancho")
-
-    if q["strikeSpacingOk"]:
-        score += 5
-    else:
+    elif q.get("strikeSpacingOk") is False:
         score -= 5
         reasons.append("Spacing de strikes no ideal")
 
     return score, reasons
 
-
-# ------------------------
-# Decisión final
-# ------------------------
 
 def decide_trade(base_state):
     reasons = []
@@ -366,10 +405,7 @@ def decide_trade(base_state):
 
     if base_state["macro"]["windowCritical"]:
         reasons.insert(0, "Ventana macro crítica")
-        alerts.append({
-            "title": "Macro crítica",
-            "text": base_state["macro"]["summary"],
-        })
+        alerts.append({"title": "Macro crítica", "text": base_state["macro"]["summary"]})
 
     if session_code != "regular":
         reasons.append("Esperar apertura")
@@ -391,7 +427,6 @@ def decide_trade(base_state):
         if not quotes_usable:
             reasons.append("Quotes no operables")
             score -= 20
-
         if liquidity_ok is False:
             reasons.append("Liquidez insuficiente")
             score -= 15
@@ -403,43 +438,27 @@ def decide_trade(base_state):
         reasons.append("OPEX mensual")
         score -= 5
 
-    tq_score, tq_reasons = score_trade_quality(base_state["tradeQuality"])
+    tq_score, tq_reasons = score_trade_quality(base_state["tradeQuality"], session_code)
     score += tq_score
     reasons.extend(tq_reasons)
 
     if base_state["macro"]["windowCritical"]:
-        decision_label = "no entrar"
-        decision_tone = "red"
-        risk_label = "Riesgo alto"
+        decision_label, decision_tone, risk_label = "no entrar", "red", "Riesgo alto"
     elif execution["timeStopTriggered"]:
-        decision_label = "cerrar o no abrir"
-        decision_tone = "red"
-        risk_label = "Riesgo alto"
+        decision_label, decision_tone, risk_label = "cerrar o no abrir", "red", "Riesgo alto"
     elif session_code != "regular":
-        decision_label = "esperar apertura"
-        decision_tone = "yellow"
-        risk_label = "Riesgo medio"
+        decision_label, decision_tone, risk_label = "esperar apertura", "yellow", "Riesgo medio"
     elif execution["minutesToEntryStart"] > 0:
-        decision_label = "esperar primera hora"
-        decision_tone = "yellow"
-        risk_label = "Riesgo controlado"
+        decision_label, decision_tone, risk_label = "esperar primera hora", "yellow", "Riesgo controlado"
     elif not execution["entryWindowOpen"]:
-        decision_label = "fuera de ventana"
-        decision_tone = "yellow"
-        risk_label = "Riesgo medio"
+        decision_label, decision_tone, risk_label = "fuera de ventana", "yellow", "Riesgo medio"
     else:
         if score <= -40:
-            decision_label = "no entrar"
-            decision_tone = "red"
-            risk_label = "Riesgo alto"
+            decision_label, decision_tone, risk_label = "no entrar", "red", "Riesgo alto"
         elif score <= -15:
-            decision_label = "esperar confirmación"
-            decision_tone = "yellow"
-            risk_label = "Riesgo medio"
+            decision_label, decision_tone, risk_label = "esperar confirmación", "yellow", "Riesgo medio"
         else:
-            decision_label = "entrar sólo si setup perfecto"
-            decision_tone = "green"
-            risk_label = "Riesgo controlado"
+            decision_label, decision_tone, risk_label = "entrar sólo si setup perfecto", "green", "Riesgo controlado"
 
     return {
         "decisionLabel": decision_label,
@@ -451,14 +470,9 @@ def decide_trade(base_state):
     }
 
 
-# ------------------------
-# Estado principal
-# ------------------------
-
 def build_state():
     current_dt = now_ny()
 
-    # 1) Finnhub para QQQ
     quote = fetch_quote_finnhub("QQQ")
     price = quote["price"]
     change = quote["change"]
@@ -467,16 +481,15 @@ def build_state():
     updated_at = quote["updatedAt"]
     source = quote["source"]
 
-    # 2) Sesión real basada en hora NY
     session_info = infer_session_from_time(current_dt)
     session_code = session_info["code"]
     session_label = session_info["label"]
 
-    # 3) Flags, macro, ejecución temporal
     flags = get_opex_flags(current_dt)
     macro = build_macro_block(current_dt)
     execution = build_execution_block(current_dt, session_code)
-    trade_quality = mock_trade_quality()
+
+    options_bundle = fetch_options_source("QQQ", price, current_dt, session_code)
 
     state = {
         "updatedAtNY": fmt_dt(updated_at),
@@ -486,37 +499,14 @@ def build_state():
         "changePct": change_pct,
         "prevClose": prev_close,
         "source": source,
-        "session": {
-            "code": session_code,
-            "label": session_label,
-        },
-        "vwap": {
-            "value": None,
-            "distPct": None,
-        },
-        "expectedMove": {
-            "move": None,
-            "movePct": None,
-        },
-        "trade": {
-            "bufferDynamicPct": 1.07,
-            "shortStrike": None,
-            "breakeven": None,
-            "distToShort": None,
-            "netCredit": None,
-        },
-        "tradeQuality": trade_quality,
+        "session": {"code": session_code, "label": session_label},
+        "vwap": {"value": None, "distPct": None},
+        "expectedMove": {"move": None, "movePct": None},
+        "trade": options_bundle["trade"],
+        "tradeQuality": options_bundle["tradeQuality"],
         "execution": execution,
-        "options": {
-            "expiration": "0dte_or_nearest",
-            "quotesUsable": False,
-            "liquidityOk": False,
-            "shortCallDelta": trade_quality["targetDelta"],
-            "notes": "Opciones en modo mock; validación real pendiente de conectar cadena",
-        },
-        "optionsMeta": {
-            "source": "no_options_source_available",
-        },
+        "options": options_bundle["options"],
+        "optionsMeta": options_bundle["optionsMeta"],
         "macro": macro,
         "flags": flags,
         "earnings": {
@@ -529,7 +519,7 @@ def build_state():
             }
         },
         "market": {
-            "isHoliday": False,  # en fases posteriores puedes cruzar con calendario Nasdaq [web:43]
+            "isHoliday": False,
             "name": "Sesión normal",
             "date": fmt_date(current_dt),
             "source": "--",
@@ -538,7 +528,6 @@ def build_state():
 
     decision = decide_trade(state)
     state.update(decision)
-
     return state
 
 
