@@ -1,51 +1,47 @@
-name: Update state
+name: Update QQQ Dashboard Data
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"
   workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * 1-5"
 
 permissions:
   contents: write
 
-concurrency:
-  group: update-state
-  cancel-in-progress: true
-
 jobs:
-  build:
+  build-data:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install deps
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests
+          pip install -r requirements.txt
 
-      - name: Generate state
+      - name: Verify FINNHUB_API_KEY
+        run: python -c "import os; print('OK' if os.getenv('FINNHUB_API_KEY') else 'MISSING')"
         env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-        run: |
-          python scripts/build_data.py
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
 
-      - name: Commit and push
+      - name: Generate state.json
+        run: python scripts/build_data.py
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
+
+      - name: Commit updated data
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/state.json
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-          git commit -m "chore: update qqq state"
-          git push origin HEAD:${{ github.ref_name }}
+          git diff --cached --quiet || git commit -m "Update dashboard data"
+
+      - name: Push changes
+        run: git push
