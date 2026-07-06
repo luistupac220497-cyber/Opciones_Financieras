@@ -162,15 +162,11 @@ def build_macro_block(current_dt):
 
 
 def mock_trade_quality():
-    """
-    Placeholder para cuando tengas la cadena real.
-    Ajusta estos valores desde tu generador de spreads.
-    """
     return {
-        "targetDelta": 0.20,          # delta del short (ej. 0.15–0.25 es tu sweet spot) [web:262][web:267]
-        "creditPerRisk": 0.25,        # crédito / ancho del spread (0.2–0.3 típico en 0DTE) [web:267][web:263]
-        "minOpenInterest": 8000,      # OI mínimo en el short [web:273]
-        "width": 5                    # ancho del spread
+        "targetDelta": 0.20,
+        "creditPerRisk": 0.25,
+        "minOpenInterest": 8000,
+        "width": 5
     }
 
 
@@ -192,7 +188,6 @@ def score_trade_quality(q):
     if 0.20 <= cr <= 0.35:
         score += 10
     elif 0.15 <= cr < 0.20:
-        score += 0
         reasons.append("Crédito algo justo")
     else:
         score -= 10
@@ -202,7 +197,6 @@ def score_trade_quality(q):
     if oi >= 5000:
         score += 10
     elif 2000 <= oi < 5000:
-        score += 0
         reasons.append("OI moderado")
     else:
         score -= 10
@@ -216,8 +210,11 @@ def decide_trade(base_state):
     alerts = []
     score = 0
 
-    macro_score = base_state["macro"]["score"]
-    score += macro_score
+    session_code = base_state["session"]["code"]
+    quotes_usable = base_state["options"]["quotesUsable"]
+    liquidity_ok = base_state["options"]["liquidityOk"]
+
+    score += base_state["macro"]["score"]
 
     if base_state["macro"]["windowCritical"]:
         reasons.insert(0, "Ventana macro crítica")
@@ -226,17 +223,17 @@ def decide_trade(base_state):
             "text": base_state["macro"]["summary"],
         })
 
-    if base_state["session"]["code"] != "regular":
-        reasons.append("Sesión extendida")
-        score -= 12
+    if session_code != "regular":
+        reasons.append("Esperar apertura")
+        score -= 5
+    else:
+        if not quotes_usable:
+            reasons.append("Quotes no operables")
+            score -= 20
 
-    if not base_state["options"]["quotesUsable"]:
-        reasons.append("Quotes no operables")
-        score -= 20
-
-    if base_state["options"]["liquidityOk"] is False:
-        reasons.append("Liquidez insuficiente")
-        score -= 15
+        if liquidity_ok is False:
+            reasons.append("Liquidez insuficiente")
+            score -= 15
 
     if base_state["flags"]["opexQuarterly"]:
         reasons.append("OPEX trimestral")
@@ -253,6 +250,10 @@ def decide_trade(base_state):
         decision_label = "no entrar"
         decision_tone = "red"
         risk_label = "Riesgo alto"
+    elif session_code != "regular":
+        decision_label = "esperar apertura"
+        decision_tone = "yellow"
+        risk_label = "Riesgo medio"
     else:
         if score <= -40:
             decision_label = "no entrar"
@@ -316,7 +317,7 @@ def build_state():
             "quotesUsable": False,
             "liquidityOk": False,
             "shortCallDelta": trade_quality["targetDelta"],
-            "notes": "Sin cadena operable en esta ejecución",
+            "notes": "Esperando sesión regular para validar cadena y liquidez",
         },
         "optionsMeta": {
             "source": "no_options_source_available",
