@@ -1,7 +1,6 @@
 import json
 import math
 import os
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -70,6 +69,10 @@ def fmt_countdown(delta_seconds):
         return "ya ocurrido"
     h = int(delta_seconds // 3600)
     m = int((delta_seconds % 3600) // 60)
+    d = int(delta_seconds // 86400)
+    if d > 0:
+        rem_h = int((delta_seconds % 86400) // 3600)
+        return f"{d}d {rem_h}h"
     return f"{h}h {m}m" if h > 0 else f"{m}m"
 
 
@@ -95,14 +98,19 @@ def to_num(v):
 
 def get_session_label(ny_dt, market_closed=False):
     if market_closed:
-        return {"code": "closed", "label": "Market closed"}
+        return {"code": "closed", "label": "Mercado cerrado"}
 
     mins = ny_dt.hour * 60 + ny_dt.minute
+
+    if mins < 4 * 60:
+        return {"code": "closed", "label": "Mercado cerrado"}
     if mins < 9 * 60 + 30:
         return {"code": "premarket", "label": "Premarket"}
     if mins < 16 * 60:
-        return {"code": "regular", "label": "Regular"}
-    return {"code": "afterhours", "label": "After hours"}
+        return {"code": "regular", "label": "Sesión regular"}
+    if mins < 20 * 60:
+        return {"code": "afterhours", "label": "After hours"}
+    return {"code": "closed", "label": "Mercado cerrado"}
 
 
 def is_us_market_holiday(ny_dt):
@@ -121,9 +129,15 @@ def is_us_market_holiday(ny_dt):
         "2026-12-25": "Christmas Day",
     }
 
+    early_close_2026 = {
+        "2026-11-27": "Early Close",
+        "2026-12-24": "Early Close",
+    }
+
     if date_str in holidays_2026:
         return {
             "isHoliday": True,
+            "isEarlyClose": False,
             "name": holidays_2026[date_str],
             "date": date_str,
             "source": "Nasdaq holiday calendar",
@@ -132,13 +146,24 @@ def is_us_market_holiday(ny_dt):
     if ny_dt.weekday() >= 5:
         return {
             "isHoliday": True,
+            "isEarlyClose": False,
             "name": "Weekend",
             "date": date_str,
             "source": "Weekend",
         }
 
+    if date_str in early_close_2026:
+        return {
+            "isHoliday": False,
+            "isEarlyClose": True,
+            "name": early_close_2026[date_str],
+            "date": date_str,
+            "source": "Nasdaq holiday calendar",
+        }
+
     return {
         "isHoliday": False,
+        "isEarlyClose": False,
         "name": None,
         "date": date_str,
         "source": None,
@@ -334,6 +359,37 @@ def build_option_snapshot_from_row(row, source_name, source_url, expiration="0DT
     }
 
 
+def empty_options_snapshot(notes, issues, source="no_options_source_available", expiration="0DTE_or_nearest"):
+    return {
+        "expiration": expiration,
+        "shortCallBid": None,
+        "shortCallAsk": None,
+        "longCallBid": None,
+        "longCallAsk": None,
+        "shortCallDelta": None,
+        "longCallDelta": None,
+        "shortCallOI": None,
+        "longCallOI": None,
+        "shortCallVolume": None,
+        "longCallVolume": None,
+        "quotesUsable": False,
+        "liquidityOk": False,
+        "deltaOk": False,
+        "notes": notes,
+        "issues": issues,
+        "meta": {
+            "used": False,
+            "source": source,
+            "sourceUrl": None,
+            "updatedAt": now_utc().isoformat(),
+            "shortStrike": None,
+            "longStrike": None,
+            "netCredit": None,
+            "breakeven": None,
+        },
+    }
+
+
 def get_nasdaq_options_snapshot(symbol, spot):
     urls = [
         f"https://www.nasdaq.com/market-activity/etf/{symbol.lower()}/option-chain",
@@ -377,34 +433,13 @@ def get_nasdaq_options_snapshot(symbol, spot):
         except Exception as e:
             last_error = str(e)
 
-    return {
-        "expiration": "0DTE_or_nearest",
-        "shortCallBid": None,
-        "shortCallAsk": None,
-        "longCallBid": None,
-        "longCallAsk": None,
-        "shortCallDelta": None,
-        "longCallDelta": None,
-        "shortCallOI": None,
-        "longCallOI": None,
-        "shortCallVolume": None,
-        "longCallVolume": None,
-        "quotesUsable": False,
-        "liquidityOk": False,
-        "deltaOk": False,
-        "notes": "Nasdaq no devolvió snapshot usable en esta ejecución",
-        "issues": [f"nasdaq_unavailable_or_unparseable: {last_error}"] if last_error else ["nasdaq_unavailable_or_unparseable"],
-        "meta": {
-            "used": False,
-            "source": "nasdaq_option_chain",
-            "sourceUrl": None,
-            "updatedAt": now_utc().isoformat(),
-            "shortStrike": None,
-            "longStrike": None,
-            "netCredit": None,
-            "breakeven": None,
-        },
-    }
+    snap = empty_options_snapshot(
+        notes="Nasdaq no devolvió snapshot usable en esta ejecución",
+        issues=[f"nasdaq_unavailable_or_unparseable: {last_error}"] if last_error else ["nasdaq_unavailable_or_unparseable"],
+        source="nasdaq_option_chain",
+    )
+    snap["meta"]["sourceUrl"] = None
+    return snap
 
 
 def get_yahoo_options_snapshot(symbol, spot):
@@ -416,34 +451,13 @@ def get_yahoo_options_snapshot(symbol, spot):
 
         candidates = parse_tables_from_html(r.text)
         if not candidates:
-            return {
-                "expiration": "0DTE_or_nearest",
-                "shortCallBid": None,
-                "shortCallAsk": None,
-                "longCallBid": None,
-                "longCallAsk": None,
-                "shortCallDelta": None,
-                "longCallDelta": None,
-                "shortCallOI": None,
-                "longCallOI": None,
-                "shortCallVolume": None,
-                "longCallVolume": None,
-                "quotesUsable": False,
-                "liquidityOk": False,
-                "deltaOk": False,
-                "notes": "Yahoo no devolvió snapshot usable en esta ejecución",
-                "issues": ["yahoo_unavailable_or_unparseable"],
-                "meta": {
-                    "used": False,
-                    "source": "yahoo_option_chain",
-                    "sourceUrl": url,
-                    "updatedAt": now_utc().isoformat(),
-                    "shortStrike": None,
-                    "longStrike": None,
-                    "netCredit": None,
-                    "breakeven": None,
-                },
-            }
+            snap = empty_options_snapshot(
+                notes="Yahoo no devolvió snapshot usable en esta ejecución",
+                issues=["yahoo_unavailable_or_unparseable"],
+                source="yahoo_option_chain",
+            )
+            snap["meta"]["sourceUrl"] = url
+            return snap
 
         for df in candidates:
             row = choose_best_option_row(df, spot)
@@ -455,64 +469,22 @@ def get_yahoo_options_snapshot(symbol, spot):
                     expiration="0DTE_or_nearest",
                 )
 
-        return {
-            "expiration": "0DTE_or_nearest",
-            "shortCallBid": None,
-            "shortCallAsk": None,
-            "longCallBid": None,
-            "longCallAsk": None,
-            "shortCallDelta": None,
-            "longCallDelta": None,
-            "shortCallOI": None,
-            "longCallOI": None,
-            "shortCallVolume": None,
-            "longCallVolume": None,
-            "quotesUsable": False,
-            "liquidityOk": False,
-            "deltaOk": False,
-            "notes": "Yahoo devolvió tablas pero no fila útil",
-            "issues": ["yahoo_no_usable_row"],
-            "meta": {
-                "used": False,
-                "source": "yahoo_option_chain",
-                "sourceUrl": url,
-                "updatedAt": now_utc().isoformat(),
-                "shortStrike": None,
-                "longStrike": None,
-                "netCredit": None,
-                "breakeven": None,
-            },
-        }
+        snap = empty_options_snapshot(
+            notes="Yahoo devolvió tablas pero no fila útil",
+            issues=["yahoo_no_usable_row"],
+            source="yahoo_option_chain",
+        )
+        snap["meta"]["sourceUrl"] = url
+        return snap
 
     except Exception as e:
-        return {
-            "expiration": "0DTE_or_nearest",
-            "shortCallBid": None,
-            "shortCallAsk": None,
-            "longCallBid": None,
-            "longCallAsk": None,
-            "shortCallDelta": None,
-            "longCallDelta": None,
-            "shortCallOI": None,
-            "longCallOI": None,
-            "shortCallVolume": None,
-            "longCallVolume": None,
-            "quotesUsable": False,
-            "liquidityOk": False,
-            "deltaOk": False,
-            "notes": "Yahoo no devolvió snapshot usable en esta ejecución",
-            "issues": [f"yahoo_unavailable_or_unparseable: {e}"],
-            "meta": {
-                "used": False,
-                "source": "yahoo_option_chain",
-                "sourceUrl": url,
-                "updatedAt": now_utc().isoformat(),
-                "shortStrike": None,
-                "longStrike": None,
-                "netCredit": None,
-                "breakeven": None,
-            },
-        }
+        snap = empty_options_snapshot(
+            notes="Yahoo no devolvió snapshot usable en esta ejecución",
+            issues=[f"yahoo_unavailable_or_unparseable: {e}"],
+            source="yahoo_option_chain",
+        )
+        snap["meta"]["sourceUrl"] = url
+        return snap
 
 
 def get_options_snapshot(symbol, spot, market_holiday):
@@ -616,7 +588,7 @@ def compute_buffer(expected_move_pct, pm_range_pct, vwap_dist_pct_abs, session_c
     em_component = min(max((expected_move_pct or 0) * 0.56, 0), 0.85)
     pm_component = min(max((pm_range_pct or 0) * 0.20, 0), 0.40)
     vwap_component = min(max((vwap_dist_pct_abs or 0) * 0.18, 0), 0.25)
-    session_boost = 0.22 if session_code not in {"regular", "closed"} else 0.0
+    session_boost = 0.22 if session_code in {"premarket", "afterhours"} else 0.0
     macro_boost = 0.18 if macro_veto else 0.0
     closed_boost = 0.20 if market_closed else 0.0
 
@@ -643,13 +615,10 @@ def compute_buffer(expected_move_pct, pm_range_pct, vwap_dist_pct_abs, session_c
     }
 
 
-def get_macro_block():
-    event_ny = datetime(2026, 7, 3, 8, 30, tzinfo=NY_ZONE)
-    nowu = now_utc()
+def build_macro_item(event_ny, nowu):
     event_utc = event_ny.astimezone(UTC_ZONE)
     delta_seconds = (event_utc - nowu).total_seconds()
-
-    item = {
+    return {
         "evento": "Nóminas no agrícolas (NFP)",
         "impacto": "alto",
         "datetimeNY": event_ny.strftime("%Y-%m-%d %H:%M ET"),
@@ -662,10 +631,42 @@ def get_macro_block():
         "countdown": fmt_countdown(delta_seconds),
         "momento": "Antes de la apertura",
         "status": "upcoming" if delta_seconds > 0 else "recent",
-        "isVeto": delta_seconds > 0 and delta_seconds <= 24 * 3600,
+        "isVeto": 0 < delta_seconds <= 24 * 3600,
     }
 
-    return {"status": "OK", "next": item, "items": [item], "all": [item]}
+
+def get_macro_block():
+    nowu = now_utc()
+
+    nfp_dates_ny = [
+        datetime(2026, 1, 9, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 2, 11, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 3, 6, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 4, 3, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 5, 8, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 6, 5, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 7, 2, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 8, 7, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 9, 4, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 10, 2, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 11, 6, 8, 30, tzinfo=NY_ZONE),
+        datetime(2026, 12, 4, 8, 30, tzinfo=NY_ZONE),
+    ]
+
+    all_items = [build_macro_item(d, nowu) for d in nfp_dates_ny]
+    upcoming = [x for x in all_items if x["status"] == "upcoming"]
+    recent = [x for x in all_items if x["status"] == "recent"]
+
+    next_item = upcoming[0] if upcoming else None
+    last_item = recent[-1] if recent else None
+
+    return {
+        "status": "OK",
+        "next": next_item,
+        "last": last_item,
+        "items": [x for x in [next_item, last_item] if x is not None],
+        "all": all_items,
+    }
 
 
 def get_earnings_block():
@@ -680,30 +681,55 @@ def get_earnings_block():
     return {"status": "OK", "next": next_item, "items": [next_item]}
 
 
-def compute_freshness(last_bar_at):
+def compute_freshness(last_bar_at, market_holiday=None, session=None):
+    threshold = 3
+
     if not last_bar_at:
         return {
             "ageMinutes": None,
-            "thresholdMinutes": 3,
+            "thresholdMinutes": threshold,
             "isStale": True,
             "status": "Sin timestamp",
+            "label": "Sin timestamp",
         }
 
     try:
         last_dt = datetime.fromisoformat(last_bar_at)
         age = (now_utc() - last_dt.astimezone(UTC_ZONE)).total_seconds() / 60.0
+        is_stale = age > threshold
+
+        if market_holiday and market_holiday.get("isHoliday"):
+            return {
+                "ageMinutes": round2(age),
+                "thresholdMinutes": threshold,
+                "isStale": False,
+                "status": "Market holiday",
+                "label": "Mercado cerrado",
+            }
+
+        if session and session.get("code") in {"closed", "premarket", "afterhours"} and is_stale:
+            return {
+                "ageMinutes": round2(age),
+                "thresholdMinutes": threshold,
+                "isStale": True,
+                "status": "Extended hours",
+                "label": "Dato fuera de sesión regular",
+            }
+
         return {
             "ageMinutes": round2(age),
-            "thresholdMinutes": 3,
-            "isStale": False,
+            "thresholdMinutes": threshold,
+            "isStale": is_stale,
             "status": "Quote timestamp",
+            "label": "Dato retrasado" if is_stale else "Dato reciente",
         }
     except Exception:
         return {
             "ageMinutes": None,
-            "thresholdMinutes": 3,
+            "thresholdMinutes": threshold,
             "isStale": True,
             "status": "Error",
+            "label": "Error de timestamp",
         }
 
 
@@ -739,13 +765,13 @@ def compute_score_and_reasons(price_data, options, trade, macro, session, market
         reasons.append("Crédito bajo")
         score -= 5
 
-    if macro["next"]["isVeto"]:
+    if macro.get("next") and macro["next"]["isVeto"]:
         reasons.append("Macro cercana: Nóminas no agrícolas (NFP)")
         score -= 20
 
     score = max(0, min(100, int(round(score))))
 
-    if macro["next"]["isVeto"]:
+    if macro.get("next") and macro["next"]["isVeto"]:
         return score, "no entrar", "red", "no entrar", "Riesgo alto", reasons
     if score >= 70:
         return score, "entraría", "green", "entraría", "Riesgo controlado", reasons
@@ -800,12 +826,14 @@ def main():
     pm_range_pct = 0.0
     vwap_dist_pct_abs = abs(price_data["vwap"]["distPct"]) if price_data["vwap"]["distPct"] is not None else 0.0
 
+    macro_veto = bool(macro.get("next") and macro["next"]["isVeto"])
+
     buffer_part = compute_buffer(
         expected_move_pct=expected_move["movePct"],
         pm_range_pct=pm_range_pct,
         vwap_dist_pct_abs=vwap_dist_pct_abs,
         session_code=session["code"],
-        macro_veto=macro["next"]["isVeto"],
+        macro_veto=macro_veto,
         market_closed=market_holiday["isHoliday"],
     )
 
@@ -826,10 +854,25 @@ def main():
         "distToShort": round2(meta["shortStrike"] - price_data["price"]) if meta["shortStrike"] is not None and price_data["price"] is not None else None,
     }
 
-    freshness = compute_freshness(price_data["lastBarAt"])
+    freshness = compute_freshness(
+        price_data["lastBarAt"],
+        market_holiday=market_holiday,
+        session=session,
+    )
+
     score, decision, tone, label, risk, reasons = compute_score_and_reasons(
         price_data, options, trade, macro, session, market_holiday
     )
+
+    if macro.get("next"):
+        macro_text = macro["next"]["countdown"]
+        macro_status_label = macro["next"]["countdown"]
+    elif macro.get("last"):
+        macro_text = f"último {macro['last']['dateNY']}"
+        macro_status_label = "ya ocurrido"
+    else:
+        macro_text = "--"
+        macro_status_label = "--"
 
     state = {
         "ticker": TICKER,
@@ -845,7 +888,7 @@ def main():
         "updatedAtNY": now_ny().strftime("%Y-%m-%d %H:%M:%S ET"),
         "session": session,
         "market": market_holiday,
-        "summary": f"buffer {buffer_part['bufferDynamicPct']:.2f}% · short {('--' if trade['shortStrike'] is None else trade['shortStrike'])} · crédito {('--' if trade['netCredit'] is None else trade['netCredit'])} · macro {macro['next']['countdown']} · tramo {session['code']}",
+        "summary": f"buffer {buffer_part['bufferDynamicPct']:.2f}% · short {('--' if trade['shortStrike'] is None else trade['shortStrike'])} · crédito {('--' if trade['netCredit'] is None else trade['netCredit'])} · macro {macro_text} · tramo {session['code']}",
         "trade": trade,
         "bufferDebug": buffer_part["bufferDebug"],
         "options": options,
@@ -876,6 +919,7 @@ def main():
             }
         ] if market_holiday["isHoliday"] else [],
         "macro": macro,
+        "macroLabel": macro_status_label,
         "earnings": earnings,
         "optionsMeta": meta,
     }
