@@ -57,7 +57,7 @@
     .top{
       display:flex;
       justify-content:space-between;
-      align-items:center;
+      align-items:flex-start;
       gap:12px;
       margin-bottom:18px;
     }
@@ -66,6 +66,12 @@
       margin:0;
       font-size:clamp(1.5rem,2vw,2rem);
       font-weight:900;
+    }
+
+    .meta-stack{
+      display:grid;
+      gap:4px;
+      margin-top:6px;
     }
 
     .meta{
@@ -318,8 +324,6 @@
       gap:8px;
     }
 
-    .muted{color:var(--muted)}
-
     @media (min-width:981px){
       .status-top{grid-template-columns:1fr 1fr}
     }
@@ -331,7 +335,7 @@
 
     @media (max-width:560px){
       .grid4{grid-template-columns:1fr}
-      .top{align-items:flex-start;flex-direction:column}
+      .top{flex-direction:column}
     }
   </style>
 </head>
@@ -340,7 +344,11 @@
     <div class="top">
       <div>
         <h1 class="title">QQQ 0DTE Dashboard</h1>
-        <div class="meta" id="headerMeta">Cargando...</div>
+        <div class="meta-stack">
+          <div class="meta" id="headerMeta">Última actualización del snapshot: cargando...</div>
+          <div class="meta" id="liveClock">Hora ET: --</div>
+          <div class="meta" id="browserClock">Hora local: --</div>
+        </div>
       </div>
       <div class="toolbar">
         <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema">◐</button>
@@ -491,6 +499,9 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
+    let lastState = null;
+    let dashboardInterval = null;
+    let clockInterval = null;
 
     const fmtMoney = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`;
     const fmtPct = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${(Number(v) * 100).toFixed(2)}%`;
@@ -602,6 +613,40 @@
       $("decisionText").className = `decision ${tone || "yellow"}`;
     }
 
+    function formatETNow(){
+      const now = new Date();
+      return new Intl.DateTimeFormat("es-ES", {
+        timeZone: "America/New_York",
+        weekday: "short",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).format(now) + " ET";
+    }
+
+    function formatLocalNow(){
+      const now = new Date();
+      return new Intl.DateTimeFormat("es-ES", {
+        weekday: "short",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).format(now);
+    }
+
+    function updateClocks(){
+      $("liveClock").textContent = `Hora ET: ${formatETNow()}`;
+      $("browserClock").textContent = `Hora local: ${formatLocalNow()}`;
+    }
+
     async function fetchState(){
       const url = `./data/state.json?t=${Date.now()}`;
       const res = await fetch(url, { cache:"no-store" });
@@ -609,115 +654,131 @@
       return res.json();
     }
 
+    function renderState(state){
+      lastState = state;
+
+      $("headerMeta").textContent = `Última actualización del snapshot: ${fmtText(state.updatedAtNY || state.updatedAtText)}`;
+      $("decisionText").textContent = fmtText(state.decisionLabel);
+      $("scoreValue").textContent = state.score ?? "--";
+      setDecisionTone(state.decisionTone);
+
+      $("summaryBuffer").textContent = fmtPctRaw(state.trade?.bufferDynamicPct);
+      $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
+      $("summaryCredit").textContent = fmtMoney(state.trade?.netCredit);
+      $("summaryMacro").textContent = fmtText(state.macro?.summary);
+      $("summaryOpex").textContent = humanizeOpex(state.flags);
+      $("summaryPhase").textContent = fmtText(state.execution?.phase);
+
+      $("phaseNote").textContent = phaseMessage(state.execution, state.session?.code);
+
+      $("priceValue").textContent = fmtMoney(state.price);
+      $("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
+      $("creditValueTop").textContent = fmtMoney(state.trade?.netCredit);
+      $("macroNextTop").textContent = fmtText(state.macro?.nextBig?.label, "—");
+
+      const riskText = humanizeRisk(state.riskLabel);
+      const sessionText = humanizeSession(state.session?.code, state.session?.label);
+
+      $("riskBadge").textContent = riskText;
+      $("sessionBadge").textContent = sessionText;
+      $("sourceValue").textContent = humanizeSource(state.source);
+      $("optionsSourceValue").textContent = humanizeSource(state.optionsMeta?.source);
+
+      $("riskBadge").className = "status-badge";
+      if((riskText || "").toLowerCase().includes("alto")) $("riskBadge").classList.add("danger");
+      else if((riskText || "").toLowerCase().includes("medio")) $("riskBadge").classList.add("warning");
+      else $("riskBadge").classList.add("success");
+
+      $("sessionBadge").className = "status-badge";
+      if((state.session?.code || "") === "closed") $("sessionBadge").classList.add("neutral");
+      else if((state.session?.code || "") === "regular") $("sessionBadge").classList.add("success");
+      else $("sessionBadge").classList.add("warning");
+
+      $("spotValue").textContent = fmtMoney(state.price);
+      $("changeValue").textContent = `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`;
+      $("vwapValue").textContent = `${fmtMoney(state.vwap?.value)} · ${fmtPctRaw(state.vwap?.distPct)}`;
+      $("sessionValue").textContent = sessionText;
+      $("prevCloseValue").textContent = fmtMoney(state.prevClose);
+
+      $("bufferValue").textContent = fmtPctRaw(state.trade?.bufferDynamicPct);
+      $("shortStrikeValue2").textContent = fmtMoney(state.trade?.shortStrike);
+      $("breakevenValue").textContent = fmtMoney(state.trade?.breakeven);
+      $("distToShortValue").textContent = state.trade?.distToShort == null ? "--" : fmtMoney(state.trade?.distToShort);
+      $("expectedMoveValue").textContent = `${fmtMoney(state.expectedMove?.move)} (${fmtPctRaw(state.expectedMove?.movePct)})`;
+
+      const tqDelta = fmtDelta(state.tradeQuality?.targetDelta);
+      const tqCr = state.tradeQuality?.creditPerRisk == null ? "--" : Number(state.tradeQuality.creditPerRisk).toFixed(2);
+      const tqOi = state.tradeQuality?.minOpenInterest == null ? "--" : state.tradeQuality.minOpenInterest;
+      $("tradeQualityValue").textContent = `Δ ${tqDelta} · Cr/R ${tqCr} · OI ${tqOi}`;
+
+      $("expirationValue").textContent = humanizeExpiration(state.options?.expiration);
+      $("quotesValue").textContent = humanizeQuotes(state.options?.quotesUsable, state.session?.code);
+      $("liquidityValue").textContent = humanizeLiquidity(state.options?.liquidityOk, state.session?.code);
+      $("deltaValue").textContent = fmtDelta(state.options?.shortCallDelta);
+      $("notesValue").textContent = fmtText(state.options?.notes);
+
+      $("macroTodayValue").textContent = macroTodayText(state.macro);
+      $("macroCriticalValue").textContent = yesNo(state.macro?.windowCritical);
+      $("macroScoreValue").textContent = fmtText(state.macro?.score);
+      $("macroNextValue").textContent = fmtText(state.macro?.nextBig?.label, "—");
+      $("macroDateValue").textContent = fmtText(state.macro?.nextBig?.datetimeNY, "—");
+      $("macroCountdownValue").textContent = fmtText(state.macro?.nextBig?.countdown, "—");
+
+      $("phaseValue").textContent = fmtText(state.execution?.phase);
+      $("entryStartValue").textContent = fmtText(state.execution?.entryStartET);
+      $("minutesStartValue").textContent = fmtText(state.execution?.minutesToEntryStart);
+      $("entryCutoffValue").textContent = fmtText(state.execution?.entryCutoffET);
+      $("minutesCutoffValue").textContent = fmtText(state.execution?.minutesToEntryCutoff);
+      $("hardExitValue").textContent = fmtText(state.execution?.hardExitET);
+      $("timeStopValue").textContent = yesNo(state.execution?.timeStopTriggered);
+      $("maxHoldValue").textContent = `${state.execution?.maxHoldMinutes ?? "--"} min`;
+
+      $("bidAskValue").textContent = fmtMoney(state.tradeQuality?.bidAskWidth);
+      $("spreadWidthPctValue").textContent = fmtPct(state.tradeQuality?.spreadWidthPct);
+      $("shortOIValue").textContent = fmtText(state.tradeQuality?.shortStrikeOI);
+      $("longOIValue").textContent = fmtText(state.tradeQuality?.longStrikeOI);
+      $("spacingValue").textContent = yesNo(state.tradeQuality?.strikeSpacingOk);
+      $("opexValue").textContent = humanizeOpex(state.flags);
+
+      renderReasons(state.reasons);
+
+      const alertBox = $("marketAlert");
+      if(Array.isArray(state.alerts) && state.alerts.length){
+        alertBox.style.display = "block";
+        alertBox.textContent = state.alerts.map(a => `${a.title}: ${a.text}`).join(" · ");
+      } else {
+        alertBox.style.display = "none";
+        alertBox.textContent = "";
+      }
+    }
+
     async function loadDashboard(){
       try{
         const state = await fetchState();
-
-        $("headerMeta").textContent = fmtText(state.updatedAtNY || state.updatedAtText);
-        $("decisionText").textContent = fmtText(state.decisionLabel);
-        $("scoreValue").textContent = state.score ?? "--";
-        setDecisionTone(state.decisionTone);
-
-        $("summaryBuffer").textContent = fmtPctRaw(state.trade?.bufferDynamicPct);
-        $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
-        $("summaryCredit").textContent = fmtMoney(state.trade?.netCredit);
-        $("summaryMacro").textContent = fmtText(state.macro?.summary);
-        $("summaryOpex").textContent = humanizeOpex(state.flags);
-        $("summaryPhase").textContent = fmtText(state.execution?.phase);
-
-        $("phaseNote").textContent = phaseMessage(state.execution, state.session?.code);
-
-        $("priceValue").textContent = fmtMoney(state.price);
-        $("shortStrikeValue").textContent = fmtMoney(state.trade?.shortStrike);
-        $("creditValueTop").textContent = fmtMoney(state.trade?.netCredit);
-        $("macroNextTop").textContent = fmtText(state.macro?.nextBig?.label, "—");
-
-        const riskText = humanizeRisk(state.riskLabel);
-        const sessionText = humanizeSession(state.session?.code, state.session?.label);
-
-        $("riskBadge").textContent = riskText;
-        $("sessionBadge").textContent = sessionText;
-        $("sourceValue").textContent = humanizeSource(state.source);
-        $("optionsSourceValue").textContent = humanizeSource(state.optionsMeta?.source);
-
-        $("riskBadge").className = "status-badge";
-        if((riskText || "").toLowerCase().includes("alto")) $("riskBadge").classList.add("danger");
-        else if((riskText || "").toLowerCase().includes("medio")) $("riskBadge").classList.add("warning");
-        else $("riskBadge").classList.add("success");
-
-        $("sessionBadge").className = "status-badge";
-        if((state.session?.code || "") === "closed") $("sessionBadge").classList.add("neutral");
-        else if((state.session?.code || "") === "regular") $("sessionBadge").classList.add("success");
-        else $("sessionBadge").classList.add("warning");
-
-        $("spotValue").textContent = fmtMoney(state.price);
-        $("changeValue").textContent = `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`;
-        $("vwapValue").textContent = `${fmtMoney(state.vwap?.value)} · ${fmtPctRaw(state.vwap?.distPct)}`;
-        $("sessionValue").textContent = sessionText;
-        $("prevCloseValue").textContent = fmtMoney(state.prevClose);
-
-        $("bufferValue").textContent = fmtPctRaw(state.trade?.bufferDynamicPct);
-        $("shortStrikeValue2").textContent = fmtMoney(state.trade?.shortStrike);
-        $("breakevenValue").textContent = fmtMoney(state.trade?.breakeven);
-        $("distToShortValue").textContent = state.trade?.distToShort == null ? "--" : fmtMoney(state.trade?.distToShort);
-        $("expectedMoveValue").textContent = `${fmtMoney(state.expectedMove?.move)} (${fmtPctRaw(state.expectedMove?.movePct)})`;
-
-        const tqDelta = fmtDelta(state.tradeQuality?.targetDelta);
-        const tqCr = state.tradeQuality?.creditPerRisk == null ? "--" : Number(state.tradeQuality.creditPerRisk).toFixed(2);
-        const tqOi = state.tradeQuality?.minOpenInterest == null ? "--" : state.tradeQuality.minOpenInterest;
-        $("tradeQualityValue").textContent = `Δ ${tqDelta} · Cr/R ${tqCr} · OI ${tqOi}`;
-
-        $("expirationValue").textContent = humanizeExpiration(state.options?.expiration);
-        $("quotesValue").textContent = humanizeQuotes(state.options?.quotesUsable, state.session?.code);
-        $("liquidityValue").textContent = humanizeLiquidity(state.options?.liquidityOk, state.session?.code);
-        $("deltaValue").textContent = fmtDelta(state.options?.shortCallDelta);
-        $("notesValue").textContent = fmtText(state.options?.notes);
-
-        $("macroTodayValue").textContent = macroTodayText(state.macro);
-        $("macroCriticalValue").textContent = yesNo(state.macro?.windowCritical);
-        $("macroScoreValue").textContent = fmtText(state.macro?.score);
-        $("macroNextValue").textContent = fmtText(state.macro?.nextBig?.label, "—");
-        $("macroDateValue").textContent = fmtText(state.macro?.nextBig?.datetimeNY, "—");
-        $("macroCountdownValue").textContent = fmtText(state.macro?.nextBig?.countdown, "—");
-
-        $("phaseValue").textContent = fmtText(state.execution?.phase);
-        $("entryStartValue").textContent = fmtText(state.execution?.entryStartET);
-        $("minutesStartValue").textContent = fmtText(state.execution?.minutesToEntryStart);
-        $("entryCutoffValue").textContent = fmtText(state.execution?.entryCutoffET);
-        $("minutesCutoffValue").textContent = fmtText(state.execution?.minutesToEntryCutoff);
-        $("hardExitValue").textContent = fmtText(state.execution?.hardExitET);
-        $("timeStopValue").textContent = yesNo(state.execution?.timeStopTriggered);
-        $("maxHoldValue").textContent = `${state.execution?.maxHoldMinutes ?? "--"} min`;
-
-        $("bidAskValue").textContent = fmtMoney(state.tradeQuality?.bidAskWidth);
-        $("spreadWidthPctValue").textContent = fmtPct(state.tradeQuality?.spreadWidthPct);
-        $("shortOIValue").textContent = fmtText(state.tradeQuality?.shortStrikeOI);
-        $("longOIValue").textContent = fmtText(state.tradeQuality?.longStrikeOI);
-        $("spacingValue").textContent = yesNo(state.tradeQuality?.strikeSpacingOk);
-        $("opexValue").textContent = humanizeOpex(state.flags);
-
-        renderReasons(state.reasons);
-
-        const alertBox = $("marketAlert");
-        if(Array.isArray(state.alerts) && state.alerts.length){
-          alertBox.style.display = "block";
-          alertBox.textContent = state.alerts.map(a => `${a.title}: ${a.text}`).join(" · ");
-        } else {
-          alertBox.style.display = "none";
-          alertBox.textContent = "";
-        }
+        renderState(state);
       } catch(err){
-        $("headerMeta").textContent = "Error cargando datos";
+        $("headerMeta").textContent = "Última actualización del snapshot: error";
         $("decisionText").textContent = "Error";
         $("phaseNote").textContent = "No se pudo cargar el estado del dashboard.";
         renderReasons([err.message || "Error"]);
       }
     }
 
+    function startTimers(){
+      updateClocks();
+      if (clockInterval) clearInterval(clockInterval);
+      clockInterval = setInterval(updateClocks, 1000);
+
+      if (dashboardInterval) clearInterval(dashboardInterval);
+      dashboardInterval = setInterval(loadDashboard, 60000);
+    }
+
     $("refreshBtn").addEventListener("click", loadDashboard);
+
     applyThemeToggle();
+    updateClocks();
     loadDashboard();
-    setInterval(loadDashboard, 60000);
+    startTimers();
   </script>
 </body>
 </html>
