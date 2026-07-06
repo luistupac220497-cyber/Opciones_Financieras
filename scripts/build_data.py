@@ -65,9 +65,7 @@ def macro_events_2026():
         parse_event("2026-07-29 14:30", "Rueda de prensa FOMC", "alto", veto=True),
         parse_event("2026-08-07 08:30", "Nóminas no agrícolas (NFP)", "alto", veto=True),
     ]
-
-
-def build_macro_block(current_dt):
+    def build_macro_block(current_dt):
     events = [e for e in macro_events_2026() if e["dt"] >= current_dt - timedelta(hours=6)]
     events.sort(key=lambda x: x["dt"])
 
@@ -150,7 +148,9 @@ def get_finnhub_api_key():
     if not api_key:
         raise RuntimeError("FINNHUB_API_KEY no está configurada")
     return api_key
-    def load_previous_state():
+
+
+def load_previous_state():
     if not os.path.exists(STATE_PATH):
         return None
     try:
@@ -158,9 +158,7 @@ def get_finnhub_api_key():
             return json.load(f)
     except Exception:
         return None
-
-
-def fallback_quote_from_previous(previous_state, reason_code, reason_text):
+        def fallback_quote_from_previous(previous_state, reason_code, reason_text):
     current_dt = now_ny()
 
     if previous_state:
@@ -252,9 +250,8 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
                 "degraded": False,
                 "degradedReason": None,
                 "staleFromPreviousState": False,
-            }
-
-        except requests.exceptions.Timeout:
+        }
+                    except requests.exceptions.Timeout:
             last_error = "timeout"
             if attempt < retries:
                 time_module.sleep(sleep_seconds)
@@ -288,8 +285,10 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
         previous_state,
         "finnhub_unknown_error",
         f"Error desconocido en Finnhub: {last_error or 'sin detalle'}",
-                   )
-    def infer_session_from_time(current_dt: datetime):
+    )
+
+
+def infer_session_from_time(current_dt: datetime):
     t = current_dt.time()
     if t < time(4, 0) or t >= time(20, 0):
         return {"code": "closed", "label": "Mercado cerrado"}
@@ -340,8 +339,6 @@ def round_to_strike(price, step=1):
     if price is None:
         return None
     return math.ceil(price / step) * step
-
-
 def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, session_code: str):
     regular_open = time(9, 30)
     qqq_opt_close = QQQ_OPTIONS_CLOSE_ET
@@ -413,8 +410,10 @@ def fetch_options_source(symbol: str, spot_price: float, current_dt: datetime, s
             "netCredit": None,
         },
         "tradeQuality": base_quality,
-            }
-    def score_trade_quality(q, session_code):
+    }
+
+
+def score_trade_quality(q, session_code):
     score = 0
     reasons = []
 
@@ -640,3 +639,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+            
