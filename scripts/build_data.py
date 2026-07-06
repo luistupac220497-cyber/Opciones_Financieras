@@ -162,26 +162,37 @@ def build_macro_block(current_dt):
 
 
 def build_execution_block(current_dt, session_code):
+    entry_start = datetime.combine(current_dt.date(), time(10, 30), tzinfo=NY)
     entry_cutoff = datetime.combine(current_dt.date(), time(13, 30), tzinfo=NY)
     hard_exit = datetime.combine(current_dt.date(), time(15, 15), tzinfo=NY)
     max_hold_minutes = 60
 
+    minutes_to_entry_start = int((entry_start - current_dt).total_seconds() / 60)
     minutes_to_cutoff = int((entry_cutoff - current_dt).total_seconds() / 60)
     minutes_to_hard_exit = int((hard_exit - current_dt).total_seconds() / 60)
 
-    entry_window_open = session_code == "regular" and minutes_to_cutoff > 0
+    entry_window_open = (
+        session_code == "regular"
+        and minutes_to_entry_start <= 0
+        and minutes_to_cutoff > 0
+    )
+
     time_stop_triggered = session_code == "regular" and minutes_to_hard_exit <= 0
 
     if session_code != "regular":
         phase = "Fuera de sesión regular"
+    elif minutes_to_entry_start > 0:
+        phase = "Esperando 1h de mercado"
     elif not entry_window_open:
         phase = "Fuera de ventana de entrada"
     else:
         phase = "Ventana de entrada abierta"
 
     return {
+        "entryStartET": entry_start.strftime("%H:%M ET"),
         "entryCutoffET": entry_cutoff.strftime("%H:%M ET"),
         "hardExitET": hard_exit.strftime("%H:%M ET"),
+        "minutesToEntryStart": minutes_to_entry_start,
         "minutesToEntryCutoff": minutes_to_cutoff,
         "minutesToHardExit": minutes_to_hard_exit,
         "maxHoldMinutes": max_hold_minutes,
@@ -279,7 +290,11 @@ def decide_trade(base_state):
         reasons.append("Esperar apertura")
         score -= 5
 
-    if session_code == "regular" and not execution["entryWindowOpen"]:
+    if session_code == "regular" and execution["minutesToEntryStart"] > 0:
+        reasons.append("Esperar 1h de mercado desde la apertura")
+        score -= 10
+
+    if session_code == "regular" and not execution["entryWindowOpen"] and execution["minutesToEntryStart"] <= 0:
         reasons.append("Fuera de ventana de entrada")
         score -= 20
 
@@ -319,6 +334,10 @@ def decide_trade(base_state):
         decision_label = "esperar apertura"
         decision_tone = "yellow"
         risk_label = "Riesgo medio"
+    elif execution["minutesToEntryStart"] > 0:
+        decision_label = "esperar primera hora"
+        decision_tone = "yellow"
+        risk_label = "Riesgo controlado"
     elif not execution["entryWindowOpen"]:
         decision_label = "fuera de ventana"
         decision_tone = "yellow"
@@ -392,7 +411,7 @@ def build_state():
             "quotesUsable": False,
             "liquidityOk": False,
             "shortCallDelta": trade_quality["targetDelta"],
-            "notes": "Esperando sesión regular para validar cadena, spread y liquidez",
+            "notes": "Esperando sesión regular y primera hora completa para validar cadena, spread y liquidez",
         },
         "optionsMeta": {
             "source": "no_options_source_available",
