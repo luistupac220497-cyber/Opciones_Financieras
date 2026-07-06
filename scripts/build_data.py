@@ -110,7 +110,8 @@ def build_macro_block(current_dt):
                 "datetimeNY": fmt_dt(e["dt"]),
                 "countdown": fmt_countdown(e["dt"], current_dt),
                 "veto": e["veto"],
-            } for e in today_high
+            }
+            for e in today_high
         ],
         "windowList": [
             {
@@ -119,9 +120,12 @@ def build_macro_block(current_dt):
                 "datetimeNY": fmt_dt(e["dt"]),
                 "countdown": fmt_countdown(e["dt"], current_dt),
                 "veto": e["veto"],
-            } for e in window_critical
+            }
+            for e in window_critical
         ],
-        "nextBig": None if not next_big else {
+        "nextBig": None
+        if not next_big
+        else {
             "label": next_big["label"],
             "impact": next_big["impact"],
             "datetimeNY": fmt_dt(next_big["dt"]),
@@ -139,7 +143,7 @@ def get_opex_flags(current_dt):
     today = fmt_date(current_dt)
     return {
         "opexDay": today in monthly_opex,
-        "opexQuarterly": today in quarterly_opex
+        "opexQuarterly": today in quarterly_opex,
     }
 
 
@@ -217,7 +221,7 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
                 return fallback_quote_from_previous(
                     previous_state,
                     f"finnhub_http_{status}",
-                    f"Finnhub devolvió HTTP {status}"
+                    f"Finnhub devolvió HTTP {status}",
                 )
 
             if status == 429:
@@ -228,7 +232,7 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
                 return fallback_quote_from_previous(
                     previous_state,
                     "finnhub_rate_limited",
-                    "Finnhub devolvió 429 rate limit"
+                    "Finnhub devolvió 429 rate limit",
                 )
 
             resp.raise_for_status()
@@ -262,7 +266,7 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
             return fallback_quote_from_previous(
                 previous_state,
                 "finnhub_timeout",
-                "Timeout consultando Finnhub"
+                "Timeout consultando Finnhub",
             )
 
         except requests.exceptions.RequestException as e:
@@ -273,7 +277,7 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
             return fallback_quote_from_previous(
                 previous_state,
                 "finnhub_request_error",
-                f"Error consultando Finnhub: {str(e)[:140]}"
+                f"Error consultando Finnhub: {str(e)[:140]}",
             )
 
         except Exception as e:
@@ -281,13 +285,13 @@ def fetch_quote_finnhub(symbol: str, retries: int = 3, sleep_seconds: float = 2.
             return fallback_quote_from_previous(
                 previous_state,
                 "finnhub_unexpected_error",
-                f"Error inesperado en Finnhub: {str(e)[:140]}"
+                f"Error inesperado en Finnhub: {str(e)[:140]}",
             )
 
     return fallback_quote_from_previous(
         previous_state,
         "finnhub_unknown_error",
-        f"Error desconocido en Finnhub: {last_error or 'sin detalle'}"
+        f"Error desconocido en Finnhub: {last_error or 'sin detalle'}",
     )
 
 
@@ -588,6 +592,25 @@ def build_state():
         "change": change,
         "changePct": change_pct,
         "prevClose": prev_close,
+        updated_at = quote["updatedAt"]
+    source = quote["source"]
+
+    session_info = infer_session_from_time(current_dt)
+    session_code = session_info["code"]
+    session_label = session_info["label"]
+
+    flags = get_opex_flags(current_dt)
+    macro = build_macro_block(current_dt)
+    execution = build_execution_block(current_dt, session_code)
+    options_bundle = fetch_options_source("QQQ", price, current_dt, session_code)
+
+    state = {
+        "updatedAtNY": fmt_dt(updated_at),
+        "updatedAtText": quote.get("updatedAtText", fmt_dt(updated_at)),
+        "price": price,
+        "change": change,
+        "changePct": change_pct,
+        "prevClose": prev_close,
         "source": source,
         "session": {"code": session_code, "label": session_label},
         "vwap": {"value": None, "distPct": None},
@@ -618,7 +641,7 @@ def build_state():
             "spotDegraded": quote.get("degraded", False),
             "spotReason": quote.get("degradedReason"),
             "staleFromPreviousState": quote.get("staleFromPreviousState", False),
-        }
+        },
     }
 
     decision = decide_trade(state)
@@ -635,3 +658,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+   
