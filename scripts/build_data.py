@@ -1,5 +1,4 @@
 import json
-import math
 import os
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -10,17 +9,22 @@ UTC = ZoneInfo("UTC")
 DATA_DIR = "data"
 STATE_PATH = os.path.join(DATA_DIR, "state.json")
 
+
 def ensure_dirs():
     os.makedirs(DATA_DIR, exist_ok=True)
+
 
 def now_ny():
     return datetime.now(UTC).astimezone(NY)
 
+
 def fmt_dt(dt):
     return dt.strftime("%Y-%m-%d %H:%M ET")
 
+
 def fmt_date(dt):
     return dt.strftime("%Y-%m-%d")
+
 
 def fmt_countdown(target, current):
     delta = target - current
@@ -36,73 +40,104 @@ def fmt_countdown(target, current):
         return f"{hours}h {minutes}m"
     return f"{minutes}m"
 
-def parse_event(dt_str, label, impact="alto", kind="macro"):
+
+def parse_event(dt_str, label, impact="alto", kind="macro", veto=False):
     dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(tzinfo=NY)
     return {
         "label": label,
         "impact": impact,
         "kind": kind,
+        "veto": veto,
         "dt": dt,
     }
 
-def upcoming_macro_events():
+
+def macro_events_2026():
     return [
-        parse_event("2026-07-08 14:00", "Actas del FOMC", "alto"),
-        parse_event("2026-07-09 08:30", "Peticiones de desempleo", "medio"),
-        parse_event("2026-07-14 08:30", "IPC (CPI)", "alto"),
-        parse_event("2026-07-14 08:30", "IPC subyacente", "alto"),
-        parse_event("2026-07-15 08:30", "IPP (PPI)", "medio"),
-        parse_event("2026-07-16 08:30", "Ventas minoristas", "alto"),
-        parse_event("2026-07-24 09:45", "PMI manufacturero", "medio"),
-        parse_event("2026-07-24 09:45", "PMI servicios", "medio"),
-        parse_event("2026-07-29 14:00", "Decisión de tipos FOMC", "alto"),
-        parse_event("2026-07-29 14:30", "Rueda de prensa FOMC", "alto"),
-        parse_event("2026-08-07 08:30", "Nóminas no agrícolas (NFP)", "alto"),
+        parse_event("2026-07-08 14:00", "Actas del FOMC", "alto", veto=True),
+        parse_event("2026-07-09 08:30", "Peticiones de desempleo", "medio", veto=False),
+        parse_event("2026-07-14 08:30", "IPC (CPI)", "alto", veto=True),
+        parse_event("2026-07-14 08:30", "IPC subyacente", "alto", veto=True),
+        parse_event("2026-07-15 08:30", "IPP (PPI)", "medio", veto=False),
+        parse_event("2026-07-16 08:30", "Ventas minoristas", "alto", veto=True),
+        parse_event("2026-07-24 09:45", "PMI manufacturero", "medio", veto=False),
+        parse_event("2026-07-24 09:45", "PMI servicios", "medio", veto=False),
+        parse_event("2026-07-29 14:00", "Decisión de tipos FOMC", "alto", veto=True),
+        parse_event("2026-07-29 14:30", "Rueda de prensa FOMC", "alto", veto=True),
+        parse_event("2026-08-07 08:30", "Nóminas no agrícolas (NFP)", "alto", veto=True),
     ]
 
+
+def get_opex_flags(current_dt):
+    monthly_opex = {
+        "2026-07-17",
+        "2026-08-21",
+        "2026-09-18",
+        "2026-10-16",
+        "2026-11-20",
+        "2026-12-18",
+    }
+    quarterly_opex = {
+        "2026-09-18",
+        "2026-12-18",
+    }
+
+    today = fmt_date(current_dt)
+    return {
+        "opexDay": today in monthly_opex,
+        "opexQuarterly": today in quarterly_opex,
+    }
+
+
 def build_macro_block(current_dt):
-    events = [e for e in upcoming_macro_events() if e["dt"] >= current_dt - timedelta(hours=4)]
+    events = [e for e in macro_events_2026() if e["dt"] >= current_dt - timedelta(hours=6)]
     events.sort(key=lambda x: x["dt"])
 
-    high_impact_today = []
-    critical_window = []
+    today_high = []
+    window_critical = []
     next_big = None
 
     for e in events:
         if e["impact"] == "alto" and e["dt"].date() == current_dt.date():
-            high_impact_today.append(e)
+            today_high.append(e)
 
         minutes_to = (e["dt"] - current_dt).total_seconds() / 60
-        if e["impact"] == "alto" and -60 <= minutes_to <= 90:
-            critical_window.append(e)
+        if e["veto"] and -60 <= minutes_to <= 90:
+            window_critical.append(e)
 
-    high_impact_future = [e for e in events if e["impact"] == "alto" and e["dt"] >= current_dt]
-    if high_impact_future:
-        next_big = high_impact_future[0]
+    high_future = [e for e in events if e["impact"] == "alto" and e["dt"] >= current_dt]
+    if high_future:
+        next_big = high_future[0]
 
-    macro_today_high_impact = len(high_impact_today) > 0
-    macro_window_critical = len(critical_window) > 0
+    macro_today_high = len(today_high) > 0
+    macro_window_critical = len(window_critical) > 0
 
     if macro_window_critical:
-        headline = critical_window[0]["label"]
-        summary = f"Ventana crítica · {headline}"
-    elif macro_today_high_impact:
-        labels = ", ".join(e["label"] for e in high_impact_today[:2])
-        summary = f"Macro hoy · {labels}"
+        macro_summary = f"Ventana crítica · {window_critical[0]['label']}"
+        macro_score = -40
+    elif macro_today_high:
+        macro_summary = f"Macro hoy · {', '.join(e['label'] for e in today_high[:2])}"
+        macro_score = -15
+    elif next_big:
+        macro_summary = f"Próximo gran evento · {next_big['label']}"
+        macro_score = -5
     else:
-        summary = "Sin macro alta hoy"
+        macro_summary = "Sin macro alta hoy"
+        macro_score = 0
 
-    macro = {
-        "todayHighImpact": macro_today_high_impact,
+    return {
+        "todayHighImpact": macro_today_high,
         "windowCritical": macro_window_critical,
+        "score": macro_score,
         "todayList": [
             {
                 "label": e["label"],
                 "impact": e["impact"],
                 "datetimeNY": fmt_dt(e["dt"]),
                 "countdown": fmt_countdown(e["dt"], current_dt),
+                "veto": e["veto"],
             }
-            for e in high_impact_today
+            for e in today_high
         ],
         "windowList": [
             {
@@ -110,8 +145,9 @@ def build_macro_block(current_dt):
                 "impact": e["impact"],
                 "datetimeNY": fmt_dt(e["dt"]),
                 "countdown": fmt_countdown(e["dt"], current_dt),
+                "veto": e["veto"],
             }
-            for e in critical_window
+            for e in window_critical
         ],
         "nextBig": None if not next_big else {
             "label": next_big["label"],
@@ -119,40 +155,84 @@ def build_macro_block(current_dt):
             "datetimeNY": fmt_dt(next_big["dt"]),
             "dateNY": fmt_date(next_big["dt"]),
             "countdown": fmt_countdown(next_big["dt"], current_dt),
+            "veto": next_big["veto"],
         },
-        "summary": summary,
+        "summary": macro_summary,
     }
 
-    return macro
+
+def decide_trade(base_state):
+    reasons = []
+    alerts = []
+    score = 0
+    decision_label = "vigilar"
+    decision_tone = "yellow"
+
+    if base_state["session"]["code"] != "regular":
+        reasons.append("Sesión extendida")
+        score -= 12
+
+    if not base_state["options"]["quotesUsable"]:
+        reasons.append("Quotes no operables")
+        score -= 20
+
+    if base_state["options"]["liquidityOk"] is False:
+        reasons.append("Liquidez insuficiente")
+        score -= 15
+
+    if base_state["macro"]["windowCritical"]:
+        reasons.insert(0, "Ventana macro crítica")
+        alerts.append({
+            "title": "Macro crítica",
+            "text": base_state["macro"]["summary"],
+        })
+        score -= 40
+
+    if base_state["flags"]["opexQuarterly"]:
+        reasons.append("OPEX trimestral")
+        score -= 10
+    elif base_state["flags"]["opexDay"]:
+        reasons.append("OPEX mensual")
+        score -= 5
+
+    score += base_state["macro"]["score"]
+
+    if score <= -40:
+        decision_label = "no entrar"
+        decision_tone = "red"
+        risk_label = "Riesgo alto"
+    elif score <= -15:
+        decision_label = "esperar confirmación"
+        decision_tone = "yellow"
+        risk_label = "Riesgo medio"
+    else:
+        decision_label = "vigilar"
+        decision_tone = "green"
+        risk_label = "Riesgo controlado"
+
+    return {
+        "decisionLabel": decision_label,
+        "decisionTone": decision_tone,
+        "score": score,
+        "riskLabel": risk_label,
+        "reasons": reasons,
+        "alerts": alerts,
+    }
+
 
 def build_state():
     current_dt = now_ny()
+    flags = get_opex_flags(current_dt)
     macro = build_macro_block(current_dt)
-
-    decision_label = "no entrar"
-    decision_tone = "yellow"
-    score = 0
-    reasons = [
-        "Sesión extendida",
-        "Quotes no operables",
-        "Liquidez insuficiente",
-    ]
-
-    if macro["windowCritical"]:
-        reasons.insert(0, "Ventana macro crítica")
 
     state = {
         "updatedAtNY": fmt_dt(current_dt),
         "updatedAtText": fmt_dt(current_dt),
-        "decisionLabel": decision_label,
-        "decisionTone": decision_tone,
-        "score": score,
         "price": 712.60,
         "change": -12.57,
         "changePct": -1.73,
         "prevClose": 725.17,
         "source": "finnhub_quote",
-        "riskLabel": "Riesgo alto",
         "session": {
             "code": "premarket",
             "label": "Premarket",
@@ -183,6 +263,7 @@ def build_state():
             "source": "no_options_source_available",
         },
         "macro": macro,
+        "flags": flags,
         "earnings": {
             "next": {
                 "empresa": "Tesla",
@@ -198,23 +279,20 @@ def build_state():
             "date": fmt_date(current_dt),
             "source": "--",
         },
-        "alerts": [],
-        "reasons": reasons,
     }
 
-    if macro["windowCritical"]:
-        state["alerts"].append({
-            "title": "Macro crítica",
-            "text": macro["summary"],
-        })
+    decision = decide_trade(state)
+    state.update(decision)
 
     return state
+
 
 def main():
     ensure_dirs()
     state = build_state()
     with open(STATE_PATH, "w", encoding="utf-8") as f:
-        json.dump(state, f, ensure_ascii=False, indent=2)
+      json.dump(state, f, ensure_ascii=False, indent=2)
+
 
 if __name__ == "__main__":
     main()
