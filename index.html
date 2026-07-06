@@ -21,7 +21,7 @@
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
-    .wrap{width:min(1120px,calc(100% - 24px));margin:24px auto 48px}
+    .wrap{width:min(1180px,calc(100% - 24px));margin:24px auto 48px}
     .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
     .title{margin:0;font-size:clamp(1.5rem,2vw,2rem);font-weight:900}
     .meta{color:var(--muted);font-size:.95rem}
@@ -170,21 +170,23 @@
       </article>
 
       <article class="card panel">
-        <h3>Earnings y OPEX</h3>
-        <div class="kv"><div class="k">Empresa</div><div class="v" id="earningsCompanyValue">--</div></div>
-        <div class="kv"><div class="k">Ticker</div><div class="v" id="earningsTickerValue">--</div></div>
-        <div class="kv"><div class="k">Fecha earnings</div><div class="v" id="earningsDateValue">--</div></div>
-        <div class="kv"><div class="k">Días</div><div class="v" id="earningsDaysValue">--</div></div>
-        <div class="kv"><div class="k">OPEX</div><div class="v" id="opexValue">--</div></div>
+        <h3>Ejecución</h3>
+        <div class="kv"><div class="k">Fase</div><div class="v" id="phaseValue">--</div></div>
+        <div class="kv"><div class="k">Cutoff entrada</div><div class="v" id="entryCutoffValue">--</div></div>
+        <div class="kv"><div class="k">Min. al cutoff</div><div class="v" id="minutesCutoffValue">--</div></div>
+        <div class="kv"><div class="k">Salida dura</div><div class="v" id="hardExitValue">--</div></div>
+        <div class="kv"><div class="k">Time stop</div><div class="v" id="timeStopValue">--</div></div>
+        <div class="kv"><div class="k">Máx hold</div><div class="v" id="maxHoldValue">--</div></div>
       </article>
 
       <article class="card panel">
-        <h3>Mercado</h3>
-        <div class="kv"><div class="k">Estado</div><div class="v" id="marketStatusValue">--</div></div>
-        <div class="kv"><div class="k">Motivo</div><div class="v" id="marketNameValue">--</div></div>
-        <div class="kv"><div class="k">Fecha</div><div class="v" id="marketDateValue">--</div></div>
-        <div class="kv"><div class="k">Fuente</div><div class="v" id="marketSourceValue">--</div></div>
-        <div class="kv"><div class="k">Sesión</div><div class="v" id="marketSessionValue">--</div></div>
+        <h3>Liquidez y OPEX</h3>
+        <div class="kv"><div class="k">Bid-ask spread</div><div class="v" id="bidAskValue">--</div></div>
+        <div class="kv"><div class="k">Spread %</div><div class="v" id="spreadWidthPctValue">--</div></div>
+        <div class="kv"><div class="k">OI short</div><div class="v" id="shortOIValue">--</div></div>
+        <div class="kv"><div class="k">OI long</div><div class="v" id="longOIValue">--</div></div>
+        <div class="kv"><div class="k">Spacing</div><div class="v" id="spacingValue">--</div></div>
+        <div class="kv"><div class="k">OPEX</div><div class="v" id="opexValue">--</div></div>
       </article>
     </section>
 
@@ -197,7 +199,8 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const fmtMoney = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`;
-    const fmtPct = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`;
+    const fmtPct = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${(Number(v) * 100).toFixed(2)}%`;
+    const fmtPctRaw = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`;
     const fmtDelta = (v) => v == null || Number.isNaN(Number(v)) ? "--" : Number(v).toFixed(2);
     const fmtText = (v, fallback="--") => v == null || v === "" ? fallback : String(v);
     const yesNo = (v) => v === true ? "Sí" : v === false ? "No" : "--";
@@ -305,7 +308,7 @@
         $("scoreValue").textContent = state.score ?? "--";
         setDecisionTone(state.decisionTone);
 
-        $("summaryBuffer").textContent = fmtPct(state.trade?.bufferDynamicPct);
+        $("summaryBuffer").textContent = fmtPctRaw(state.trade?.bufferDynamicPct);
         $("summaryShort").textContent = fmtMoney(state.trade?.shortStrike);
         $("summaryCredit").textContent = fmtMoney(state.trade?.netCredit);
         $("summaryMacro").textContent = fmtText(state.macro?.summary);
@@ -335,16 +338,16 @@
         else $("sessionBadge").classList.add("warning");
 
         $("spotValue").textContent = fmtMoney(state.price);
-        $("changeValue").textContent = `${fmtMoney(state.change)} · ${fmtPct(state.changePct)}`;
-        $("vwapValue").textContent = `${fmtMoney(state.vwap?.value)} · ${fmtPct(state.vwap?.distPct)}`;
+        $("changeValue").textContent = `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`;
+        $("vwapValue").textContent = `${fmtMoney(state.vwap?.value)} · ${fmtPctRaw(state.vwap?.distPct)}`;
         $("sessionValue").textContent = sessionText;
         $("prevCloseValue").textContent = fmtMoney(state.prevClose);
 
-        $("bufferValue").textContent = fmtPct(state.trade?.bufferDynamicPct);
+        $("bufferValue").textContent = fmtPctRaw(state.trade?.bufferDynamicPct);
         $("shortStrikeValue2").textContent = fmtMoney(state.trade?.shortStrike);
         $("breakevenValue").textContent = fmtMoney(state.trade?.breakeven);
         $("distToShortValue").textContent = state.trade?.distToShort == null ? "--" : fmtMoney(state.trade?.distToShort);
-        $("expectedMoveValue").textContent = `${fmtMoney(state.expectedMove?.move)} (${fmtPct(state.expectedMove?.movePct)})`;
+        $("expectedMoveValue").textContent = `${fmtMoney(state.expectedMove?.move)} (${fmtPctRaw(state.expectedMove?.movePct)})`;
         $("tradeQualityValue").textContent =
           `Δ ${fmtDelta(state.tradeQuality?.targetDelta)} · ` +
           `Cr/R ${(state.tradeQuality?.creditPerRisk ?? 0).toFixed(2)} · ` +
@@ -363,17 +366,19 @@
         $("macroDateValue").textContent = fmtText(state.macro?.nextBig?.datetimeNY, "—");
         $("macroCountdownValue").textContent = fmtText(state.macro?.nextBig?.countdown, "—");
 
-        $("earningsCompanyValue").textContent = fmtText(state.earnings?.next?.empresa);
-        $("earningsTickerValue").textContent = fmtText(state.earnings?.next?.ticker);
-        $("earningsDateValue").textContent = fmtText(state.earnings?.next?.fecha);
-        $("earningsDaysValue").textContent = fmtText(state.earnings?.next?.dias);
-        $("opexValue").textContent = humanizeOpex(state.flags);
+        $("phaseValue").textContent = fmtText(state.execution?.phase);
+        $("entryCutoffValue").textContent = fmtText(state.execution?.entryCutoffET);
+        $("minutesCutoffValue").textContent = fmtText(state.execution?.minutesToEntryCutoff);
+        $("hardExitValue").textContent = fmtText(state.execution?.hardExitET);
+        $("timeStopValue").textContent = yesNo(state.execution?.timeStopTriggered);
+        $("maxHoldValue").textContent = `${state.execution?.maxHoldMinutes ?? "--"} min`;
 
-        $("marketStatusValue").textContent = state.market?.isHoliday ? "Cerrado" : "Abierto";
-        $("marketNameValue").textContent = fmtText(state.market?.name, "Sesión normal");
-        $("marketDateValue").textContent = fmtText(state.market?.date);
-        $("marketSourceValue").textContent = fmtText(state.market?.source);
-        $("marketSessionValue").textContent = sessionText;
+        $("bidAskValue").textContent = fmtMoney(state.tradeQuality?.bidAskWidth);
+        $("spreadWidthPctValue").textContent = fmtPct(state.tradeQuality?.spreadWidthPct);
+        $("shortOIValue").textContent = fmtText(state.tradeQuality?.shortStrikeOI);
+        $("longOIValue").textContent = fmtText(state.tradeQuality?.longStrikeOI);
+        $("spacingValue").textContent = yesNo(state.tradeQuality?.strikeSpacingOk);
+        $("opexValue").textContent = humanizeOpex(state.flags);
 
         renderReasons(state.reasons);
 
