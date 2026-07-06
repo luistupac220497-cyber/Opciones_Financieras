@@ -161,12 +161,70 @@ def build_macro_block(current_dt):
     }
 
 
+def mock_trade_quality():
+    """
+    Placeholder para cuando tengas la cadena real.
+    Ajusta estos valores desde tu generador de spreads.
+    """
+    return {
+        "targetDelta": 0.20,          # delta del short (ej. 0.15–0.25 es tu sweet spot) [web:262][web:267]
+        "creditPerRisk": 0.25,        # crédito / ancho del spread (0.2–0.3 típico en 0DTE) [web:267][web:263]
+        "minOpenInterest": 8000,      # OI mínimo en el short [web:273]
+        "width": 5                    # ancho del spread
+    }
+
+
+def score_trade_quality(q):
+    score = 0
+    reasons = []
+
+    d = q["targetDelta"]
+    if 0.15 <= d <= 0.25:
+        score += 10
+    elif 0.10 <= d < 0.30:
+        score += 5
+        reasons.append("Delta fuera de rango óptimo")
+    else:
+        score -= 10
+        reasons.append("Delta demasiado agresivo")
+
+    cr = q["creditPerRisk"]
+    if 0.20 <= cr <= 0.35:
+        score += 10
+    elif 0.15 <= cr < 0.20:
+        score += 0
+        reasons.append("Crédito algo justo")
+    else:
+        score -= 10
+        reasons.append("Crédito/riesgo pobre")
+
+    oi = q["minOpenInterest"]
+    if oi >= 5000:
+        score += 10
+    elif 2000 <= oi < 5000:
+        score += 0
+        reasons.append("OI moderado")
+    else:
+        score -= 10
+        reasons.append("OI bajo")
+
+    return score, reasons
+
+
 def decide_trade(base_state):
     reasons = []
     alerts = []
     score = 0
-    decision_label = "vigilar"
-    decision_tone = "yellow"
+
+    macro_score = base_state["macro"]["score"]
+    score += macro_score
+
+    if base_state["macro"]["windowCritical"]:
+        reasons.insert(0, "Ventana macro crítica")
+        alerts.append({
+            "title": "Macro crítica",
+            "text": base_state["macro"]["summary"],
+        })
 
     if base_state["session"]["code"] != "regular":
         reasons.append("Sesión extendida")
@@ -180,14 +238,6 @@ def decide_trade(base_state):
         reasons.append("Liquidez insuficiente")
         score -= 15
 
-    if base_state["macro"]["windowCritical"]:
-        reasons.insert(0, "Ventana macro crítica")
-        alerts.append({
-            "title": "Macro crítica",
-            "text": base_state["macro"]["summary"],
-        })
-        score -= 40
-
     if base_state["flags"]["opexQuarterly"]:
         reasons.append("OPEX trimestral")
         score -= 10
@@ -195,20 +245,27 @@ def decide_trade(base_state):
         reasons.append("OPEX mensual")
         score -= 5
 
-    score += base_state["macro"]["score"]
+    tq_score, tq_reasons = score_trade_quality(base_state["tradeQuality"])
+    score += tq_score
+    reasons.extend(tq_reasons)
 
-    if score <= -40:
+    if base_state["macro"]["windowCritical"]:
         decision_label = "no entrar"
         decision_tone = "red"
         risk_label = "Riesgo alto"
-    elif score <= -15:
-        decision_label = "esperar confirmación"
-        decision_tone = "yellow"
-        risk_label = "Riesgo medio"
     else:
-        decision_label = "vigilar"
-        decision_tone = "green"
-        risk_label = "Riesgo controlado"
+        if score <= -40:
+            decision_label = "no entrar"
+            decision_tone = "red"
+            risk_label = "Riesgo alto"
+        elif score <= -15:
+            decision_label = "esperar confirmación"
+            decision_tone = "yellow"
+            risk_label = "Riesgo medio"
+        else:
+            decision_label = "entrar sólo si setup perfecto"
+            decision_tone = "green"
+            risk_label = "Riesgo controlado"
 
     return {
         "decisionLabel": decision_label,
@@ -224,6 +281,7 @@ def build_state():
     current_dt = now_ny()
     flags = get_opex_flags(current_dt)
     macro = build_macro_block(current_dt)
+    trade_quality = mock_trade_quality()
 
     state = {
         "updatedAtNY": fmt_dt(current_dt),
@@ -252,11 +310,12 @@ def build_state():
             "distToShort": None,
             "netCredit": None,
         },
+        "tradeQuality": trade_quality,
         "options": {
             "expiration": "0dte_or_nearest",
             "quotesUsable": False,
             "liquidityOk": False,
-            "shortCallDelta": None,
+            "shortCallDelta": trade_quality["targetDelta"],
             "notes": "Sin cadena operable en esta ejecución",
         },
         "optionsMeta": {
@@ -291,7 +350,7 @@ def main():
     ensure_dirs()
     state = build_state()
     with open(STATE_PATH, "w", encoding="utf-8") as f:
-      json.dump(state, f, ensure_ascii=False, indent=2)
+        json.dump(state, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
