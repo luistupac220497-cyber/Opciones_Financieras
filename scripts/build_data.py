@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from zoneinfo import ZoneInfo
 
 NY = ZoneInfo("America/New_York")
@@ -161,12 +161,47 @@ def build_macro_block(current_dt):
     }
 
 
+def build_execution_block(current_dt, session_code):
+    entry_cutoff = datetime.combine(current_dt.date(), time(13, 30), tzinfo=NY)
+    hard_exit = datetime.combine(current_dt.date(), time(15, 15), tzinfo=NY)
+    max_hold_minutes = 60
+
+    minutes_to_cutoff = int((entry_cutoff - current_dt).total_seconds() / 60)
+    minutes_to_hard_exit = int((hard_exit - current_dt).total_seconds() / 60)
+
+    entry_window_open = session_code == "regular" and minutes_to_cutoff > 0
+    time_stop_triggered = session_code == "regular" and minutes_to_hard_exit <= 0
+
+    if session_code != "regular":
+        phase = "Fuera de sesión regular"
+    elif not entry_window_open:
+        phase = "Fuera de ventana de entrada"
+    else:
+        phase = "Ventana de entrada abierta"
+
+    return {
+        "entryCutoffET": entry_cutoff.strftime("%H:%M ET"),
+        "hardExitET": hard_exit.strftime("%H:%M ET"),
+        "minutesToEntryCutoff": minutes_to_cutoff,
+        "minutesToHardExit": minutes_to_hard_exit,
+        "maxHoldMinutes": max_hold_minutes,
+        "entryWindowOpen": entry_window_open,
+        "timeStopTriggered": time_stop_triggered,
+        "phase": phase,
+    }
+
+
 def mock_trade_quality():
     return {
         "targetDelta": 0.20,
         "creditPerRisk": 0.25,
         "minOpenInterest": 8000,
-        "width": 5
+        "shortStrikeOI": 9200,
+        "longStrikeOI": 8700,
+        "width": 5,
+        "bidAskWidth": 0.07,
+        "spreadWidthPct": 0.28,
+        "strikeSpacingOk": True,
     }
 
 
@@ -202,6 +237,22 @@ def score_trade_quality(q):
         score -= 10
         reasons.append("OI bajo")
 
+    spread_width_pct = q["spreadWidthPct"]
+    if spread_width_pct <= 0.10:
+        score += 10
+    elif spread_width_pct <= 0.20:
+        score += 4
+        reasons.append("Spread algo ancho")
+    else:
+        score -= 10
+        reasons.append("Spread ancho")
+
+    if q["strikeSpacingOk"]:
+        score += 5
+    else:
+        score -= 5
+        reasons.append("Spacing de strikes no ideal")
+
     return score, reasons
 
 
@@ -213,6 +264,7 @@ def decide_trade(base_state):
     session_code = base_state["session"]["code"]
     quotes_usable = base_state["options"]["quotesUsable"]
     liquidity_ok = base_state["options"]["liquidityOk"]
+    execution = base_state["execution"]
 
     score += base_state["macro"]["score"]
 
@@ -226,7 +278,16 @@ def decide_trade(base_state):
     if session_code != "regular":
         reasons.append("Esperar apertura")
         score -= 5
-    else:
+
+    if session_code == "regular" and not execution["entryWindowOpen"]:
+        reasons.append("Fuera de ventana de entrada")
+        score -= 20
+
+    if execution["timeStopTriggered"]:
+        reasons.append("Hora de salida alcanzada")
+        score -= 30
+
+    if session_code == "regular":
         if not quotes_usable:
             reasons.append("Quotes no operables")
             score -= 20
@@ -250,8 +311,16 @@ def decide_trade(base_state):
         decision_label = "no entrar"
         decision_tone = "red"
         risk_label = "Riesgo alto"
+    elif execution["timeStopTriggered"]:
+        decision_label = "cerrar o no abrir"
+        decision_tone = "red"
+        risk_label = "Riesgo alto"
     elif session_code != "regular":
         decision_label = "esperar apertura"
+        decision_tone = "yellow"
+        risk_label = "Riesgo medio"
+    elif not execution["entryWindowOpen"]:
+        decision_label = "fuera de ventana"
         decision_tone = "yellow"
         risk_label = "Riesgo medio"
     else:
@@ -280,8 +349,13 @@ def decide_trade(base_state):
 
 def build_state():
     current_dt = now_ny()
+
+    session_code = "premarket"
+    session_label = "Premarket"
+
     flags = get_opex_flags(current_dt)
     macro = build_macro_block(current_dt)
+    execution = build_execution_block(current_dt, session_code)
     trade_quality = mock_trade_quality()
 
     state = {
@@ -293,8 +367,8 @@ def build_state():
         "prevClose": 725.17,
         "source": "finnhub_quote",
         "session": {
-            "code": "premarket",
-            "label": "Premarket",
+            "code": session_code,
+            "label": session_label,
         },
         "vwap": {
             "value": None,
@@ -312,12 +386,13 @@ def build_state():
             "netCredit": None,
         },
         "tradeQuality": trade_quality,
+        "execution": execution,
         "options": {
             "expiration": "0dte_or_nearest",
             "quotesUsable": False,
             "liquidityOk": False,
             "shortCallDelta": trade_quality["targetDelta"],
-            "notes": "Esperando sesión regular para validar cadena y liquidez",
+            "notes": "Esperando sesión regular para validar cadena, spread y liquidez",
         },
         "optionsMeta": {
             "source": "no_options_source_available",
