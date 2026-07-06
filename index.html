@@ -145,6 +145,7 @@
         <div class="kv"><div class="k">Breakeven</div><div class="v" id="breakevenValue">--</div></div>
         <div class="kv"><div class="k">Distancia al short</div><div class="v" id="distToShortValue">--</div></div>
         <div class="kv"><div class="k">Expected move</div><div class="v" id="expectedMoveValue">--</div></div>
+        <div class="kv"><div class="k">Quality</div><div class="v" id="tradeQualityValue">--</div></div>
       </article>
 
       <article class="card panel">
@@ -230,10 +231,16 @@
       return value || "--";
     }
 
-    function humanizeLiquidity(value){
-      if(value===true) return "Adecuada";
-      if(value===false) return "Débil";
+    function humanizeLiquidity(value, sessionCode){
+      if (sessionCode !== "regular" && value === false) return "Pendiente apertura";
+      if (value === true) return "Adecuada";
+      if (value === false) return "Débil";
       return "--";
+    }
+
+    function humanizeQuotes(value, sessionCode){
+      if (sessionCode !== "regular" && value === false) return "Pendiente apertura";
+      return yesNo(value);
     }
 
     function humanizeRisk(value){
@@ -338,10 +345,14 @@
         $("breakevenValue").textContent = fmtMoney(state.trade?.breakeven);
         $("distToShortValue").textContent = state.trade?.distToShort == null ? "--" : fmtMoney(state.trade?.distToShort);
         $("expectedMoveValue").textContent = `${fmtMoney(state.expectedMove?.move)} (${fmtPct(state.expectedMove?.movePct)})`;
+        $("tradeQualityValue").textContent =
+          `Δ ${fmtDelta(state.tradeQuality?.targetDelta)} · ` +
+          `Cr/R ${(state.tradeQuality?.creditPerRisk ?? 0).toFixed(2)} · ` +
+          `OI ${state.tradeQuality?.minOpenInterest ?? "--"}`;
 
         $("expirationValue").textContent = humanizeExpiration(state.options?.expiration);
-        $("quotesValue").textContent = yesNo(state.options?.quotesUsable);
-        $("liquidityValue").textContent = humanizeLiquidity(state.options?.liquidityOk);
+        $("quotesValue").textContent = humanizeQuotes(state.options?.quotesUsable, state.session?.code);
+        $("liquidityValue").textContent = humanizeLiquidity(state.options?.liquidityOk, state.session?.code);
         $("deltaValue").textContent = fmtDelta(state.options?.shortCallDelta);
         $("notesValue").textContent = fmtText(state.options?.notes);
 
