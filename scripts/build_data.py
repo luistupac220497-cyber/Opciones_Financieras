@@ -123,9 +123,7 @@ def build_macro_block(current_dt):
             }
             for e in window_critical
         ],
-        "nextBig": None
-        if not next_big
-        else {
+        "nextBig": None if not next_big else {
             "label": next_big["label"],
             "impact": next_big["impact"],
             "datetimeNY": fmt_dt(next_big["dt"]),
@@ -592,29 +590,19 @@ def build_state():
         "change": change,
         "changePct": change_pct,
         "prevClose": prev_close,
-        updated_at = quote["updatedAt"]
-    source = quote["source"]
-
-    session_info = infer_session_from_time(current_dt)
-    session_code = session_info["code"]
-    session_label = session_info["label"]
-
-    flags = get_opex_flags(current_dt)
-    macro = build_macro_block(current_dt)
-    execution = build_execution_block(current_dt, session_code)
-    options_bundle = fetch_options_source("QQQ", price, current_dt, session_code)
-
-    state = {
-        "updatedAtNY": fmt_dt(updated_at),
-        "updatedAtText": quote.get("updatedAtText", fmt_dt(updated_at)),
-        "price": price,
-        "change": change,
-        "changePct": change_pct,
-        "prevClose": prev_close,
         "source": source,
-        "session": {"code": session_code, "label": session_label},
-        "vwap": {"value": None, "distPct": None},
-        "expectedMove": {"move": None, "movePct": None},
+    session": {
+            "code": session_code,
+            "label": session_label
+        },
+        "vwap": {
+            "value": None,
+            "distPct": None
+        },
+        "expectedMove": {
+            "move": None,
+            "movePct": None
+        },
         "trade": options_bundle["trade"],
         "tradeQuality": options_bundle["tradeQuality"],
         "execution": execution,
@@ -628,20 +616,20 @@ def build_state():
                 "ticker": "TSLA",
                 "fecha": "2026-07-22",
                 "dias": 16,
-                "momento": "Hora no especificada",
+                "momento": "Hora no especificada"
             }
         },
         "market": {
             "isHoliday": False,
             "name": "Sesión normal",
             "date": fmt_date(current_dt),
-            "source": "--",
+            "source": "--"
         },
         "dataHealth": {
             "spotDegraded": quote.get("degraded", False),
             "spotReason": quote.get("degradedReason"),
-            "staleFromPreviousState": quote.get("staleFromPreviousState", False),
-        },
+            "staleFromPreviousState": quote.get("staleFromPreviousState", False)
+        }
     }
 
     decision = decide_trade(state)
@@ -658,4 +646,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-   
