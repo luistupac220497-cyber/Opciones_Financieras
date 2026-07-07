@@ -269,7 +269,7 @@
           <div id="browserClock">Hora local: --</div>
           <div id="headerSpotSource">Fuente spot: --</div>
         </div>
-        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v10</div>
+        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v11</div>
       </div>
       <div class="top-actions">
         <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">◐</button>
@@ -394,6 +394,11 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
+    function safeSetText(id, value) {
+      const el = $(id);
+      if (el) el.textContent = value;
+    }
+
     function fmtMoney(v) {
       if (v === null || v === undefined || Number.isNaN(Number(v))) return "No disponible";
       return new Intl.NumberFormat("en-US", {
@@ -511,6 +516,7 @@
 
     function renderReasons(list) {
       const box = $("reasonsBox");
+      if (!box) return;
       box.innerHTML = "";
       const items = Array.isArray(list) ? list : [];
       if (!items.length) {
@@ -529,12 +535,14 @@
     }
 
     function setBadge(el, text, type) {
+      if (!el) return;
       el.className = `status-badge status-${type}`;
       el.textContent = text;
     }
 
     function renderAlert(state) {
       const el = $("marketAlert");
+      if (!el) return;
       const alerts = state?.alerts || [];
       if (alerts.length) {
         el.style.display = "block";
@@ -544,4 +552,226 @@
       if (state?.market?.isHoliday) {
         el.style.display = "block";
         el.textContent = `Mercado cerrado por festivo en EE. UU. · ${fmtText(state.market.name)}.`;
-        
+        return;
+      }
+      el.style.display = "none";
+      el.textContent = "";
+    }
+
+    function updateClocks() {
+      const now = new Date();
+
+      const et = new Intl.DateTimeFormat("es-ES", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZone: "America/New_York",
+        timeZoneName: "short"
+      }).format(now);
+
+      const local = new Intl.DateTimeFormat("es-ES", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }).format(now);
+
+      safeSetText("liveClock", `Hora ET: ${et}`);
+      safeSetText("browserClock", `Hora local: ${local}`);
+    }
+
+    function renderRows(containerId, rows) {
+      const box = $(containerId);
+      if (!box) return;
+      box.innerHTML = "";
+      rows.forEach(([k, v]) => {
+        const row = document.createElement("div");
+        row.className = "data-row";
+        row.innerHTML = `<div class="k">${k}</div><div class="v">${v}</div>`;
+        box.appendChild(row);
+      });
+    }
+
+    async function loadState() {
+      document.body.classList.add("loading");
+      try {
+        const res = await fetch(`./data/state.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const state = await res.json();
+        renderState(state);
+      } catch (err) {
+        safeSetText("headerMeta", `Error cargando snapshot: ${err.message}`);
+        safeSetText("decisionText", "error");
+        const d = $("decisionText");
+        if (d) d.className = "decision red";
+        safeSetText("scoreValue", "Score --");
+        safeSetText("phaseNote", "No se pudo cargar data/state.json");
+        safeSetText("headerSpotSource", "Fuente spot: error");
+        renderReasons([`Fallo de carga del JSON: ${err.message}`]);
+      } finally {
+        document.body.classList.remove("loading");
+      }
+    }
+
+    function renderState(state) {
+      try {
+        safeSetText("headerMeta", `Última actualización del snapshot: ${fmtText(state.updatedAt)} · unix ${fmtText(state.generatedAtUnix)}`);
+        safeSetText("headerSpotSource", `Fuente spot: ${humanizeSource(state?.dataHealth?.spotSource)}`);
+
+        const tone = state?.decisionTone || "blue";
+        safeSetText("decisionText", fmtText(state?.decisionLabel));
+        const decisionEl = $("decisionText");
+        if (decisionEl) decisionEl.className = `decision ${tone}`;
+        safeSetText("scoreValue", `Score ${fmtText(state?.score, "--")}`);
+
+        const estimated = state?.trade?.shortStrikeMode === "estimated";
+        const liveChain = state?.options?.status === "live";
+        const shortText = state?.trade?.shortStrike != null
+          ? `${fmtMoney(state.trade.shortStrike)}${estimated ? " · estimado" : ""}`
+          : "No disponible";
+
+        safeSetText("chipBuffer", `Buffer ${fmtPctRaw(state?.trade?.bufferPct)}`);
+        safeSetText("chipShort", `Short ${shortText}`);
+        safeSetText("chipCredit", `Crédito ${state?.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible"}`);
+        safeSetText("chipMacro", state?.macro?.nextBig?.label ? `Macro Próx. · ${state.macro.nextBig.label}` : `Macro ${fmtText(state?.macro?.summary)}`);
+        safeSetText("chipEarnings", state?.earnings?.qqqNext?.symbol
+          ? `Earnings QQQ · ${state.earnings.qqqNext.symbol}`
+          : state?.earnings?.next?.symbol
+            ? `Earnings Próximo · ${state.earnings.next.symbol}`
+            : `Earnings ${fmtText(state?.earnings?.summary)}`);
+        safeSetText("chipOpex", `OPEX ${humanizeOpex(state?.flags)}`);
+        safeSetText("chipPhase", `Fase ${fmtText(state?.execution?.phase)}`);
+        safeSetText("phaseNote", phaseMessage(state));
+
+        safeSetText("miniPrice", fmtMoney(state?.price));
+        safeSetText("miniShort", shortText);
+        safeSetText("miniCredit", state?.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible");
+        safeSetText("miniEvent", bestEventText(state));
+
+        const risk = (state?.riskLabel || "").toLowerCase();
+        if (risk.includes("alto")) setBadge($("riskBadge"), state.riskLabel, "danger");
+        else if (risk.includes("controlado")) setBadge($("riskBadge"), state.riskLabel, "success");
+        else setBadge($("riskBadge"), fmtText(state?.riskLabel), "warning");
+
+        const sessionCode = state?.session?.code || "closed";
+        if (sessionCode === "regular") setBadge($("sessionBadge"), humanizeSession(sessionCode), "success");
+        else if (sessionCode === "premarket" || sessionCode === "afterhours") setBadge($("sessionBadge"), humanizeSession(sessionCode), "info");
+        else setBadge($("sessionBadge"), humanizeSession(sessionCode), "neutral");
+
+        safeSetText("spotSource", humanizeSource(state?.dataHealth?.spotSource));
+        safeSetText("vwapSource", humanizeSource(state?.dataHealth?.vwapSource));
+        safeSetText("optionsSource", humanizeSource(state?.dataHealth?.optionsSource));
+        safeSetText("macroSource", humanizeSource(state?.dataHealth?.macroSource));
+        safeSetText("earningsSource", humanizeSource(state?.dataHealth?.earningsSource));
+        safeSetText("freshnessValue", fmtText(state?.dataHealth?.freshnessLabel));
+        safeSetText("snapshotValue", `${fmtText(state?.dataHealth?.snapshotLabel)} · stalePrev=${state?.dataHealth?.spotStaleFromPreviousState ? "sí" : "no"}`);
+        safeSetText("optionsDataStatus", fmtText(state?.dataHealth?.optionsDataStatus));
+
+        renderRows("priceSessionBox", [
+          ["Spot", fmtMoney(state?.price)],
+          ["Cambio", `${fmtSignedMoney(state?.change)} · ${fmtSignedPct(state?.changePct)}`],
+          ["VWAP", fmtMoney(state?.vwap)],
+          ["Dist. vs VWAP", state?.vwapDist != null ? fmtMoney(state.vwapDist) : "No disponible"],
+          ["Sesión", humanizeSession(state?.session?.code)],
+          ["Cierre previo", fmtMoney(state?.prevClose)]
+        ]);
+
+        renderRows("setupBox", [
+          ["Buffer dinámico", fmtPctRaw(state?.trade?.bufferPct)],
+          ["Short strike", shortText],
+          ["Modo strike", estimated ? "Estimado" : "Cadena real"],
+          ["Breakeven", state?.trade?.breakeven != null ? fmtMoney(state.trade.breakeven) : "No disponible"],
+          ["Distancia al short", state?.trade?.distanceToShort != null ? fmtMoney(state.trade.distanceToShort) : "No disponible"],
+          ["Expected move", state?.trade?.expectedMove != null ? `${fmtMoney(state.trade.expectedMove)} · ${fmtPctRaw(state.trade.expectedMovePct)}` : "No disponible"],
+          ["Quality", `${fmtText(state?.tradeQuality?.label)} · Score ${fmtText(state?.tradeQuality?.score, "0")}`]
+        ]);
+
+        renderRows("operabilityBox", [
+          ["Expiración", humanizeExpiration(state?.options?.expiration)],
+          ["Quotes válidas", humanizeQuotes(state?.options?.quotesUsable)],
+          ["Liquidez", humanizeLiquidity(state?.options?.liquidityOk)],
+          ["Delta short", state?.options?.deltaShort != null ? `${fmtNumber(state.options.deltaShort)} (objetivo ${fmtNumber(state.options.deltaTarget)})` : `Objetivo ${fmtNumber(state?.options?.deltaTarget)}`],
+          ["Cadena", liveChain ? "Live" : fmtText(state?.options?.status)],
+          ["Notas", fmtText(state?.options?.notes)]
+        ]);
+
+        renderRows("macroBox", [
+          ["Resumen", fmtText(state?.macro?.summary)],
+          ["Macro hoy", state?.macro?.todayHighImpact ? "Sí, hay macro alta hoy" : "Sin macro alta hoy"],
+          ["Ventana crítica", yesNo(state?.macro?.windowCritical)],
+          ["Macro score", fmtText(state?.macro?.score, "0")],
+          ["Próximo gran evento", state?.macro?.nextBig?.label || "No disponible"],
+          ["Fecha ET", state?.macro?.nextBig?.dateEt || "No disponible"],
+          ["Countdown", state?.macro?.nextBig?.countdown || "No disponible"]
+        ]);
+
+        renderRows("earningsBox", [
+          ["Resumen", fmtText(state?.earnings?.summary)],
+          ["Próximo earnings", state?.earnings?.next ? `${state.earnings.next.symbol} · ${state.earnings.next.dateEt || state.earnings.next.date}` : "No disponible"],
+          ["Countdown", state?.earnings?.next?.countdown || "No disponible"],
+          ["QQQ próximo", state?.earnings?.qqqNext ? `${state.earnings.qqqNext.symbol} · ${state.earnings.qqqNext.date}` : "No disponible"],
+          ["Mega-cap watch", state?.earnings?.watchlist?.length ? state.earnings.watchlist.map(x => `${x.symbol} ${x.date}`).join(" · ") : "Sin nombres cercanos"],
+          ["Catalysts secundarios", state?.earnings?.secondaryWatchlist?.length ? state.earnings.secondaryWatchlist.map(x => `${x.symbol} ${x.date}`).join(" · ") : "Sin secundarios cercanos"]
+        ]);
+
+        renderRows("executionBox", [
+          ["Fase", fmtText(state?.execution?.phase)],
+          ["Inicio ventana", fmtText(state?.execution?.entryStartEt)],
+          ["Min. al inicio", fmtText(state?.execution?.minsToEntryStart)],
+          ["Cutoff entrada", fmtText(state?.execution?.entryCutoffEt)],
+          ["Min. al cutoff", fmtText(state?.execution?.minsToCutoff)],
+          ["Salida dura", fmtText(state?.execution?.hardExitEt)],
+          ["Time stop", yesNo(state?.execution?.timeStopTriggered)],
+          ["Máx hold", `${fmtText(state?.execution?.maxHoldMinutes)} min`]
+        ]);
+
+        renderRows("liquidityBox", [
+          ["Bid-ask spread", state?.options?.bidAskSpread != null ? fmtMoney(state.options.bidAskSpread) : "No disponible"],
+          ["Spread %", state?.options?.spreadPct != null ? fmtPctRaw(state.options.spreadPct) : "No disponible"],
+          ["OI short", state?.options?.openInterestShort != null ? fmtText(state.options.openInterestShort) : "No disponible"],
+          ["OI long", state?.options?.openInterestLong != null ? fmtText(state.options.openInterestLong) : "No disponible"],
+          ["Spacing", yesNo(state?.options?.spacingOk)],
+          ["OPEX", humanizeOpex(state?.flags)]
+        ]);
+
+        renderReasons(state?.reasons);
+        renderAlert(state);
+      } catch (err) {
+        safeSetText("headerMeta", `Error renderizando snapshot: ${err.message}`);
+        safeSetText("headerSpotSource", "Fuente spot: error render");
+        renderReasons([`Error renderizando dashboard: ${err.message}`]);
+        console.error("renderState error:", err, state);
+      }
+    }
+
+    function setupTheme() {
+      const btn = $("themeBtn");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        const root = document.documentElement;
+        const current = root.getAttribute("data-theme") || "dark";
+        root.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+      });
+    }
+
+    function setupRefresh() {
+      const btn = $("refreshBtn");
+      if (!btn) return;
+      btn.addEventListener("click", loadState);
+    }
+
+    setupTheme();
+    setupRefresh();
+    updateClocks();
+    loadState();
+    setInterval(updateClocks, 1000);
+  </script>
+</body>
+</html>
