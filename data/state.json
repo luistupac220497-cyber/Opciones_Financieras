@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-07 05:10 ET",
-  "generatedAtUnix": 1783415444,
+  "updatedAt": "2026-07-07 05:11 ET",
+  "generatedAtUnix": 1783415514,
   "price": 722.82,
   "change": 10.22,
   "changePct": 1.4342,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 319,
-    "minutesSinceEntryStart": -320,
+    "minsToEntryStart": 318,
+    "minutesSinceEntryStart": -319,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 499,
+    "minsToCutoff": 498,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
