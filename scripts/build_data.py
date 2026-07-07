@@ -124,14 +124,14 @@ def load_previous_state():
         return None
 
 
-def fallback_quote_from_previous(previous_state, reason_code, reason_text):
+def fallback_quote_from_previous(previous_state, reason_code, reason_text, source="fallback"):
     quote = {
         "price": None,
         "change": None,
         "changePct": None,
         "prevClose": None,
         "updatedAt": None,
-        "source": "finnhub_quote",
+        "source": source,
         "degraded": True,
         "degradedReasonCode": reason_code,
         "degradedReason": reason_text,
@@ -147,6 +147,71 @@ def fallback_quote_from_previous(previous_state, reason_code, reason_text):
     return quote
 
 
+def yahoo_session():
+    s = requests.Session()
+    s.headers.update({
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json,text/plain,*/*",
+    })
+    return s
+
+
+def fetch_quote_yahoo(symbol):
+    previous_state = load_previous_state()
+    try:
+        s = yahoo_session()
+        url = "https://query1.finance.yahoo.com/v7/finance/quote"
+        params = {"symbols": symbol}
+        r = s.get(url, params=params, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+        results = (((data or {}).get("quoteResponse") or {}).get("result") or [])
+        if not results:
+            raise RuntimeError("Yahoo quote sin resultados")
+
+        q = results[0]
+
+        price = safe_float(
+            q.get("preMarketPrice")
+            or q.get("postMarketPrice")
+            or q.get("regularMarketPrice")
+        )
+
+        prev_close = safe_float(q.get("regularMarketPreviousClose"))
+        if prev_close is None:
+            prev_close = safe_float(q.get("regularMarketPreviousClose"))
+
+        if price is None:
+            raise RuntimeError("Yahoo quote sin precio usable")
+
+        change = None
+        change_pct = None
+        if prev_close is not None:
+            change = round(price - prev_close, 2)
+            if prev_close != 0:
+                change_pct = round((change / prev_close) * 100.0, 4)
+
+        ts = q.get("preMarketTime") or q.get("postMarketTime") or q.get("regularMarketTime")
+        updated_at = None
+        if ts:
+            updated_at = datetime.fromtimestamp(int(ts), tz=UTC).astimezone(NY)
+
+        return {
+            "price": price,
+            "change": change,
+            "changePct": change_pct,
+            "prevClose": prev_close,
+            "updatedAt": fmt_dt(updated_at) if updated_at else fmt_dt(now_ny()),
+            "source": "yahoo_quote",
+            "degraded": False,
+            "degradedReasonCode": None,
+            "degradedReason": None,
+            "staleFromPreviousState": False,
+        }
+    except Exception as e:
+        return fallback_quote_from_previous(previous_state, "yahoo_quote_error", str(e), source="yahoo_quote")
+
+
 def fetch_quote_finnhub(symbol, retries=3, sleep_seconds=2):
     previous_state = load_previous_state()
     api_key = get_finnhub_api_key()
@@ -160,12 +225,12 @@ def fetch_quote_finnhub(symbol, retries=3, sleep_seconds=2):
                 if attempt < retries:
                     time_module.sleep(sleep_seconds)
                     continue
-                return fallback_quote_from_previous(previous_state, "finnhub_rate_limited", "Finnhub rate limited")
+                return fallback_quote_from_previous(previous_state, "finnhub_rate_limited", "Finnhub rate limited", source="finnhub_quote")
             if 500 <= r.status_code <= 599:
                 if attempt < retries:
                     time_module.sleep(sleep_seconds)
                     continue
-                return fallback_quote_from_previous(previous_state, f"finnhub_http_{r.status_code}", f"Finnhub HTTP {r.status_code}")
+                return fallback_quote_from_previous(previous_state, f"finnhub_http_{r.status_code}", f"Finnhub HTTP {r.status_code}", source="finnhub_quote")
 
             r.raise_for_status()
             data = r.json()
@@ -191,16 +256,32 @@ def fetch_quote_finnhub(symbol, retries=3, sleep_seconds=2):
             if attempt < retries:
                 time_module.sleep(sleep_seconds)
                 continue
-            return fallback_quote_from_previous(previous_state, "finnhub_timeout", "Timeout consultando Finnhub")
+            return fallback_quote_from_previous(previous_state, "finnhub_timeout", "Timeout consultando Finnhub", source="finnhub_quote")
         except requests.RequestException as e:
             if attempt < retries:
                 time_module.sleep(sleep_seconds)
                 continue
-            return fallback_quote_from_previous(previous_state, "finnhub_request_error", str(e))
+            return fallback_quote_from_previous(previous_state, "finnhub_request_error", str(e), source="finnhub_quote")
         except Exception as e:
-            return fallback_quote_from_previous(previous_state, "finnhub_unexpected_error", str(e))
+            return fallback_quote_from_previous(previous_state, "finnhub_unexpected_error", str(e), source="finnhub_quote")
 
-    return fallback_quote_from_previous(previous_state, "finnhub_unknown", "Error desconocido")
+    return fallback_quote_from_previous(previous_state, "finnhub_unknown", "Error desconocido", source="finnhub_quote")
+
+
+def fetch_best_quote(symbol):
+    yahoo_quote = fetch_quote_yahoo(symbol)
+    if yahoo_quote.get("price") is not None and not yahoo_quote.get("degraded"):
+        return yahoo_quote
+
+    finnhub_quote = fetch_quote_finnhub(symbol)
+    if finnhub_quote.get("price") is not None:
+        return finnhub_quote
+
+    if yahoo_quote.get("price") is not None:
+        return yahoo_quote
+
+    previous_state = load_previous_state()
+    return fallback_quote_from_previous(previous_state, "all_quote_sources_failed", "Yahoo y Finnhub no devolvieron spot usable", source="fallback_quote")
 
 
 def fetch_intraday_vwap(symbol, current_dt):
@@ -477,15 +558,6 @@ def get_opex_flags(current_dt):
     monthly = weekday == 4 and d == third_friday(d.year, d.month)
     quarterly = monthly and d.month in (3, 6, 9, 12)
     return {"opexDay": monthly, "opexQuarterly": quarterly}
-
-
-def yahoo_session():
-    s = requests.Session()
-    s.headers.update({
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json,text/plain,*/*",
-    })
-    return s
 
 
 def fetch_yahoo_options_chain(symbol):
@@ -876,7 +948,7 @@ def fetch_earnings_calendar(symbols, current_dt):
             summary = f"Earnings propios muy próximos · {qqq_next['symbol']}"
         elif days_to_qqq <= 3:
             score -= 10
-            summary = f"Earnings propios próximos · {qqq_next['symbol']}"
+            summary = f"Earnings propios próximos · {qqqNext['symbol']}"
 
     if not qqq_next and primary_watch:
         hw_dt = datetime.strptime(primary_watch[0]["date"], "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
@@ -896,7 +968,7 @@ def fetch_earnings_calendar(symbols, current_dt):
             summary = f"Catalyst secundario próximo · {secondary_watch[0]['symbol']}"
         elif days_to_sec <= 3:
             score -= 1
-            summary = f"Catalyst secundario cercano · {secondaryWatch[0]['symbol']}"
+            summary = f"Catalyst secundario cercano · {secondary_watch[0]['symbol']}"
 
     return {
         "today": today[:10],
@@ -1109,7 +1181,7 @@ def decide_trade(state):
 
 def build_state():
     current_dt = now_ny()
-    quote = fetch_quote_finnhub("QQQ")
+    quote = fetch_best_quote("QQQ")
     session = infer_session_from_time(current_dt)
     flags = get_opex_flags(current_dt)
     macro = fetch_macro_calendar(current_dt)
