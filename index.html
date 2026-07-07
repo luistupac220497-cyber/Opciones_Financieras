@@ -9,38 +9,273 @@
   <meta http-equiv="Expires" content="0" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
   <style>
-    :root,[data-theme="light"]{--bg:#f7f6f2;--surface:#fbfbf9;--surface-2:#f3f0ec;--text:#28251d;--muted:#7a7974;--border:#d4d1ca;--success:#437a22;--warning:#d19900;--danger:#a13544;--info:#006494;--shadow:0 12px 32px rgba(0,0,0,.08)}
-    [data-theme="dark"]{--bg:#171614;--surface:#1c1b19;--surface-2:#22211f;--text:#cdccca;--muted:#8d8b88;--border:#393836;--success:#6daa45;--warning:#edb336;--danger:#d163a7;--info:#5591c7;--shadow:0 12px 32px rgba(0,0,0,.28)}
-    *{box-sizing:border-box}body{margin:0;font-family:"Satoshi",sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
-    .app{max-width:1400px;margin:0 auto;padding:20px}.topbar,.hero,.section-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow)}
-    .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;padding:18px 20px;margin-bottom:18px}
-    .title-wrap h1{margin:0 0 8px;font-size:clamp(1.6rem,1.2rem + 1vw,2.3rem)}.meta{display:grid;gap:4px;color:var(--muted);font-size:.96rem}
-    .build-chip{display:inline-flex;margin-top:8px;padding:6px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-size:.86rem}
-    .top-actions{display:flex;gap:10px}.icon-btn{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:12px;min-width:44px;min-height:44px;cursor:pointer}
-    .market-alert{display:none;margin-bottom:18px;padding:14px 16px;border-radius:14px;border:1px solid rgba(237,179,54,.24);background:rgba(237,179,54,.12)}
-    .hero{display:grid;grid-template-columns:2fr 1fr;gap:18px;padding:22px;margin-bottom:18px}
-    .decision{font-size:clamp(2rem,1.5rem + 2vw,3.2rem);font-weight:900;margin:0 0 12px;text-transform:lowercase}
-    .decision.green{color:var(--success)}.decision.yellow{color:var(--warning)}.decision.red{color:var(--danger)}.decision.blue{color:var(--info)}
-    .score-pill,.chip,.status-badge{display:inline-flex;align-items:center;border-radius:999px}
-    .score-pill{gap:8px;padding:8px 12px;margin-bottom:14px;background:var(--surface-2);border:1px solid var(--border);font-weight:700}
-    .chips,.reasons-box,.status-wrap{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{background:var(--surface-2);border:1px solid var(--border);padding:8px 12px;font-size:.94rem}
-    .phase-note{color:var(--muted);margin-bottom:16px}
-    .mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-    .mini-card{background:var(--surface-2);border:1px solid var(--border);border-radius:16px;padding:14px}
-    .mini-card .label{color:var(--muted);font-size:.9rem;margin-bottom:8px}.mini-card .value{font-size:1.32rem;font-weight:800}
-    .side-panel{display:grid;gap:14px;align-content:start}.section-card{padding:16px}.section-title{margin:0 0 10px;font-size:1.08rem}
-    .status-badge{padding:8px 12px;font-weight:700;font-size:.92rem;border:1px solid transparent}
+    :root,[data-theme="light"]{
+      --bg:#f7f6f2;
+      --surface:#fbfbf9;
+      --surface-2:#f3f0ec;
+      --text:#28251d;
+      --muted:#7a7974;
+      --border:#d4d1ca;
+      --success:#437a22;
+      --warning:#d19900;
+      --danger:#a13544;
+      --info:#006494;
+      --shadow:0 12px 32px rgba(0,0,0,.08);
+    }
+    [data-theme="dark"]{
+      --bg:#171614;
+      --surface:#1c1b19;
+      --surface-2:#22211f;
+      --text:#cdccca;
+      --muted:#8d8b88;
+      --border:#393836;
+      --success:#6daa45;
+      --warning:#edb336;
+      --danger:#d163a7;
+      --info:#5591c7;
+      --shadow:0 12px 32px rgba(0,0,0,.28);
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:"Satoshi",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+
+    .app{
+      max-width:1400px;
+      margin:0 auto;
+      padding:20px;
+    }
+
+    .topbar,.hero,.section-card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+      padding:18px 20px;
+      margin-bottom:18px;
+    }
+
+    .title-wrap h1{
+      margin:0 0 8px;
+      font-size:clamp(1.6rem,1.2rem + 1vw,2.3rem);
+    }
+
+    .meta{
+      display:grid;
+      gap:4px;
+      color:var(--muted);
+      font-size:.96rem;
+    }
+
+    .build-chip{
+      display:inline-flex;
+      margin-top:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-size:.86rem;
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+    }
+
+    .icon-btn{
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      color:var(--text);
+      border-radius:12px;
+      min-width:44px;
+      min-height:44px;
+      cursor:pointer;
+      font-size:1rem;
+    }
+
+    .market-alert{
+      display:none;
+      margin-bottom:18px;
+      padding:14px 16px;
+      border-radius:14px;
+      border:1px solid rgba(237,179,54,.24);
+      background:rgba(237,179,54,.12);
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:18px;
+      padding:22px;
+      margin-bottom:18px;
+    }
+
+    .decision{
+      font-size:clamp(2rem,1.5rem + 2vw,3.2rem);
+      font-weight:900;
+      margin:0 0 12px;
+      text-transform:lowercase;
+    }
+
+    .decision.green{color:var(--success)}
+    .decision.yellow{color:var(--warning)}
+    .decision.red{color:var(--danger)}
+    .decision.blue{color:var(--info)}
+
+    .score-pill,.chip,.status-badge{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+    }
+
+    .score-pill{
+      gap:8px;
+      padding:8px 12px;
+      margin-bottom:14px;
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      font-weight:700;
+    }
+
+    .chips,.reasons-box,.status-wrap{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .chip{
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      padding:8px 12px;
+      font-size:.94rem;
+    }
+
+    .phase-note{
+      color:var(--muted);
+      margin:14px 0 16px;
+    }
+
+    .mini-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+    }
+
+    .mini-card{
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .mini-card .label{
+      color:var(--muted);
+      font-size:.9rem;
+      margin-bottom:8px;
+    }
+
+    .mini-card .value{
+      font-size:1.32rem;
+      font-weight:800;
+    }
+
+    .side-panel{
+      display:grid;
+      gap:14px;
+      align-content:start;
+    }
+
+    .section-card{
+      padding:16px;
+    }
+
+    .section-title{
+      margin:0 0 10px;
+      font-size:1.08rem;
+    }
+
+    .status-badge{
+      padding:8px 12px;
+      font-weight:700;
+      font-size:.92rem;
+      border:1px solid transparent;
+    }
+
     .status-danger{background:rgba(209,99,167,.14);color:var(--danger);border-color:rgba(209,99,167,.28)}
     .status-warning{background:rgba(237,179,54,.14);color:var(--warning);border-color:rgba(237,179,54,.28)}
     .status-success{background:rgba(109,170,69,.14);color:var(--success);border-color:rgba(109,170,69,.28)}
     .status-info{background:rgba(85,145,199,.14);color:var(--info);border-color:rgba(85,145,199,.28)}
     .status-neutral{background:var(--surface-2);color:var(--text);border-color:var(--border)}
-    .main-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.data-list{display:grid;gap:10px}
-    .data-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-    .data-row:last-child{border-bottom:none;padding-bottom:0}.data-row .k{color:var(--muted);min-width:42%}.data-row .v{text-align:right;word-break:break-word}
-    @media (max-width:1100px){.hero{grid-template-columns:1fr}.mini-grid{grid-template-columns:repeat(2,1fr)}.main-grid{grid-template-columns:1fr}}
-    @media (max-width:640px){.app{padding:14px}.mini-grid{grid-template-columns:1fr}.data-row{flex-direction:column;gap:4px}.data-row .v{text-align:left}}
+
+    .main-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:16px;
+    }
+
+    .data-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .data-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      padding-bottom:8px;
+      border-bottom:1px solid var(--border);
+    }
+
+    .data-row:last-child{
+      border-bottom:none;
+      padding-bottom:0;
+    }
+
+    .data-row .k{
+      color:var(--muted);
+      min-width:42%;
+    }
+
+    .data-row .v{
+      text-align:right;
+      word-break:break-word;
+    }
+
+    .muted{color:var(--muted)}
+
+    .loading .decision,
+    .loading .value,
+    .loading .v{
+      opacity:.65;
+    }
+
+    @media (max-width:1100px){
+      .hero{grid-template-columns:1fr}
+      .mini-grid{grid-template-columns:repeat(2,1fr)}
+      .main-grid{grid-template-columns:1fr}
+    }
+
+    @media (max-width:640px){
+      .app{padding:14px}
+      .mini-grid{grid-template-columns:1fr}
+      .data-row{flex-direction:column;gap:4px}
+      .data-row .v{text-align:left}
+    }
   </style>
 </head>
 <body>
@@ -55,9 +290,10 @@
         </div>
         <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v5</div>
       </div>
+
       <div class="top-actions">
-        <button id="themeBtn" class="icon-btn" type="button">◐</button>
-        <button id="refreshBtn" class="icon-btn" type="button">↻</button>
+        <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">◐</button>
+        <button id="refreshBtn" class="icon-btn" type="button" aria-label="Refrescar">↻</button>
       </div>
     </header>
 
@@ -65,7 +301,7 @@
 
     <section class="hero">
       <div>
-        <div style="color:var(--muted);margin-bottom:8px;">Decisión operativa</div>
+        <div class="muted" style="margin-bottom:8px;">Decisión operativa</div>
         <div id="decisionText" class="decision blue">--</div>
         <div id="scoreValue" class="score-pill">Score --</div>
 
@@ -82,7 +318,453 @@
         <div id="phaseNote" class="phase-note">--</div>
 
         <div class="mini-grid">
-          <div class="mini-card"><div class="label">Precio</div><div id="miniPrice" class="value">--</div></div>
-          <div class="mini-card"><div class="label">Short strike</div><div id="miniShort" class="value">--</div></div>
-          <div class="mini-card"><div class="label">Net credit</div><div id="miniCredit" class="value">--</div></div>
-          <div class="mini-card"><div class="label">Pró
+          <div class="mini-card">
+            <div class="label">Precio</div>
+            <div id="miniPrice" class="value">--</div>
+          </div>
+          <div class="mini-card">
+            <div class="label">Short strike</div>
+            <div id="miniShort" class="value">--</div>
+          </div>
+          <div class="mini-card">
+            <div class="label">Net credit</div>
+            <div id="miniCredit" class="value">--</div>
+          </div>
+          <div class="mini-card">
+            <div class="label">Próximo gran evento</div>
+            <div id="miniEvent" class="value">--</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="section-card">
+          <h3 class="section-title">Estado</h3>
+          <div class="status-wrap">
+            <span id="riskBadge" class="status-badge status-neutral">Riesgo --</span>
+            <span id="sessionBadge" class="status-badge status-neutral">Sesión --</span>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h3 class="section-title">Fuentes</h3>
+          <div class="data-list">
+            <div class="data-row"><div class="k">Spot</div><div id="spotSource" class="v">--</div></div>
+            <div class="data-row"><div class="k">VWAP</div><div id="vwapSource" class="v">--</div></div>
+            <div class="data-row"><div class="k">Options</div><div id="optionsSource" class="v">--</div></div>
+            <div class="data-row"><div class="k">Macro</div><div id="macroSource" class="v">--</div></div>
+            <div class="data-row"><div class="k">Earnings</div><div id="earningsSource" class="v">--</div></div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h3 class="section-title">Freshness</h3>
+          <div class="data-list">
+            <div class="data-row"><div class="k">Estado</div><div id="freshnessValue" class="v">--</div></div>
+            <div class="data-row"><div class="k">Dato</div><div id="snapshotValue" class="v">--</div></div>
+            <div class="data-row"><div class="k">Options</div><div id="optionsDataStatus" class="v">--</div></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <main class="main-grid">
+      <section class="section-card">
+        <h3 class="section-title">Precio y sesión</h3>
+        <div id="priceSessionBox" class="data-list"></div>
+      </section>
+
+      <section class="section-card">
+        <h3 class="section-title">Setup</h3>
+        <div id="setupBox" class="data-list"></div>
+      </section>
+
+      <section class="section-card">
+        <h3 class="section-title">Operabilidad</h3>
+        <div id="operabilityBox" class="data-list"></div>
+      </section>
+
+      <section class="section-card">
+        <h3 class="section-title">Macro</h3>
+        <div id="macroBox" class="data-list"></div>
+      </section>
+
+      <section class="section-card">
+        <h3 class="section-title">Earnings</h3>
+        <div id="earningsBox" class="data-list"></div>
+      </section>
+
+      <section class="section-card">
+        <h3 class="section-title">Ejecución</h3>
+        <div id="executionBox" class="data-list"></div>
+      </section>
+
+      <section class="section-card">
+        <h3 class="section-title">Liquidez y OPEX</h3>
+        <div id="liquidityBox" class="data-list"></div>
+      </section>
+
+      <section class="section-card">
+        <h3 class="section-title">Motivos</h3>
+        <div id="reasonsBox" class="reasons-box"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function fmtMoney(v) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "No disponible";
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 2
+      }).format(Number(v));
+    }
+
+    function fmtPctRaw(v) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "No disponible";
+      return `${Number(v).toFixed(2)}%`;
+    }
+
+    function fmtNumber(v, digits = 2) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "No disponible";
+      return Number(v).toFixed(digits);
+    }
+
+    function fmtSignedMoney(v) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "No disponible";
+      const n = Number(v);
+      return `${n >= 0 ? "+" : ""}${fmtMoney(n)}`;
+    }
+
+    function fmtSignedPct(v) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "No disponible";
+      const n = Number(v);
+      return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
+    }
+
+    function fmtText(v, fallback = "No disponible") {
+      if (v === null || v === undefined || v === "") return fallback;
+      return String(v);
+    }
+
+    function yesNo(v) {
+      if (v === true) return "Sí";
+      if (v === false) return "No";
+      return "No evaluable";
+    }
+
+    function humanizeSource(v) {
+      const map = {
+        finnhub_quote: "Finnhub",
+        finnhub_candles: "Finnhub",
+        yahoo_options: "Yahoo Finance",
+        finnhub_economic_calendar: "Finnhub",
+        finnhub_earnings_calendar: "Finnhub"
+      };
+      return map[v] || fmtText(v);
+    }
+
+    function humanizeSession(code) {
+      const map = {
+        regular: "Sesión regular",
+        premarket: "Pre-market",
+        afterhours: "After hours",
+        closed: "Mercado cerrado"
+      };
+      return map[code] || fmtText(code);
+    }
+
+    function humanizeExpiration(v) {
+      const map = {
+        market_closed: "Objetivo · Mercado cerrado",
+        nearest: "Objetivo · 0DTE o vencimiento más cercano"
+      };
+      return map[v] || fmtText(v);
+    }
+
+    function humanizeLiquidity(v) {
+      if (v === true) return "Aceptable";
+      if (v === false) return "Débil";
+      return "No evaluable";
+    }
+
+    function humanizeQuotes(v) {
+      if (v === true) return "Sí";
+      if (v === false) return "No";
+      return "No disponible";
+    }
+
+    function humanizeOpex(flags) {
+      if (flags?.opexQuarterly) return "Sí · trimestral";
+      if (flags?.opexDay) return "Sí · mensual";
+      return "No";
+    }
+
+    function phaseMessage(state) {
+      const degraded = state?.dataHealth?.spotDegraded;
+      const sessionCode = state?.session?.code;
+      const exec = state?.execution || {};
+
+      if (degraded) {
+        return "Dato degradado. Usa esta lectura solo como referencia provisional hasta recuperar spot actualizado.";
+      }
+      if (sessionCode !== "regular") {
+        if (sessionCode === "premarket") {
+          return "Pre-market. Observa contexto y gap, pero espera apertura para evaluar opciones y liquidez real.";
+        }
+        if (sessionCode === "afterhours") {
+          return "After hours. No tiene sentido abrir nuevas posiciones intradía; solo revisión post-cierre.";
+        }
+        return "Mercado cerrado. Usa el panel para preparar escenarios, no para ejecutar.";
+      }
+      if (exec.timeStopTriggered) {
+        return "Time stop activado. Ya no compensa abrir una estructura intradía nueva.";
+      }
+      if (exec.entryWindowOpen) {
+        return "Ventana operativa abierta. Solo considerar entrada si macro, spreads, OI y crédito acompañan.";
+      }
+      if ((exec.minsToEntryStart ?? 9999) > 0) {
+        return "Aún no ha empezado la ventana de entrada. Espera la primera hora para evaluar mejor la estructura.";
+      }
+      return "Fuera de ventana de entrada. Mejor priorizar disciplina antes que forzar un setup.";
+    }
+
+    function renderReasons(list) {
+      const box = $("reasonsBox");
+      box.innerHTML = "";
+      const items = Array.isArray(list) ? list : [];
+      if (!items.length) {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = "Sin motivos cargados";
+        box.appendChild(chip);
+        return;
+      }
+      items.forEach((reason) => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = reason;
+        box.appendChild(chip);
+      });
+    }
+
+    function setBadge(el, text, type) {
+      el.className = `status-badge status-${type}`;
+      el.textContent = text;
+    }
+
+    function renderAlert(state) {
+      const el = $("marketAlert");
+      const alerts = state?.alerts || [];
+      if (alerts.length) {
+        el.style.display = "block";
+        el.textContent = alerts[0];
+        return;
+      }
+      if (state?.market?.isHoliday) {
+        el.style.display = "block";
+        el.textContent = `Mercado cerrado por festivo en EE. UU. · ${fmtText(state.market.name)}.`;
+        return;
+      }
+      el.style.display = "none";
+      el.textContent = "";
+    }
+
+    function updateClocks() {
+      const now = new Date();
+
+      const et = new Intl.DateTimeFormat("es-ES", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZone: "America/New_York",
+        timeZoneName: "short"
+      }).format(now);
+
+      const local = new Intl.DateTimeFormat("es-ES", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }).format(now);
+
+      $("liveClock").textContent = `Hora ET: ${et}`;
+      $("browserClock").textContent = `Hora local: ${local}`;
+    }
+
+    function renderRows(containerId, rows) {
+      const box = $(containerId);
+      box.innerHTML = "";
+      rows.forEach(([k, v]) => {
+        const row = document.createElement("div");
+        row.className = "data-row";
+        row.innerHTML = `<div class="k">${k}</div><div class="v">${v}</div>`;
+        box.appendChild(row);
+      });
+    }
+
+    async function loadState() {
+      document.body.classList.add("loading");
+
+      try {
+        const res = await fetch(`./data/state.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const state = await res.json();
+        renderState(state);
+      } catch (err) {
+        $("headerMeta").textContent = `Error cargando snapshot: ${err.message}`;
+        $("decisionText").textContent = "error";
+        $("decisionText").className = "decision red";
+        $("scoreValue").textContent = "Score --";
+        $("phaseNote").textContent = "No se pudo cargar data/state.json";
+        renderReasons(["Fallo de carga del JSON"]);
+      } finally {
+        document.body.classList.remove("loading");
+      }
+    }
+
+    function renderState(state) {
+      $("headerMeta").textContent = `Última actualización del snapshot: ${fmtText(state.updatedAt)}`;
+
+      const tone = state.decisionTone || "blue";
+      $("decisionText").textContent = fmtText(state.decisionLabel);
+      $("decisionText").className = `decision ${tone}`;
+      $("scoreValue").textContent = `Score ${fmtText(state.score, "--")}`;
+
+      $("chipBuffer").textContent = `Buffer ${fmtPctRaw(state.trade?.bufferPct)}`;
+      $("chipShort").textContent = `Short ${state.trade?.shortStrike ? fmtMoney(state.trade.shortStrike) : "No disponible"}`;
+      $("chipCredit").textContent = `Crédito ${state.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible"}`;
+      $("chipMacro").textContent = state.macro?.nextBig?.label
+        ? `Macro Próximo gran evento · ${state.macro.nextBig.label}`
+        : `Macro ${fmtText(state.macro?.summary)}`;
+      $("chipEarnings").textContent = state.earnings?.next?.symbol
+        ? `Earnings Próximo · ${state.earnings.next.symbol}`
+        : `Earnings ${fmtText(state.earnings?.summary)}`;
+      $("chipOpex").textContent = `OPEX ${humanizeOpex(state.flags)}`;
+      $("chipPhase").textContent = `Fase ${fmtText(state.execution?.phase)}`;
+
+      $("phaseNote").textContent = phaseMessage(state);
+
+      $("miniPrice").textContent = fmtMoney(state.price);
+      $("miniShort").textContent = state.trade?.shortStrike != null ? fmtMoney(state.trade.shortStrike) : "No disponible";
+      $("miniCredit").textContent = state.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible";
+      $("miniEvent").textContent = state.macro?.nextBig?.label || state.earnings?.next?.symbol || "Sin evento";
+
+      const risk = (state.riskLabel || "").toLowerCase();
+      if (risk.includes("alto")) setBadge($("riskBadge"), state.riskLabel, "danger");
+      else if (risk.includes("controlado")) setBadge($("riskBadge"), state.riskLabel, "success");
+      else setBadge($("riskBadge"), fmtText(state.riskLabel), "warning");
+
+      const sessionCode = state.session?.code || "closed";
+      if (sessionCode === "regular") setBadge($("sessionBadge"), humanizeSession(sessionCode), "success");
+      else if (sessionCode === "premarket" || sessionCode === "afterhours") setBadge($("sessionBadge"), humanizeSession(sessionCode), "info");
+      else setBadge($("sessionBadge"), humanizeSession(sessionCode), "neutral");
+
+      $("spotSource").textContent = humanizeSource(state.dataHealth?.spotSource);
+      $("vwapSource").textContent = humanizeSource(state.dataHealth?.vwapSource);
+      $("optionsSource").textContent = humanizeSource(state.dataHealth?.optionsSource);
+      $("macroSource").textContent = humanizeSource(state.dataHealth?.macroSource);
+      $("earningsSource").textContent = humanizeSource(state.dataHealth?.earningsSource);
+
+      $("freshnessValue").textContent = fmtText(state.dataHealth?.freshnessLabel);
+      $("snapshotValue").textContent = fmtText(state.dataHealth?.snapshotLabel);
+      $("optionsDataStatus").textContent = fmtText(state.dataHealth?.optionsDataStatus);
+
+      renderRows("priceSessionBox", [
+        ["Spot", fmtMoney(state.price)],
+        ["Cambio", `${fmtSignedMoney(state.change)} · ${fmtSignedPct(state.changePct)}`],
+        ["VWAP", fmtMoney(state.vwap)],
+        ["Dist. vs VWAP", state.vwapDist != null ? fmtMoney(state.vwapDist) : "No disponible"],
+        ["Sesión", humanizeSession(state.session?.code)],
+        ["Cierre previo", fmtMoney(state.prevClose)]
+      ]);
+
+      renderRows("setupBox", [
+        ["Buffer dinámico", fmtPctRaw(state.trade?.bufferPct)],
+        ["Short strike", state.trade?.shortStrike != null ? fmtMoney(state.trade.shortStrike) : "No disponible"],
+        ["Breakeven", state.trade?.breakeven != null ? fmtMoney(state.trade.breakeven) : "No disponible"],
+        ["Distancia al short", state.trade?.distanceToShort != null ? fmtMoney(state.trade.distanceToShort) : "No disponible"],
+        ["Expected move", state.trade?.expectedMove != null ? `${fmtMoney(state.trade.expectedMove)} · ${fmtPctRaw(state.trade.expectedMovePct)}` : "No disponible"],
+        ["Quality", `${fmtText(state.tradeQuality?.label)} · Score ${fmtText(state.tradeQuality?.score, "0")}`]
+      ]);
+
+      renderRows("operabilityBox", [
+        ["Expiración", humanizeExpiration(state.options?.expiration)],
+        ["Quotes válidas", humanizeQuotes(state.options?.quotesUsable)],
+        ["Liquidez", humanizeLiquidity(state.options?.liquidityOk)],
+        ["Delta short", state.options?.deltaShort != null ? `${fmtNumber(state.options.deltaShort)} (objetivo ${fmtNumber(state.options.deltaTarget)})` : `Objetivo ${fmtNumber(state.options?.deltaTarget)}`],
+        ["Notas", fmtText(state.options?.notes)]
+      ]);
+
+      renderRows("macroBox", [
+        ["Macro hoy", state.macro?.todayHighImpact ? "Sí, hay macro alta hoy" : "Sin macro alta hoy"],
+        ["Ventana crítica", yesNo(state.macro?.windowCritical)],
+        ["Macro score", fmtText(state.macro?.score, "0")],
+        ["Próximo gran evento", state.macro?.nextBig?.label || "No disponible"],
+        ["Fecha ET", state.macro?.nextBig?.dateEt || "No disponible"],
+        ["Countdown", state.macro?.nextBig?.countdown || "No disponible"]
+      ]);
+
+      renderRows("earningsBox", [
+        ["Resumen", fmtText(state.earnings?.summary)],
+        ["Próximo earnings", state.earnings?.next ? `${state.earnings.next.symbol} · ${state.earnings.next.dateEt || state.earnings.next.date}` : "No disponible"],
+        ["Countdown", state.earnings?.next?.countdown || "No disponible"],
+        ["QQQ próximo", state.earnings?.qqqNext ? `${state.earnings.qqqNext.symbol} · ${state.earnings.qqqNext.date}` : "No disponible"],
+        ["Mega-cap watch", state.earnings?.watchlist?.length ? state.earnings.watchlist.map(x => `${x.symbol} ${x.date}`).join(" · ") : "Sin nombres cercanos"],
+        ["Catalysts secundarios", state.earnings?.secondaryWatchlist?.length ? state.earnings.secondaryWatchlist.map(x => `${x.symbol} ${x.date}`).join(" · ") : "Sin secundarios cercanos"]
+      ]);
+
+      renderRows("executionBox", [
+        ["Fase", fmtText(state.execution?.phase)],
+        ["Inicio ventana", fmtText(state.execution?.entryStartEt)],
+        ["Min. al inicio", fmtText(state.execution?.minsToEntryStart)],
+        ["Cutoff entrada", fmtText(state.execution?.entryCutoffEt)],
+        ["Min. al cutoff", fmtText(state.execution?.minsToCutoff)],
+        ["Salida dura", fmtText(state.execution?.hardExitEt)],
+        ["Time stop", yesNo(state.execution?.timeStopTriggered)],
+        ["Máx hold", `${fmtText(state.execution?.maxHoldMinutes)} min`]
+      ]);
+
+      renderRows("liquidityBox", [
+        ["Bid-ask spread", state.options?.bidAskSpread != null ? fmtMoney(state.options.bidAskSpread) : "No disponible"],
+        ["Spread %", state.options?.spreadPct != null ? fmtPctRaw(state.options.spreadPct) : "No disponible"],
+        ["OI short", state.options?.openInterestShort != null ? fmtText(state.options.openInterestShort) : "No disponible"],
+        ["OI long", state.options?.openInterestLong != null ? fmtText(state.options.openInterestLong) : "No disponible"],
+        ["Spacing", yesNo(state.options?.spacingOk)],
+        ["OPEX", humanizeOpex(state.flags)]
+      ]);
+
+      renderReasons(state.reasons);
+      renderAlert(state);
+    }
+
+    function setupTheme() {
+      $("themeBtn").addEventListener("click", () => {
+        const root = document.documentElement;
+        const current = root.getAttribute("data-theme") || "dark";
+        root.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+      });
+    }
+
+    function setupRefresh() {
+      $("refreshBtn").addEventListener("click", loadState);
+    }
+
+    setupTheme();
+    setupRefresh();
+    updateClocks();
+    loadState();
+    setInterval(updateClocks, 1000);
+  </script>
+</body>
+</html>
