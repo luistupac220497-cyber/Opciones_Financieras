@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-07 04:40 ET",
-  "generatedAtUnix": 1783413644,
+  "updatedAt": "2026-07-07 04:44 ET",
+  "generatedAtUnix": 1783413896,
   "price": 722.82,
   "change": 10.22,
   "changePct": 1.4342,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 349,
-    "minutesSinceEntryStart": -350,
+    "minsToEntryStart": 345,
+    "minutesSinceEntryStart": -346,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 529,
+    "minsToCutoff": 525,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -64,8 +64,8 @@
     "score": 0,
     "items": [],
     "nextBig": null,
-    "summary": "Macro no disponible (403 Client Error: Forbidden for url: https://finnhub.io/api/v1/calendar/economic?from=2026-07-06&to=2026-07-28&token=d93)",
-    "source": "finnhub_economic_calendar"
+    "summary": "Macro no disponible por acceso/API",
+    "source": "macro_unavailable"
   },
   "earnings": {
     "today": [],
@@ -138,7 +138,7 @@
     "spotSource": "finnhub_quote",
     "optionsSource": "yahoo_options",
     "vwapSource": "finnhub_candles",
-    "macroSource": "finnhub_economic_calendar",
+    "macroSource": "macro_unavailable",
     "earningsSource": "finnhub_earnings_calendar",
     "spotDegraded": false,
     "spotDegradedReason": null,
@@ -159,6 +159,7 @@
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
+    "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · TSLA",
     "Pre-market; esperar apertura",
     "Fuera de horario de opciones; métricas no evaluables aún"
