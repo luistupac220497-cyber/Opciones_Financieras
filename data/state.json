@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-07 04:00 ET",
-  "generatedAtUnix": 1783411256,
+  "updatedAt": "2026-07-07 04:06 ET",
+  "generatedAtUnix": 1783411597,
   "price": 722.82,
   "change": 10.22,
   "changePct": 1.4342,
@@ -26,10 +26,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 389,
-    "minutesSinceEntryStart": -390,
+    "minsToEntryStart": 383,
+    "minutesSinceEntryStart": -384,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 569,
+    "minsToCutoff": 563,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -49,11 +49,13 @@
     "openInterestLong": null,
     "spacingOk": null,
     "status": "unavailable",
-    "notes": "Fuera de horario regular de opciones; no se evalúan liquidez, OI, spread ni crédito"
+    "notes": "Fuera de horario regular de opciones; no se evalúan liquidez, OI, spread ni crédito",
+    "impliedVolatility": null
   },
   "optionsMeta": {
-    "source": "nasdaq_public",
-    "snapshot": "no_live_chain"
+    "source": "yahoo_options",
+    "snapshot": "no_live_chain",
+    "expirationDate": null
   },
   "macro": {
     "todayHighImpact": false,
@@ -136,7 +138,8 @@
   },
   "dataHealth": {
     "spotSource": "finnhub_quote",
-    "optionsSource": "nasdaq_public",
+    "optionsSource": "yahoo_options",
+    "vwapSource": "finnhub_candles",
     "spotDegraded": false,
     "spotDegradedReason": null,
     "spotStaleFromPreviousState": false,
