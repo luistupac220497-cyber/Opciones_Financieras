@@ -3,7 +3,7 @@ name: Update QQQ Dashboard Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/10 * * * 1-5"
+    - cron: "7,22,37,52 * * * 1-5"
 
 permissions:
   contents: write
@@ -30,6 +30,9 @@ jobs:
         run: python -c "import os; print('OK' if os.getenv('FINNHUB_API_KEY') else 'MISSING')"
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
+
+      - name: Compile Python script
+        run: python -m py_compile scripts/build_data.py
 
       - name: Generate state.json
         run: python scripts/build_data.py
