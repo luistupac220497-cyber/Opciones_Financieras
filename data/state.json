@@ -1,78 +1,121 @@
 {
-  "updatedAtNY": "2026-07-06 16:00 ET",
-  "updatedAtText": "2026-07-06 16:00 ET",
+  "symbol": "QQQ",
+  "updatedAt": "2026-07-07 03:47 ET",
   "price": 722.82,
   "change": 10.22,
   "changePct": 1.4342,
   "prevClose": 712.6,
-  "source": "finnhub_quote",
   "session": {
     "code": "closed",
     "label": "Mercado cerrado"
   },
-  "vwap": {
-    "value": null,
-    "distPct": null
-  },
-  "expectedMove": {
-    "move": null,
-    "movePct": null
-  },
+  "vwap": null,
+  "vwapDist": null,
+  "expectedMove": null,
+  "expectedMovePct": null,
   "trade": {
-    "bufferDynamicPct": 1.07,
+    "bufferPct": 1.07,
     "shortStrike": null,
+    "netCredit": null,
     "breakeven": null,
-    "distToShort": null,
-    "netCredit": null
-  },
-  "tradeQuality": {
-    "targetDelta": 0.2,
-    "creditPerRisk": 0.25,
-    "minOpenInterest": 0,
-    "shortStrikeOI": null,
-    "longStrikeOI": null,
-    "width": 5,
-    "bidAskWidth": null,
-    "spreadWidthPct": null,
-    "strikeSpacingOk": true
+    "distanceToShort": null,
+    "expectedMove": null,
+    "expectedMovePct": null
   },
   "execution": {
-    "entryStartET": "10:30 ET",
-    "entryCutoffET": "13:30 ET",
-    "hardExitET": "15:15 ET",
-    "minutesToEntryStart": 409,
-    "minutesToEntryCutoff": 589,
-    "minutesToHardExit": 694,
-    "maxHoldMinutes": 60,
-    "entryWindowOpen": false,
+    "phase": "Fuera de sesión regular",
+    "entryStartEt": "10:30 ET",
+    "minsToEntryStart": 402,
+    "minutesSinceEntryStart": -403,
+    "entryCutoffEt": "13:30 ET",
+    "minsToCutoff": 582,
+    "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
-    "phase": "Fuera de sesión regular"
+    "entryWindowOpen": false,
+    "maxHoldMinutes": 60
   },
   "options": {
-    "expiration": "0dte_or_nearest",
+    "expiration": "market_closed",
+    "expirationLabel": "Mercado cerrado",
     "quotesUsable": false,
     "liquidityOk": false,
-    "shortCallDelta": null,
-    "notes": "Mercado fuera de sesión regular; cadena de opciones desactivada"
+    "liquidityLabel": "Cerrado",
+    "deltaShort": null,
+    "deltaTarget": 0.2,
+    "bidAskSpread": null,
+    "spreadPct": null,
+    "openInterestShort": null,
+    "openInterestLong": null,
+    "spacingOk": null,
+    "status": "unavailable",
+    "notes": "Mercado fuera de sesión regular; cadena operativa desactivada"
   },
   "optionsMeta": {
-    "source": "market_closed_guard"
+    "source": "nasdaq_public",
+    "snapshot": "no_live_chain"
   },
   "macro": {
     "todayHighImpact": false,
     "windowCritical": false,
-    "score": -5,
-    "todayList": [],
-    "windowList": [],
+    "score": -2,
+    "items": [
+      {
+        "label": "Actas del FOMC",
+        "impact": "alto",
+        "kind": "fomc_minutes",
+        "dateEt": "2026-07-08 14:00 ET",
+        "countdown": "1d 10h",
+        "veto": false
+      },
+      {
+        "label": "IPC (CPI)",
+        "impact": "alto",
+        "kind": "cpi",
+        "dateEt": "2026-07-15 08:30 ET",
+        "countdown": "8d 4h",
+        "veto": true
+      },
+      {
+        "label": "Ventas minoristas",
+        "impact": "medio",
+        "kind": "retail_sales",
+        "dateEt": "2026-07-16 08:30 ET",
+        "countdown": "9d 4h",
+        "veto": false
+      },
+      {
+        "label": "PPI",
+        "impact": "medio",
+        "kind": "ppi",
+        "dateEt": "2026-07-17 08:30 ET",
+        "countdown": "10d 4h",
+        "veto": false
+      },
+      {
+        "label": "Nóminas no agrícolas (NFP)",
+        "impact": "alto",
+        "kind": "nfp",
+        "dateEt": "2026-07-23 08:30 ET",
+        "countdown": "16d 4h",
+        "veto": true
+      },
+      {
+        "label": "Decisión de tipos FOMC",
+        "impact": "alto",
+        "kind": "fomc",
+        "dateEt": "2026-07-29 14:00 ET",
+        "countdown": "22d 10h",
+        "veto": true
+      }
+    ],
     "nextBig": {
       "label": "Actas del FOMC",
       "impact": "alto",
-      "datetimeNY": "2026-07-08 14:00 ET",
-      "dateNY": "2026-07-08",
-      "countdown": "1d 10h",
-      "veto": true
+      "kind": "fomc_minutes",
+      "dateEt": "2026-07-08 14:00 ET",
+      "countdown": "1d 10h"
     },
-    "summary": "Próximo gran evento · Actas del FOMC"
+    "summary": "Sin macro alta hoy; próximo gran evento · Actas del FOMC"
   },
   "flags": {
     "opexDay": false,
@@ -80,30 +123,51 @@
   },
   "earnings": {
     "next": {
-      "empresa": "Tesla",
-      "ticker": "TSLA",
-      "fecha": "2026-07-22",
-      "dias": 16,
-      "momento": "Hora no especificada"
+      "symbol": "TSLA",
+      "date": "2026-07-22",
+      "label": "Tesla"
     }
   },
   "market": {
     "isHoliday": false,
-    "name": "Sesión normal",
-    "date": "2026-07-07",
-    "source": "--"
+    "name": null,
+    "date": "2026-07-07"
   },
   "dataHealth": {
+    "spotSource": "finnhub_quote",
+    "optionsSource": "nasdaq_public",
     "spotDegraded": false,
-    "spotReason": null,
-    "staleFromPreviousState": false
+    "spotDegradedReason": null,
+    "spotStaleFromPreviousState": false,
+    "freshnessLabel": "Dato reciente",
+    "snapshotLabel": "Snapshot actual",
+    "optionsDataStatus": "unavailable"
   },
-  "decisionLabel": "esperar apertura",
-  "decisionTone": "yellow",
-  "score": 15,
-  "riskLabel": "Riesgo medio",
+  "tradeQuality": {
+    "score": -24,
+    "reasons": [
+      "Delta objetivo 0.20 definida",
+      "Crédito no disponible",
+      "OI no disponible",
+      "Spread no disponible",
+      "Quotes no operables",
+      "Liquidez insuficiente"
+    ],
+    "label": "Teórico"
+  },
+  "score": -38,
+  "decisionLabel": "no entrar",
+  "decisionTone": "red",
+  "riskLabel": "Riesgo alto",
   "reasons": [
-    "Esperar apertura"
+    "Fuera de sesión regular",
+    "Próximo gran evento · Actas del FOMC",
+    "Delta objetivo 0.20 definida",
+    "Crédito no disponible",
+    "OI no disponible",
+    "Spread no disponible",
+    "Quotes no operables",
+    "Liquidez insuficiente"
   ],
   "alerts": []
 }
