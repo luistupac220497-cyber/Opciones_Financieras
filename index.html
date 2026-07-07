@@ -4,6 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>QQQ 0DTE Dashboard</title>
+
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
 
   <style>
@@ -14,18 +19,12 @@
       --surface-3: #edeae5;
       --text: #28251d;
       --muted: #7a7974;
-      --faint: #b0aea8;
       --border: #d4d1ca;
-      --primary: #01696f;
       --success: #437a22;
       --warning: #d19900;
       --danger: #a13544;
       --info: #006494;
       --shadow: 0 12px 32px rgba(0,0,0,.08);
-      --radius-xl: 20px;
-      --radius-lg: 16px;
-      --radius-md: 12px;
-      --radius-full: 999px;
     }
 
     [data-theme="dark"] {
@@ -35,9 +34,7 @@
       --surface-3: #2a2926;
       --text: #cdccca;
       --muted: #8d8b88;
-      --faint: #666461;
       --border: #393836;
-      --primary: #4f98a3;
       --success: #6daa45;
       --warning: #edb336;
       --danger: #d163a7;
@@ -46,336 +43,114 @@
     }
 
     * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
-    }
-
     body {
+      margin: 0;
       font-family: "Satoshi", sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.45;
     }
 
-    button, input, select, textarea {
-      font: inherit;
-    }
-
-    .app {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .topbar,
-    .hero,
-    .section-card {
+    .app { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .topbar, .hero, .section-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
+      border-radius: 20px;
       box-shadow: var(--shadow);
     }
 
     .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      flex-wrap: wrap;
-      padding: 18px 20px;
-      margin-bottom: 18px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 16px; flex-wrap: wrap; padding: 18px 20px; margin-bottom: 18px;
     }
 
-    .title-wrap h1 {
-      margin: 0 0 8px;
-      font-size: clamp(1.6rem, 1.2rem + 1vw, 2.3rem);
-      line-height: 1.08;
+    .title-wrap h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 1.2rem + 1vw, 2.3rem); }
+    .meta { display: grid; gap: 4px; color: var(--muted); font-size: .96rem; }
+    .build-chip {
+      display: inline-flex; margin-top: 8px; padding: 6px 10px; border-radius: 999px;
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: .86rem;
     }
 
-    .meta {
-      display: grid;
-      gap: 4px;
-      color: var(--muted);
-      font-size: 0.96rem;
-    }
-
-    .top-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
+    .top-actions { display: flex; gap: 10px; }
     .icon-btn {
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
-      border-radius: var(--radius-md);
-      min-width: 44px;
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: transform .18s ease, background .18s ease, border-color .18s ease;
-    }
-
-    .icon-btn:hover {
-      transform: translateY(-1px);
-      background: var(--surface-3);
+      border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+      border-radius: 12px; min-width: 44px; min-height: 44px; cursor: pointer;
     }
 
     .market-alert {
-      display: none;
-      margin-bottom: 18px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(237,179,54,.24);
-      background: rgba(237,179,54,.12);
-      color: var(--text);
+      display: none; margin-bottom: 18px; padding: 14px 16px; border-radius: 14px;
+      border: 1px solid rgba(237,179,54,.24); background: rgba(237,179,54,.12);
     }
 
     .hero {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 18px;
-      padding: 22px;
-      margin-bottom: 18px;
+      display: grid; grid-template-columns: 2fr 1fr; gap: 18px; padding: 22px; margin-bottom: 18px;
     }
 
-    .eyebrow {
-      color: var(--muted);
-      font-size: .95rem;
-      margin-bottom: 8px;
-    }
-
-    .decision {
-      font-size: clamp(2rem, 1.5rem + 2vw, 3.2rem);
-      font-weight: 900;
-      line-height: 1;
-      margin: 0 0 12px;
-      text-transform: lowercase;
-    }
-
+    .decision { font-size: clamp(2rem, 1.5rem + 2vw, 3.2rem); font-weight: 900; margin: 0 0 12px; text-transform: lowercase; }
     .decision.green { color: var(--success); }
     .decision.yellow { color: var(--warning); }
     .decision.red { color: var(--danger); }
     .decision.blue { color: var(--info); }
 
-    .score-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      margin-bottom: 14px;
-      border-radius: var(--radius-full);
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      font-weight: 700;
+    .score-pill, .chip, .status-badge {
+      display: inline-flex; align-items: center; border-radius: 999px;
     }
 
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 14px;
+    .score-pill {
+      gap: 8px; padding: 8px 12px; margin-bottom: 14px;
+      background: var(--surface-2); border: 1px solid var(--border); font-weight: 700;
+    }
+
+    .chips, .reasons-box, .status-wrap {
+      display: flex; flex-wrap: wrap; gap: 10px;
     }
 
     .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: var(--radius-full);
-      padding: 8px 12px;
-      font-size: .94rem;
-      white-space: nowrap;
+      background: var(--surface-2); border: 1px solid var(--border); padding: 8px 12px; font-size: .94rem;
     }
 
-    .phase-note {
-      color: var(--muted);
-      font-size: 1rem;
-      margin-bottom: 16px;
-    }
+    .phase-note { color: var(--muted); margin-bottom: 16px; }
 
-    .mini-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-    }
-
+    .mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     .mini-card {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 14px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px;
     }
+    .mini-card .label { color: var(--muted); font-size: .9rem; margin-bottom: 8px; }
+    .mini-card .value { font-size: 1.32rem; font-weight: 800; }
 
-    .mini-card .label {
-      color: var(--muted);
-      font-size: .9rem;
-      margin-bottom: 8px;
-    }
+    .side-panel { display: grid; gap: 14px; align-content: start; }
+    .section-card { padding: 16px; }
+    .section-title { margin: 0 0 10px; font-size: 1.08rem; }
 
-    .mini-card .value {
-      font-size: 1.32rem;
-      font-weight: 800;
-      line-height: 1.15;
-    }
+    .status-badge { padding: 8px 12px; font-weight: 700; font-size: .92rem; border: 1px solid transparent; }
+    .status-danger { background: rgba(209,99,167,.14); color: var(--danger); border-color: rgba(209,99,167,.28); }
+    .status-warning { background: rgba(237,179,54,.14); color: var(--warning); border-color: rgba(237,179,54,.28); }
+    .status-success { background: rgba(109,170,69,.14); color: var(--success); border-color: rgba(109,170,69,.28); }
+    .status-info { background: rgba(85,145,199,.14); color: var(--info); border-color: rgba(85,145,199,.28); }
+    .status-neutral { background: var(--surface-2); color: var(--text); border-color: var(--border); }
 
-    .side-panel {
-      display: grid;
-      gap: 14px;
-      align-content: start;
-    }
-
-    .section-card {
-      padding: 16px;
-    }
-
-    .section-title {
-      margin: 0 0 10px;
-      font-size: 1.08rem;
-      line-height: 1.2;
-    }
-
-    .status-wrap {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 8px 12px;
-      border-radius: var(--radius-full);
-      font-weight: 700;
-      font-size: .92rem;
-      border: 1px solid transparent;
-    }
-
-    .status-danger {
-      background: rgba(209,99,167,.14);
-      color: var(--danger);
-      border-color: rgba(209,99,167,.28);
-    }
-
-    .status-warning {
-      background: rgba(237,179,54,.14);
-      color: var(--warning);
-      border-color: rgba(237,179,54,.28);
-    }
-
-    .status-success {
-      background: rgba(109,170,69,.14);
-      color: var(--success);
-      border-color: rgba(109,170,69,.28);
-    }
-
-    .status-info {
-      background: rgba(85,145,199,.14);
-      color: var(--info);
-      border-color: rgba(85,145,199,.28);
-    }
-
-    .status-neutral {
-      background: var(--surface-2);
-      color: var(--text);
-      border-color: var(--border);
-    }
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
-    .data-list {
-      display: grid;
-      gap: 10px;
-    }
-
+    .main-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .data-list { display: grid; gap: 10px; }
     .data-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 14px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
     }
-
-    .data-row:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .data-row .k {
-      color: var(--muted);
-      min-width: 42%;
-    }
-
-    .data-row .v {
-      text-align: right;
-      word-break: break-word;
-    }
-
-    .reasons-box {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .muted {
-      color: var(--muted);
-    }
-
-    .loading .decision {
-      opacity: .65;
-    }
+    .data-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .data-row .k { color: var(--muted); min-width: 42%; }
+    .data-row .v { text-align: right; word-break: break-word; }
 
     @media (max-width: 1100px) {
-      .hero {
-        grid-template-columns: 1fr;
-      }
-      .mini-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
+      .hero { grid-template-columns: 1fr; }
+      .mini-grid { grid-template-columns: repeat(2, 1fr); }
+      .main-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px) {
-      .app {
-        padding: 14px;
-      }
-      .topbar,
-      .hero,
-      .section-card {
-        border-radius: 16px;
-      }
-      .topbar {
-        padding: 16px;
-      }
-      .hero {
-        padding: 16px;
-      }
-      .mini-grid {
-        grid-template-columns: 1fr;
-      }
-      .data-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
-      }
-      .data-row .v {
-        text-align: left;
-      }
+      .app { padding: 14px; }
+      .mini-grid { grid-template-columns: 1fr; }
+      .data-row { flex-direction: column; gap: 4px; }
+      .data-row .v { text-align: left; }
     }
   </style>
 </head>
@@ -389,11 +164,11 @@
           <div id="liveClock">Hora ET: --</div>
           <div id="browserClock">Hora local: --</div>
         </div>
+        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v3</div>
       </div>
-
       <div class="top-actions">
-        <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">◐</button>
-        <button id="refreshBtn" class="icon-btn" type="button" aria-label="Actualizar datos">↻</button>
+        <button id="themeBtn" class="icon-btn" type="button">◐</button>
+        <button id="refreshBtn" class="icon-btn" type="button">↻</button>
       </div>
     </header>
 
@@ -401,7 +176,7 @@
 
     <section class="hero">
       <div>
-        <div class="eyebrow">Decisión operativa</div>
+        <div style="color:var(--muted);margin-bottom:8px;">Decisión operativa</div>
         <div id="decisionText" class="decision blue">--</div>
         <div id="scoreValue" class="score-pill">Score --</div>
 
@@ -449,6 +224,7 @@
           <h3 class="section-title">Fuentes</h3>
           <div class="data-list">
             <div class="data-row"><span class="k">Spot</span><span class="v" id="spotSource">--</span></div>
+            <div class="data-row"><span class="k">VWAP</span><span class="v" id="vwapSource">--</span></div>
             <div class="data-row"><span class="k">Options</span><span class="v" id="optionsSource">--</span></div>
           </div>
         </div>
@@ -465,53 +241,23 @@
     </section>
 
     <section class="main-grid">
-      <div class="section-card">
-        <h3 class="section-title">Precio y sesión</h3>
-        <div id="priceSessionBox" class="data-list"></div>
-      </div>
-
-      <div class="section-card">
-        <h3 class="section-title">Setup</h3>
-        <div id="setupBox" class="data-list"></div>
-      </div>
-
-      <div class="section-card">
-        <h3 class="section-title">Operabilidad</h3>
-        <div id="operabilityBox" class="data-list"></div>
-      </div>
-
-      <div class="section-card">
-        <h3 class="section-title">Macro</h3>
-        <div id="macroBox" class="data-list"></div>
-      </div>
-
-      <div class="section-card">
-        <h3 class="section-title">Ejecución</h3>
-        <div id="executionBox" class="data-list"></div>
-      </div>
-
-      <div class="section-card">
-        <h3 class="section-title">Liquidez y OPEX</h3>
-        <div id="liqOpexBox" class="data-list"></div>
-      </div>
-
-      <div class="section-card" style="grid-column: 1 / -1;">
-        <h3 class="section-title">Motivos</h3>
-        <div id="reasonsBox" class="reasons-box"></div>
-      </div>
+      <div class="section-card"><h3 class="section-title">Precio y sesión</h3><div id="priceSessionBox" class="data-list"></div></div>
+      <div class="section-card"><h3 class="section-title">Setup</h3><div id="setupBox" class="data-list"></div></div>
+      <div class="section-card"><h3 class="section-title">Operabilidad</h3><div id="operabilityBox" class="data-list"></div></div>
+      <div class="section-card"><h3 class="section-title">Macro</h3><div id="macroBox" class="data-list"></div></div>
+      <div class="section-card"><h3 class="section-title">Ejecución</h3><div id="executionBox" class="data-list"></div></div>
+      <div class="section-card"><h3 class="section-title">Liquidez y OPEX</h3><div id="liqOpexBox" class="data-list"></div></div>
+      <div class="section-card" style="grid-column:1/-1;"><h3 class="section-title">Motivos</h3><div id="reasonsBox" class="reasons-box"></div></div>
     </section>
   </div>
 
   <script>
+    const FRONTEND_BUILD = "2026-07-07-v3";
     const $ = (id) => document.getElementById(id);
 
     function fmtMoney(v) {
       if (v == null || Number.isNaN(Number(v))) return "No disponible";
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 2
-      }).format(Number(v));
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(Number(v));
     }
 
     function fmtPctRaw(v) {
@@ -519,9 +265,9 @@
       return `${Number(v).toFixed(2)}%`;
     }
 
-    function fmtNumber(v, decimals = 2) {
+    function fmtNumber(v, d = 2) {
       if (v == null || Number.isNaN(Number(v))) return "No disponible";
-      return Number(v).toFixed(decimals);
+      return Number(v).toFixed(d);
     }
 
     function fmtText(v) {
@@ -536,6 +282,8 @@
     function humanizeSource(v) {
       const map = {
         finnhub_quote: "Finnhub",
+        finnhub_candles: "Finnhub candles",
+        yahoo_options: "Yahoo Finance",
         nasdaq_public: "Nasdaq"
       };
       return map[v] || fmtText(v);
@@ -560,10 +308,6 @@
       return map[v] || fmtText(v);
     }
 
-    function humanizeRisk(v) {
-      return fmtText(v);
-    }
-
     function humanizeLiquidity(state) {
       if (!state?.options) return "No disponible";
       if (state.options.liquidityLabel) return state.options.liquidityLabel;
@@ -577,31 +321,17 @@
       const sessionCode = state?.session?.code;
       const execution = state?.execution || {};
 
-      if (degraded) {
-        return "Dato degradado o reciclado. La lectura es provisional hasta recuperar spot fresco.";
-      }
-      if (sessionCode === "closed") {
-        return "Mercado cerrado. El spot puede actualizar, pero la operativa 0DTE queda en espera hasta la sesión regular.";
-      }
-      if (sessionCode === "premarket") {
-        return "Pre-market. Observa contexto y gap, pero espera apertura para evaluar opciones y liquidez real.";
-      }
-      if (sessionCode === "afterhours") {
-        return "After hours. No abras nuevas posiciones intradía; prepara niveles para la siguiente sesión.";
-      }
+      if (degraded) return "Dato degradado o reciclado. La lectura es provisional hasta recuperar spot fresco.";
+      if (sessionCode === "closed") return "Mercado cerrado. El spot puede actualizar, pero la operativa 0DTE queda en espera hasta la sesión regular.";
+      if (sessionCode === "premarket") return "Pre-market. Observa contexto y gap, pero espera apertura para evaluar opciones y liquidez real.";
+      if (sessionCode === "afterhours") return "After hours. No abras nuevas posiciones intradía; prepara niveles para la siguiente sesión.";
       if (execution.entryWindowOpen) {
         const mins = execution.minutesSinceEntryStart;
-        if (mins > 60) {
-          return `Ventana operativa abierta. Ya han pasado ${mins} min desde el inicio; exige más confirmación de liquidez y spread.`;
-        }
+        if (mins > 60) return `Ventana operativa abierta. Ya han pasado ${mins} min desde el inicio; exige más confirmación de liquidez y spread.`;
         return "Ventana operativa abierta. Ya puedes evaluar entrada, pero solo si macro, liquidez y spread acompañan.";
       }
-      if (execution.minsToEntryStart > 0) {
-        return "Aún no ha empezado la ventana de entrada. Espera a que pase la primera hora.";
-      }
-      if (execution.timeStopTriggered) {
-        return "Time stop activado. No tiene sentido abrir nuevas posiciones intradía.";
-      }
+      if (execution.minsToEntryStart > 0) return "Aún no ha empezado la ventana de entrada. Espera a que pase la primera hora.";
+      if (execution.timeStopTriggered) return "Time stop activado. No tiene sentido abrir nuevas posiciones intradía.";
       return "Ventana cerrada o setup no confirmable.";
     }
 
@@ -613,14 +343,7 @@
     function renderReasons(list) {
       const box = $("reasonsBox");
       box.innerHTML = "";
-      if (!list || !list.length) {
-        const chip = document.createElement("span");
-        chip.className = "chip";
-        chip.textContent = "Sin motivos cargados";
-        box.appendChild(chip);
-        return;
-      }
-      list.forEach(item => {
+      (list && list.length ? list : ["Sin motivos cargados"]).forEach(item => {
         const chip = document.createElement("span");
         chip.className = "chip";
         chip.textContent = item;
@@ -634,17 +357,7 @@
       rows.forEach(([k, v]) => {
         const row = document.createElement("div");
         row.className = "data-row";
-
-        const left = document.createElement("span");
-        left.className = "k";
-        left.textContent = k;
-
-        const right = document.createElement("span");
-        right.className = "v";
-        right.textContent = v;
-
-        row.appendChild(left);
-        row.appendChild(right);
+        row.innerHTML = `<span class="k">${k}</span><span class="v">${v}</span>`;
         box.appendChild(row);
       });
     }
@@ -668,34 +381,22 @@
 
     function updateClocks() {
       const now = new Date();
-
       $("liveClock").textContent = "Hora ET: " + new Intl.DateTimeFormat("es-ES", {
-        weekday: "short",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        timeZone: "America/New_York",
-        timeZoneName: "short"
+        weekday: "short", day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        timeZone: "America/New_York", timeZoneName: "short"
       }).format(now);
 
       $("browserClock").textContent = "Hora local: " + new Intl.DateTimeFormat("es-ES", {
-        weekday: "short",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
+        weekday: "short", day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
       }).format(now);
     }
 
     async function loadState() {
-      document.body.classList.add("loading");
       try {
-        const res = await fetch(`./data/state.json?t=${Date.now()}`, {
+        $("frontendBuild").textContent = `Frontend build: ${FRONTEND_BUILD}`;
+        const res = await fetch(`./data/state.json?t=${Date.now()}&build=${encodeURIComponent(FRONTEND_BUILD)}`, {
           cache: "no-store"
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -703,25 +404,20 @@
         renderState(state);
       } catch (err) {
         $("headerMeta").textContent = `Error cargando snapshot: ${err.message}`;
-        const d = $("decisionText");
-        d.textContent = "error";
-        d.className = "decision red";
+        $("decisionText").textContent = "error";
+        $("decisionText").className = "decision red";
         $("scoreValue").textContent = "Score --";
         $("phaseNote").textContent = "No se pudo cargar data/state.json";
         renderReasons(["Fallo de carga del JSON"]);
         renderAlert({ alerts: ["No se pudo cargar el snapshot del dashboard"] });
-      } finally {
-        document.body.classList.remove("loading");
       }
     }
 
     function renderState(state) {
       $("headerMeta").textContent = `Última actualización del snapshot: ${fmtText(state.updatedAt)}`;
 
-      const decision = $("decisionText");
-      decision.textContent = fmtText(state.decisionLabel);
-      decision.className = `decision ${state.decisionTone || "blue"}`;
-
+      $("decisionText").textContent = fmtText(state.decisionLabel);
+      $("decisionText").className = `decision ${state.decisionTone || "blue"}`;
       $("scoreValue").textContent = `Score ${fmtText(state.score)}`;
 
       $("chipBuffer").textContent = `Buffer ${fmtPctRaw(state.trade?.bufferPct)}`;
@@ -738,23 +434,14 @@
       $("miniCredit").textContent = fmtMoney(state.trade?.netCredit);
       $("miniMacro").textContent = fmtText(state.macro?.nextBig?.label || "No disponible");
 
-      const riskType = /alto/i.test(state.riskLabel || "")
-        ? "danger"
-        : /controlado/i.test(state.riskLabel || "")
-        ? "success"
-        : "warning";
+      const riskType = /alto/i.test(state.riskLabel || "") ? "danger" : /controlado/i.test(state.riskLabel || "") ? "success" : "warning";
+      const sessionType = state.session?.code === "regular" ? "success" : state.session?.code === "closed" ? "danger" : "info";
 
-      setBadge($("riskBadge"), humanizeRisk(state.riskLabel), riskType);
-
-      const sessionType = state.session?.code === "regular"
-        ? "success"
-        : state.session?.code === "closed"
-        ? "danger"
-        : "info";
-
+      setBadge($("riskBadge"), fmtText(state.riskLabel), riskType);
       setBadge($("sessionBadge"), humanizeSession(state.session?.code), sessionType);
 
       $("spotSource").textContent = humanizeSource(state.dataHealth?.spotSource);
+      $("vwapSource").textContent = humanizeSource(state.dataHealth?.vwapSource);
       $("optionsSource").textContent = humanizeSource(state.dataHealth?.optionsSource);
       $("freshnessState").textContent = fmtText(state.dataHealth?.freshnessLabel);
       $("snapshotState").textContent = fmtText(state.dataHealth?.snapshotLabel);
@@ -762,18 +449,8 @@
 
       renderRows("priceSessionBox", [
         ["Spot", fmtMoney(state.price)],
-        [
-          "Cambio",
-          state.change == null || state.changePct == null
-            ? "No disponible"
-            : `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`
-        ],
-        [
-          "VWAP",
-          state.vwap == null && state.vwapDist == null
-            ? "No disponible"
-            : `${fmtMoney(state.vwap)} · ${fmtMoney(state.vwapDist)}`
-        ],
+        ["Cambio", state.change == null || state.changePct == null ? "No disponible" : `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`],
+        ["VWAP", state.vwap == null ? "No disponible" : `${fmtMoney(state.vwap)} · Dist ${fmtMoney(state.vwapDist)}`],
         ["Sesión", humanizeSession(state.session?.code)],
         ["Cierre previo", fmtMoney(state.prevClose)]
       ]);
@@ -783,33 +460,15 @@
         ["Short strike", fmtMoney(state.trade?.shortStrike)],
         ["Breakeven", fmtMoney(state.trade?.breakeven)],
         ["Distancia al short", fmtMoney(state.trade?.distanceToShort)],
-        [
-          "Expected move",
-          state.trade?.expectedMove == null && state.trade?.expectedMovePct == null
-            ? "No disponible"
-            : `${fmtMoney(state.trade?.expectedMove)} (${fmtPctRaw(state.trade?.expectedMovePct)})`
-        ],
-        [
-          "Quality",
-          `Estado ${fmtText(state.tradeQuality?.label)} · Score ${fmtText(state.tradeQuality?.score)}`
-        ]
+        ["Expected move", state.trade?.expectedMove == null ? "No disponible" : `${fmtMoney(state.trade?.expectedMove)} (${fmtPctRaw(state.trade?.expectedMovePct)})`],
+        ["Quality", `Estado ${fmtText(state.tradeQuality?.label)} · Score ${fmtText(state.tradeQuality?.score)}`]
       ]);
 
       renderRows("operabilityBox", [
-        [
-          "Expiración",
-          state.options?.quotesUsable
-            ? fmtText(state.options?.expirationLabel)
-            : `Objetivo · ${fmtText(state.options?.expirationLabel)}`
-        ],
+        ["Expiración", state.options?.quotesUsable ? fmtText(state.options?.expirationLabel) : `Objetivo · ${fmtText(state.options?.expirationLabel)}`],
         ["Quotes válidas", yesNo(state.options?.quotesUsable)],
         ["Liquidez", humanizeLiquidity(state)],
-        [
-          "Delta short",
-          state.options?.deltaShort == null
-            ? `Objetivo ${fmtNumber(state.options?.deltaTarget)}`
-            : fmtNumber(state.options?.deltaShort)
-        ],
+        ["Delta short", state.options?.deltaShort == null ? `Objetivo ${fmtNumber(state.options?.deltaTarget)}` : fmtNumber(state.options?.deltaShort)],
         ["Notas", fmtText(state.options?.notes)]
       ]);
 
@@ -830,57 +489,29 @@
         ["Min. al cutoff", fmtText(state.execution?.minsToCutoff)],
         ["Salida dura", fmtText(state.execution?.hardExitEt)],
         ["Time stop", yesNo(state.execution?.timeStopTriggered)],
-        [
-          "Máx hold",
-          state.execution?.maxHoldMinutes == null
-            ? "No disponible"
-            : `${state.execution.maxHoldMinutes} min`
-        ]
+        ["Máx hold", state.execution?.maxHoldMinutes == null ? "No disponible" : `${state.execution.maxHoldMinutes} min`]
       ]);
 
       renderRows("liqOpexBox", [
         ["Bid-ask spread", fmtMoney(state.options?.bidAskSpread)],
         ["Spread %", fmtPctRaw(state.options?.spreadPct)],
-        [
-          "OI short",
-          state.options?.openInterestShort == null
-            ? "No disponible"
-            : fmtText(state.options.openInterestShort)
-        ],
-        [
-          "OI long",
-          state.options?.openInterestLong == null
-            ? "No disponible"
-            : fmtText(state.options.openInterestLong)
-        ],
+        ["OI short", state.options?.openInterestShort == null ? "No disponible" : fmtText(state.options?.openInterestShort)],
+        ["OI long", state.options?.openInterestLong == null ? "No disponible" : fmtText(state.options?.openInterestLong)],
         ["Spacing", yesNo(state.options?.spacingOk)],
-        [
-          "OPEX",
-          state.flags?.opexQuarterly
-            ? "Trimestral"
-            : state.flags?.opexDay
-            ? "Sí"
-            : "No"
-        ]
+        ["OPEX", state.flags?.opexQuarterly ? "Trimestral" : state.flags?.opexDay ? "Sí" : "No"]
       ]);
 
       renderReasons(state.reasons || []);
       renderAlert(state);
     }
 
-    function setupTheme() {
-      $("themeBtn").addEventListener("click", () => {
-        const current = document.documentElement.getAttribute("data-theme");
-        document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
-      });
-    }
+    $("themeBtn").addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme");
+      document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+    });
 
-    function setupRefresh() {
-      $("refreshBtn").addEventListener("click", loadState);
-    }
+    $("refreshBtn").addEventListener("click", loadState);
 
-    setupTheme();
-    setupRefresh();
     updateClocks();
     loadState();
     setInterval(updateClocks, 1000);
