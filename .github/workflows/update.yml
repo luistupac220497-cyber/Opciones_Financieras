@@ -33,22 +33,15 @@ jobs:
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
 
-      - name: Show file before build
-        run: |
-          echo "===== BEFORE ====="
-          test -f data/state.json && cat data/state.json || echo "data/state.json no existe"
+      - name: Compile Python
+        run: python -m py_compile scripts/build_data.py
 
-      - name: Run builder
+      - name: Generate state.json
         run: python scripts/build_data.py
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
 
-      - name: Show file after build
-        run: |
-          echo "===== AFTER ====="
-          cat data/state.json
-
-      - name: Print key fields
+      - name: Show key fields
         run: |
           python - <<'PY'
           import json
@@ -56,12 +49,11 @@ jobs:
               s = json.load(f)
           print("updatedAt:", s.get("updatedAt"))
           print("price:", s.get("price"))
-          print("change:", s.get("change"))
-          print("changePct:", s.get("changePct"))
-          print("prevClose:", s.get("prevClose"))
+          print("vwap:", s.get("vwap"))
+          print("expectedMove:", s.get("expectedMove"))
+          print("shortStrike:", s.get("trade", {}).get("shortStrike"))
+          print("netCredit:", s.get("trade", {}).get("netCredit"))
           print("session:", s.get("session", {}).get("code"))
-          print("snapshotLabel:", s.get("dataHealth", {}).get("snapshotLabel"))
-          print("freshnessLabel:", s.get("dataHealth", {}).get("freshnessLabel"))
           print("optionsStatus:", s.get("dataHealth", {}).get("optionsDataStatus"))
           print("decision:", s.get("decisionLabel"))
           print("score:", s.get("score"))
@@ -70,8 +62,6 @@ jobs:
       - name: Check git diff
         id: verify_diff
         run: |
-          git status
-          git diff -- data/state.json || true
           git diff --quiet data/state.json || echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Commit updated data
