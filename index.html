@@ -65,7 +65,7 @@
           <div id="liveClock">Hora ET: --</div>
           <div id="browserClock">Hora local: --</div>
         </div>
-        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v6</div>
+        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v7</div>
       </div>
       <div class="top-actions">
         <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">◐</button>
@@ -272,27 +272,15 @@
       const sessionCode = state?.session?.code;
       const exec = state?.execution || {};
 
-      if (degraded) {
-        return "Dato degradado. Usa esta lectura solo como referencia provisional hasta recuperar spot actualizado.";
-      }
+      if (degraded) return "Dato degradado. Usa esta lectura solo como referencia provisional hasta recuperar spot actualizado.";
       if (sessionCode !== "regular") {
-        if (sessionCode === "premarket") {
-          return "Pre-market. Observa contexto y gap, pero espera apertura para evaluar opciones y liquidez real.";
-        }
-        if (sessionCode === "afterhours") {
-          return "After hours. No tiene sentido abrir nuevas posiciones intradía; solo revisión post-cierre.";
-        }
+        if (sessionCode === "premarket") return "Pre-market. Observa contexto y gap, pero espera apertura para evaluar opciones y liquidez real.";
+        if (sessionCode === "afterhours") return "After hours. No tiene sentido abrir nuevas posiciones intradía; solo revisión post-cierre.";
         return "Mercado cerrado. Usa el panel para preparar escenarios, no para ejecutar.";
       }
-      if (exec.timeStopTriggered) {
-        return "Time stop activado. Ya no compensa abrir una estructura intradía nueva.";
-      }
-      if (exec.entryWindowOpen) {
-        return "Ventana operativa abierta. Solo considerar entrada si macro, spreads, OI y crédito acompañan.";
-      }
-      if ((exec.minsToEntryStart ?? 9999) > 0) {
-        return "Aún no ha empezado la ventana de entrada. Espera la primera hora para evaluar mejor la estructura.";
-      }
+      if (exec.timeStopTriggered) return "Time stop activado. Ya no compensa abrir una estructura intradía nueva.";
+      if (exec.entryWindowOpen) return "Ventana operativa abierta. Solo considerar entrada si macro, spreads, OI y crédito acompañan.";
+      if ((exec.minsToEntryStart ?? 9999) > 0) return "Aún no ha empezado la ventana de entrada. Espera la primera hora para evaluar mejor la estructura.";
       return "Fuera de ventana de entrada. Mejor priorizar disciplina antes que forzar un setup.";
     }
 
@@ -404,8 +392,9 @@
       $("decisionText").className = `decision ${tone}`;
       $("scoreValue").textContent = `Score ${fmtText(state.score, "--")}`;
 
+      const estimated = state.trade?.shortStrikeMode === "estimated";
       const shortText = state.trade?.shortStrike != null
-        ? `${fmtMoney(state.trade.shortStrike)}${state.options?.status !== "live" ? " · estimado" : ""}`
+        ? `${fmtMoney(state.trade.shortStrike)}${estimated ? " · estimado" : ""}`
         : "No disponible";
 
       $("chipBuffer").textContent = `Buffer ${fmtPctRaw(state.trade?.bufferPct)}`;
@@ -459,6 +448,7 @@
       renderRows("setupBox", [
         ["Buffer dinámico", fmtPctRaw(state.trade?.bufferPct)],
         ["Short strike", shortText],
+        ["Modo strike", estimated ? "Estimado" : "Cadena real"],
         ["Breakeven", state.trade?.breakeven != null ? fmtMoney(state.trade.breakeven) : "No disponible"],
         ["Distancia al short", state.trade?.distanceToShort != null ? fmtMoney(state.trade.distanceToShort) : "No disponible"],
         ["Expected move", state.trade?.expectedMove != null ? `${fmtMoney(state.trade.expectedMove)} · ${fmtPctRaw(state.trade.expectedMovePct)}` : "No disponible"],
