@@ -65,7 +65,7 @@
           <div id="liveClock">Hora ET: --</div>
           <div id="browserClock">Hora local: --</div>
         </div>
-        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v7</div>
+        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v8</div>
       </div>
       <div class="top-actions">
         <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">◐</button>
@@ -226,7 +226,8 @@
         finnhub_candles: "Finnhub",
         yahoo_options: "Yahoo Finance",
         finnhub_economic_calendar: "Finnhub",
-        finnhub_earnings_calendar: "Finnhub"
+        finnhub_earnings_calendar: "Finnhub",
+        macro_unavailable: "Macro no disponible"
       };
       return map[v] || fmtText(v);
     }
@@ -400,9 +401,7 @@
       $("chipBuffer").textContent = `Buffer ${fmtPctRaw(state.trade?.bufferPct)}`;
       $("chipShort").textContent = `Short ${shortText}`;
       $("chipCredit").textContent = `Crédito ${state.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible"}`;
-      $("chipMacro").textContent = state.macro?.nextBig?.label
-        ? `Macro Próximo gran evento · ${state.macro.nextBig.label}`
-        : `Macro ${fmtText(state.macro?.summary)}`;
+      $("chipMacro").textContent = `Macro ${fmtText(state.macro?.summary)}`;
       $("chipEarnings").textContent = state.earnings?.next?.symbol
         ? `Earnings Próximo · ${state.earnings.next.symbol}`
         : `Earnings ${fmtText(state.earnings?.summary)}`;
@@ -464,6 +463,7 @@
       ]);
 
       renderRows("macroBox", [
+        ["Resumen", fmtText(state.macro?.summary)],
         ["Macro hoy", state.macro?.todayHighImpact ? "Sí, hay macro alta hoy" : "Sin macro alta hoy"],
         ["Ventana crítica", yesNo(state.macro?.windowCritical)],
         ["Macro score", fmtText(state.macro?.score, "0")],
