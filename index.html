@@ -1,760 +1,678 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>QQQ 0DTE Dashboard</title>
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
   <style>
-    :root,[data-theme="light"]{
-      --bg:#f7f6f2;
-      --surface:#f9f8f5;
-      --surface-2:#fbfbf9;
-      --border:#d4d1ca;
-      --text:#28251d;
-      --muted:#7a7974;
-      --green:#437a22;
-      --yellow:#d19900;
-      --red:#a13544;
-      --blue:#006494;
-      --radius:18px;
-      --shadow:0 12px 32px rgba(0,0,0,.08);
-      --font:"Satoshi",system-ui,sans-serif;
+    :root, [data-theme="light"] {
+      --bg: #f7f6f2;
+      --surface: #fbfbf9;
+      --surface-2: #f3f0ec;
+      --text: #28251d;
+      --muted: #7a7974;
+      --border: #d4d1ca;
+      --primary: #01696f;
+      --success: #437a22;
+      --warning: #d19900;
+      --danger: #a13544;
+      --info: #006494;
+      --shadow: 0 12px 32px rgba(0,0,0,.08);
     }
 
-    [data-theme="dark"]{
-      --bg:#171614;
-      --surface:#1c1b19;
-      --surface-2:#201f1d;
-      --border:#393836;
-      --text:#cdccca;
-      --muted:#797876;
-      --green:#6daa45;
-      --yellow:#edb336;
-      --red:#dd6974;
-      --blue:#5591c7;
-      --radius:18px;
-      --shadow:0 12px 32px rgba(0,0,0,.35);
-      --font:"Satoshi",system-ui,sans-serif;
+    [data-theme="dark"] {
+      --bg: #171614;
+      --surface: #1c1b19;
+      --surface-2: #22211f;
+      --text: #cdccca;
+      --muted: #8d8b88;
+      --border: #393836;
+      --primary: #4f98a3;
+      --success: #6daa45;
+      --warning: #edb336;
+      --danger: #d163a7;
+      --info: #5591c7;
+      --shadow: 0 12px 32px rgba(0,0,0,.28);
     }
 
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      font-family:var(--font);
-      background:var(--bg);
-      color:var(--text);
-      line-height:1.5;
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Satoshi", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
     }
 
-    .wrap{
-      width:min(1180px,calc(100% - 24px));
-      margin:24px auto 48px;
+    .app {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 20px;
     }
 
-    .top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      margin-bottom:18px;
+    .topbar, .hero, .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
     }
 
-    .title{
-      margin:0;
-      font-size:clamp(1.5rem,2vw,2rem);
-      font-weight:900;
+    .topbar {
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
     }
 
-    .meta-stack{
-      display:grid;
-      gap:4px;
-      margin-top:6px;
+    .title-wrap h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 1.2rem + 1vw, 2.2rem);
     }
 
-    .meta{
-      color:var(--muted);
-      font-size:.95rem;
+    .meta {
+      color: var(--muted);
+      font-size: .95rem;
+      display: grid;
+      gap: 4px;
     }
 
-    .toolbar{
-      display:flex;
-      gap:10px;
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
 
-    .iconbtn{
-      width:44px;
-      height:44px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:var(--surface);
-      color:var(--text);
-      cursor:pointer;
-      font-size:1rem;
+    button {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 1rem;
     }
 
-    .alert{
-      margin-bottom:18px;
-      padding:14px 16px;
-      border-radius:14px;
-      border:1px solid rgba(221,105,116,.35);
-      background:rgba(221,105,116,.12);
-      color:var(--text);
-      display:none;
-      font-weight:700;
+    .hero {
+      padding: 22px;
+      margin-bottom: 18px;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 18px;
     }
 
-    .hero{
-      display:grid;
-      grid-template-columns:1.25fr .75fr;
-      gap:18px;
-      margin-bottom:18px;
+    .decision {
+      font-size: clamp(2rem, 1.5rem + 2vw, 3.2rem);
+      font-weight: 900;
+      margin: 8px 0 10px;
+      text-transform: lowercase;
     }
 
-    .card{
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
+    .decision.green { color: var(--success); }
+    .decision.yellow { color: var(--warning); }
+    .decision.red { color: var(--danger); }
+    .decision.blue { color: var(--info); }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      font-weight: 700;
+      margin-bottom: 14px;
     }
 
-    .hero-main,.panel,.side-premium{
-      padding:18px;
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
     }
 
-    .eyebrow,.status-label,.panel h3{
-      color:var(--muted);
-      font-size:.8rem;
-      text-transform:uppercase;
-      letter-spacing:.1em;
+    .chip {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: .95rem;
     }
 
-    .panel h3{
-      margin:0 0 14px;
-      font-size:1rem;
+    .phase-note {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 1rem;
     }
 
-    .decision{
-      margin:.35rem 0 .45rem;
-      font-size:clamp(2rem,4vw,3.2rem);
-      line-height:1;
-      font-weight:900;
+    .mini-grid, .main-grid {
+      display: grid;
+      gap: 14px;
     }
 
-    .decision.green{color:var(--green)}
-    .decision.yellow{color:var(--yellow)}
-    .decision.red{color:var(--red)}
-    .decision.blue{color:var(--blue)}
-
-    .score{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 14px;
-      border:1px solid var(--border);
-      border-radius:999px;
-      background:var(--surface-2);
-      font-weight:800;
+    .mini-grid {
+      grid-template-columns: repeat(4, 1fr);
     }
 
-    .summary{
-      margin-top:14px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
+    .mini-card, .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
     }
 
-    .summary-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(127,127,127,.16);
-      background:var(--surface-2);
-      font-size:.84rem;
+    .mini-card .label,
+    .section-card .label {
+      color: var(--muted);
+      font-size: .92rem;
+      margin-bottom: 8px;
     }
 
-    .summary-chip span{color:var(--muted)}
-
-    .phase-note{
-      margin-top:12px;
-      padding:12px 14px;
-      border-radius:14px;
-      background:rgba(85,145,199,.12);
-      border:1px solid rgba(85,145,199,.28);
-      color:var(--text);
-      font-weight:700;
+    .mini-card .value {
+      font-size: 1.4rem;
+      font-weight: 800;
     }
 
-    .grid4{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:12px;
-      margin-top:18px;
+    .side-panel {
+      display: grid;
+      gap: 14px;
+      align-content: start;
     }
 
-    .mini,.status-item,.status-block{
-      background:var(--surface-2);
-      border:1px solid rgba(127,127,127,.16);
-      border-radius:14px;
-      padding:14px;
+    .status-badge {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: .92rem;
+      border: 1px solid transparent;
     }
 
-    .mini-label{
-      color:var(--muted);
-      font-size:.82rem;
-      margin-bottom:6px;
+    .status-danger { background: rgba(209,99,167,.14); color: var(--danger); border-color: rgba(209,99,167,.28); }
+    .status-warning { background: rgba(237,179,54,.14); color: var(--warning); border-color: rgba(237,179,54,.28); }
+    .status-success { background: rgba(109,170,69,.14); color: var(--success); border-color: rgba(109,170,69,.28); }
+    .status-info { background: rgba(85,145,199,.14); color: var(--info); border-color: rgba(85,145,199,.28); }
+    .status-neutral { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+
+    .alert {
+      display: none;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(237,179,54,.24);
+      background: rgba(237,179,54,.12);
+      color: var(--text);
+      margin-top: 12px;
     }
 
-    .mini-value{
-      font-size:1.05rem;
-      font-weight:800;
+    .main-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
 
-    .status-panel{
-      display:grid;
-      gap:14px;
+    .data-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
     }
 
-    .status-top{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
     }
 
-    .status-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:38px;
-      padding:10px 12px;
-      border-radius:999px;
-      font-size:.95rem;
-      font-weight:800;
-      border:1px solid transparent;
+    .data-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .data-row .k {
+      color: var(--muted);
     }
 
-    .status-badge.danger{
-      color:#fff;
-      background:linear-gradient(180deg, rgba(221,105,116,.95), rgba(161,53,68,.95));
+    .reasons-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .status-badge.warning{
-      color:#2b2200;
-      background:linear-gradient(180deg, rgba(237,179,54,.98), rgba(209,153,0,.95));
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
     }
 
-    .status-badge.success{
-      color:#fff;
-      background:linear-gradient(180deg, rgba(109,170,69,.98), rgba(67,122,34,.98));
+    .muted {
+      color: var(--muted);
     }
 
-    .status-badge.info{
-      color:#fff;
-      background:linear-gradient(180deg, rgba(85,145,199,.98), rgba(0,100,148,.98));
+    @media (max-width: 1100px) {
+      .hero { grid-template-columns: 1fr; }
+      .mini-grid { grid-template-columns: repeat(2, 1fr); }
+      .main-grid { grid-template-columns: 1fr; }
     }
 
-    .status-badge.neutral{
-      color:var(--text);
-      background:rgba(127,127,127,.10);
-    }
-
-    .status-divider{
-      height:1px;
-      background:linear-gradient(90deg, transparent, rgba(127,127,127,.22), transparent);
-    }
-
-    .source-list{
-      display:grid;
-      gap:10px;
-    }
-
-    .source-row{
-      display:grid;
-      grid-template-columns:56px 1fr;
-      gap:10px;
-      align-items:center;
-    }
-
-    .source-key,.k{color:var(--muted)}
-
-    .source-pill,.chip{
-      display:inline-flex;
-      align-items:center;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(127,127,127,.18);
-      background:rgba(127,127,127,.08);
-      font-size:.84rem;
-      font-weight:700;
-    }
-
-    .grid3{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:18px;
-      margin-bottom:18px;
-    }
-
-    .kv{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:10px;
-      padding:10px 0;
-      border-top:1px solid rgba(127,127,127,.18);
-    }
-
-    .kv:first-of-type{
-      border-top:none;
-      padding-top:0;
-    }
-
-    .v{
-      text-align:right;
-      font-weight:700;
-      max-width:320px;
-    }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-
-    .loading{
-      opacity:.7;
-    }
-
-    @media (min-width:981px){
-      .status-top{grid-template-columns:1fr 1fr}
-    }
-
-    @media (max-width:980px){
-      .hero,.grid3{grid-template-columns:1fr}
-      .grid4{grid-template-columns:repeat(2,1fr)}
-    }
-
-    @media (max-width:560px){
-      .grid4{grid-template-columns:1fr}
-      .top{flex-direction:column}
+    @media (max-width: 640px) {
+      .app { padding: 14px; }
+      .mini-grid { grid-template-columns: 1fr; }
+      .topbar { padding: 16px; }
+      .hero { padding: 16px; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div>
-        <h1 class="title">QQQ 0DTE Dashboard</h1>
-        <div class="meta-stack">
-          <div class="meta" id="headerMeta">Última actualización del snapshot: cargando...</div>
-          <div class="meta" id="liveClock">Hora ET: --</div>
-          <div class="meta" id="browserClock">Hora local: --</div>
+  <div class="app">
+    <header class="topbar">
+      <div class="title-wrap">
+        <h1>QQQ 0DTE Dashboard</h1>
+        <div class="meta">
+          <div id="headerMeta">Última actualización del snapshot: --</div>
+          <div id="liveClock">Hora ET: --</div>
+          <div id="browserClock">Hora local: --</div>
         </div>
       </div>
-      <div class="toolbar">
-        <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema">◐</button>
-        <button class="iconbtn" id="refreshBtn" aria-label="Actualizar">↻</button>
+      <div class="top-actions">
+        <button id="themeBtn" type="button">◐</button>
+        <button id="refreshBtn" type="button">↻</button>
       </div>
-    </div>
+    </header>
 
-    <div class="alert" id="marketAlert"></div>
+    <div id="marketAlert" class="alert"></div>
 
     <section class="hero">
-      <article class="card hero-main">
-        <div class="eyebrow">Decisión operativa</div>
-        <div class="decision yellow" id="decisionText">Cargando...</div>
-        <div class="score">Score <span id="scoreValue">--</span></div>
+      <div>
+        <div class="muted">Decisión operativa</div>
+        <div id="decisionText" class="decision">--</div>
+        <div id="scoreValue" class="score-pill">Score --</div>
 
-        <div class="summary">
-          <div class="summary-chip"><span>Buffer</span><strong id="summaryBuffer">--</strong></div>
-          <div class="summary-chip"><span>Short</span><strong id="summaryShort">--</strong></div>
-          <div class="summary-chip"><span>Crédito</span><strong id="summaryCredit">--</strong></div>
-          <div class="summary-chip"><span>Macro</span><strong id="summaryMacro">--</strong></div>
-          <div class="summary-chip"><span>OPEX</span><strong id="summaryOpex">--</strong></div>
-          <div class="summary-chip"><span>Fase</span><strong id="summaryPhase">--</strong></div>
+        <div class="chips">
+          <span id="chipBuffer" class="chip">Buffer --</span>
+          <span id="chipShort" class="chip">Short --</span>
+          <span id="chipCredit" class="chip">Crédito --</span>
+          <span id="chipMacro" class="chip">Macro --</span>
+          <span id="chipOpex" class="chip">OPEX --</span>
+          <span id="chipPhase" class="chip">Fase --</span>
         </div>
 
-        <div class="phase-note" id="phaseNote">Esperando datos...</div>
+        <div id="phaseNote" class="phase-note">--</div>
 
-        <div class="grid4">
-          <div class="mini">
-            <div class="mini-label">Precio</div>
-            <div class="mini-value" id="priceValue">--</div>
+        <div class="mini-grid">
+          <div class="mini-card">
+            <div class="label">Precio</div>
+            <div id="miniPrice" class="value">--</div>
           </div>
-          <div class="mini">
-            <div class="mini-label">Short strike</div>
-            <div class="mini-value" id="shortStrikeValue">--</div>
+          <div class="mini-card">
+            <div class="label">Short strike</div>
+            <div id="miniShort" class="value">--</div>
           </div>
-          <div class="mini">
-            <div class="mini-label">Net credit</div>
-            <div class="mini-value" id="creditValueTop">--</div>
+          <div class="mini-card">
+            <div class="label">Net credit</div>
+            <div id="miniCredit" class="value">--</div>
           </div>
-          <div class="mini">
-            <div class="mini-label">Próximo gran evento</div>
-            <div class="mini-value" id="macroNextTop">--</div>
+          <div class="mini-card">
+            <div class="label">Próximo gran evento</div>
+            <div id="miniMacro" class="value" style="font-size:1.05rem">--</div>
           </div>
         </div>
-      </article>
+      </div>
 
-      <aside class="card side-premium">
-        <div class="status-panel">
-          <div class="status-top">
-            <div class="status-item">
-              <div class="status-label">Riesgo</div>
-              <div class="status-badge danger" id="riskBadge">--</div>
-            </div>
-            <div class="status-item">
-              <div class="status-label">Sesión</div>
-              <div class="status-badge neutral" id="sessionBadge">--</div>
-            </div>
+      <aside class="side-panel">
+        <div class="section-card">
+          <h3 class="section-title">Estado</h3>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+            <span id="riskBadge" class="status-badge status-neutral">Riesgo --</span>
+            <span id="sessionBadge" class="status-badge status-neutral">Sesión --</span>
           </div>
+        </div>
 
-          <div class="status-divider"></div>
-
-          <div class="status-block">
-            <div class="status-label">Fuentes</div>
-            <div class="source-list">
-              <div class="source-row">
-                <span class="source-key">Spot</span>
-                <span class="source-pill" id="sourceValue">--</span>
-              </div>
-              <div class="source-row">
-                <span class="source-key">Options</span>
-                <span class="source-pill" id="optionsSourceValue">--</span>
-              </div>
-            </div>
+        <div class="section-card">
+          <h3 class="section-title">Fuentes</h3>
+          <div class="data-list">
+            <div class="data-row"><span class="k">Spot</span><span id="spotSource">--</span></div>
+            <div class="data-row"><span class="k">Options</span><span id="optionsSource">--</span></div>
           </div>
+        </div>
 
-          <div class="status-block">
-            <div class="status-label">Freshness</div>
-            <div class="source-list">
-              <div class="source-row">
-                <span class="source-key">Estado</span>
-                <span class="source-pill" id="freshnessValue">--</span>
-              </div>
-              <div class="source-row">
-                <span class="source-key">Dato</span>
-                <span class="source-pill" id="snapshotStatusValue">--</span>
-              </div>
-            </div>
+        <div class="section-card">
+          <h3 class="section-title">Freshness</h3>
+          <div class="data-list">
+            <div class="data-row"><span class="k">Estado</span><span id="freshnessState">--</span></div>
+            <div class="data-row"><span class="k">Dato</span><span id="snapshotState">--</span></div>
+            <div class="data-row"><span class="k">Options</span><span id="optionsStatus">--</span></div>
           </div>
         </div>
       </aside>
     </section>
 
-    <section class="grid3">
-      <article class="card panel">
-        <h3>Precio y sesión</h3>
-        <div class="kv"><div class="k">Spot</div><div class="v" id="spotValue">--</div></div>
-        <div class="kv"><div class="k">Cambio</div><div class="v" id="changeValue">--</div></div>
-        <div class="kv"><div class="k">VWAP</div><div class="v" id="vwapValue">--</div></div>
-        <div class="kv"><div class="k">Sesión</div><div class="v" id="sessionValue">--</div></div>
-        <div class="kv"><div class="k">Cierre previo</div><div class="v" id="prevCloseValue">--</div></div>
-      </article>
+    <section class="main-grid">
+      <div class="section-card">
+        <h3 class="section-title">Precio y sesión</h3>
+        <div class="data-list" id="priceSessionBox"></div>
+      </div>
 
-      <article class="card panel">
-        <h3>Setup</h3>
-        <div class="kv"><div class="k">Buffer dinámico</div><div class="v" id="bufferValue">--</div></div>
-        <div class="kv"><div class="k">Short strike</div><div class="v" id="shortStrikeValue2">--</div></div>
-        <div class="kv"><div class="k">Breakeven</div><div class="v" id="breakevenValue">--</div></div>
-        <div class="kv"><div class="k">Distancia al short</div><div class="v" id="distToShortValue">--</div></div>
-        <div class="kv"><div class="k">Expected move</div><div class="v" id="expectedMoveValue">--</div></div>
-        <div class="kv"><div class="k">Quality</div><div class="v" id="tradeQualityValue">--</div></div>
-      </article>
+      <div class="section-card">
+        <h3 class="section-title">Setup</h3>
+        <div class="data-list" id="setupBox"></div>
+      </div>
 
-      <article class="card panel">
-        <h3>Operabilidad</h3>
-        <div class="kv"><div class="k">Expiración</div><div class="v" id="expirationValue">--</div></div>
-        <div class="kv"><div class="k">Quotes válidas</div><div class="v" id="quotesValue">--</div></div>
-        <div class="kv"><div class="k">Liquidez</div><div class="v" id="liquidityValue">--</div></div>
-        <div class="kv"><div class="k">Delta short</div><div class="v" id="deltaValue">--</div></div>
-        <div class="kv"><div class="k">Notas</div><div class="v" id="notesValue">--</div></div>
-      </article>
-    </section>
+      <div class="section-card">
+        <h3 class="section-title">Operabilidad</h3>
+        <div class="data-list" id="operabilityBox"></div>
+      </div>
 
-    <section class="grid3">
-      <article class="card panel">
-        <h3>Macro</h3>
-        <div class="kv"><div class="k">Macro hoy</div><div class="v" id="macroTodayValue">--</div></div>
-        <div class="kv"><div class="k">Ventana crítica</div><div class="v" id="macroCriticalValue">--</div></div>
-        <div class="kv"><div class="k">Macro score</div><div class="v" id="macroScoreValue">--</div></div>
-        <div class="kv"><div class="k">Próximo gran evento</div><div class="v" id="macroNextValue">--</div></div>
-        <div class="kv"><div class="k">Fecha ET</div><div class="v" id="macroDateValue">--</div></div>
-        <div class="kv"><div class="k">Countdown</div><div class="v" id="macroCountdownValue">--</div></div>
-      </article>
+      <div class="section-card">
+        <h3 class="section-title">Macro</h3>
+        <div class="data-list" id="macroBox"></div>
+      </div>
 
-      <article class="card panel">
-        <h3>Ejecución</h3>
-        <div class="kv"><div class="k">Fase</div><div class="v" id="phaseValue">--</div></div>
-        <div class="kv"><div class="k">Inicio ventana</div><div class="v" id="entryStartValue">--</div></div>
-        <div class="kv"><div class="k">Min. al inicio</div><div class="v" id="minutesStartValue">--</div></div>
-        <div class="kv"><div class="k">Cutoff entrada</div><div class="v" id="entryCutoffValue">--</div></div>
-        <div class="kv"><div class="k">Min. al cutoff</div><div class="v" id="minutesCutoffValue">--</div></div>
-        <div class="kv"><div class="k">Salida dura</div><div class="v" id="hardExitValue">--</div></div>
-        <div class="kv"><div class="k">Time stop</div><div class="v" id="timeStopValue">--</div></div>
-        <div class="kv"><div class="k">Máx hold</div><div class="v" id="maxHoldValue">--</div></div>
-      </article>
+      <div class="section-card">
+        <h3 class="section-title">Ejecución</h3>
+        <div class="data-list" id="executionBox"></div>
+      </div>
 
-      <article class="card panel">
-        <h3>Liquidez y OPEX</h3>
-        <div class="kv"><div class="k">Bid-ask spread</div><div class="v" id="bidAskValue">--</div></div>
-        <div class="kv"><div class="k">Spread %</div><div class="v" id="spreadWidthPctValue">--</div></div>
-        <div class="kv"><div class="k">OI short</div><div class="v" id="shortOIValue">--</div></div>
-        <div class="kv"><div class="k">OI long</div><div class="v" id="longOIValue">--</div></div>
-        <div class="kv"><div class="k">Spacing</div><div class="v" id="spacingValue">--</div></div>
-        <div class="kv"><div class="k">OPEX</div><div class="v" id="opexValue">--</div></div>
-      </article>
-    </section>
+      <div class="section-card">
+        <h3 class="section-title">Liquidez y OPEX</h3>
+        <div class="data-list" id="liqOpexBox"></div>
+      </div>
 
-    <section class="card panel">
-      <h3>Motivos</h3>
-      <div class="chips" id="reasonsBox"></div>
+      <div class="section-card" style="grid-column: 1 / -1;">
+        <h3 class="section-title">Motivos</h3>
+        <div id="reasonsBox" class="reasons-box"></div>
+      </div>
     </section>
   </div>
 
   <script>
     const $ = (id) => document.getElementById(id);
 
-    const fmtMoney = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `$${Number(v).toFixed(2)}`;
-    const fmtPctRaw = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v).toFixed(2)}%`;
-    const fmtNumber = (v) => v == null || Number.isNaN(Number(v)) ? "--" : `${Number(v)}`;
-    const fmtText = (v, fallback="--") => v == null || v === "" ? fallback : String(v);
-    const yesNo = (v) => v === true ? "Sí" : v === false ? "No" : "--";
+    function fmtMoney(v) {
+      return v == null ? "No disponible" : new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 2
+      }).format(v);
+    }
 
-    function humanizeSource(value){
-      const v = String(value || "").trim().toLowerCase();
+    function fmtPctRaw(v) {
+      return v == null ? "No disponible" : `${Number(v).toFixed(2)}%`;
+    }
+
+    function fmtNumber(v, decimals = 2) {
+      return v == null ? "No disponible" : Number(v).toFixed(decimals);
+    }
+
+    function fmtText(v) {
+      return v == null || v === "" ? "No disponible" : String(v);
+    }
+
+    function yesNo(v) {
+      if (v == null) return "No disponible";
+      return v ? "Sí" : "No";
+    }
+
+    function humanizeSource(v) {
       const map = {
-        "finnhub_quote":"Finnhub",
-        "nasdaq_option_chain":"Nasdaq",
-        "market_closed_guard":"Mercado cerrado",
-        "finnhub_rate_limited":"Finnhub limitado",
-        "finnhub_timeout":"Finnhub timeout",
-        "finnhub_request_error":"Finnhub error",
-        "finnhub_unexpected_error":"Finnhub error",
-        "finnhub_unknown_error":"Finnhub error"
+        finnhub_quote: "Finnhub",
+        nasdaq_public: "Nasdaq"
       };
-      return map[v] || (value ? String(value).replaceAll("_"," ") : "--");
+      return map[v] || fmtText(v);
     }
 
-    function humanizeSession(code, label){
-      const v = String(code || "").toLowerCase();
-      if(v === "closed") return "Mercado cerrado";
-      if(v === "regular") return "Sesión regular";
-      if(v === "premarket") return "Premarket";
-      if(v === "afterhours") return "After hours";
-      return label || "--";
+    function humanizeSession(code) {
+      const map = {
+        regular: "Sesión regular",
+        premarket: "Pre-market",
+        afterhours: "After hours",
+        closed: "Mercado cerrado"
+      };
+      return map[code] || fmtText(code);
     }
 
-    function humanizeExpiration(value){
-      const v = String(value || "").toLowerCase();
-      if(v === "market_closed") return "Mercado cerrado";
-      if(v === "0dte_or_nearest") return "0DTE o vencimiento más cercano";
-      return value || "--";
+    function humanizeOptionsStatus(v) {
+      const map = {
+        live: "Cadena operable",
+        theoretical: "Setup teórico",
+        unavailable: "No disponible"
+      };
+      return map[v] || fmtText(v);
     }
 
-    function humanizeLiquidity(value, sessionCode){
-      if (sessionCode !== "regular" && value === false) return "Pendiente apertura";
-      if (value === true) return "Adecuada";
-      if (value === false) return "Débil";
-      return "--";
+    function humanizeRisk(v) {
+      return fmtText(v);
     }
 
-    function humanizeQuotes(value, sessionCode){
-      if (sessionCode !== "regular" && value === false) return "Pendiente apertura";
-      return yesNo(value);
+    function humanizeLiquidity(state) {
+      if (!state?.options) return "No disponible";
+      if (state.options.liquidityLabel) return state.options.liquidityLabel;
+      if (state.options.liquidityOk === true) return "Aceptable";
+      if (state.options.liquidityOk === false) return "Débil";
+      return "No disponible";
     }
 
-    function humanizeOpex(flags){
-      if (flags?.opexQuarterly) return "Trimestral";
-      if (flags?.opexDay) return "Mensual";
-      return "No";
-    }
-
-    function phaseMessage(state){
+    function phaseMessage(state) {
       const degraded = state?.dataHealth?.spotDegraded;
       const sessionCode = state?.session?.code;
-      const execution = state?.execution;
+      const execution = state?.execution || {};
 
       if (degraded) {
-        return "Dato spot degradado. La decisión es provisional hasta recuperar el proveedor.";
+        return "Dato degradado o reciclado. La lectura es provisional hasta recuperar spot fresco.";
       }
       if (sessionCode !== "regular") {
-        return "Aún no estás en sesión regular. El panel observa, no valida entrada real.";
+        return "Fuera de sesión regular. Observa, pero evita interpretar el setup como operable.";
       }
-      if (execution?.minutesToEntryStart > 0) {
-        return `Esperando primera hora completa. Faltan ${execution.minutesToEntryStart} min para evaluar entradas.`;
+      if (execution.entryWindowOpen) {
+        const mins = execution.minutesSinceEntryStart;
+        if (mins > 60) {
+          return `Ventana operativa abierta. Ya han pasado ${mins} min desde el inicio; exige más confirmación de liquidez y spread.`;
+        }
+        return "Ventana operativa abierta. Ya puedes evaluar entrada, pero solo si macro, liquidez y spread acompañan.";
       }
-      if (execution?.entryWindowOpen) {
-        return "Ventana operativa abierta. Solo entrar si macro, liquidez y spread acompañan.";
+      if (execution.minsToEntryStart > 0) {
+        return "Aún no ha empezado la ventana de entrada. Espera a que pase la primera hora.";
       }
-      if (execution?.timeStopTriggered) {
-        return "Zona de salida dura activada. No tiene sentido abrir nuevas posiciones intradía.";
+      if (execution.timeStopTriggered) {
+        return "Time stop activado. No tiene sentido abrir nuevas posiciones intradía.";
       }
-      return "Fuera de ventana de entrada. El sistema prioriza disciplina temporal.";
+      return "Ventana cerrada o setup no confirmable.";
     }
 
-    function renderReasons(list){
+    function setBadge(el, text, type) {
+      el.className = `status-badge status-${type}`;
+      el.textContent = text;
+    }
+
+    function renderReasons(list) {
       const box = $("reasonsBox");
       box.innerHTML = "";
-      (list || []).forEach(item => {
+      if (!list || !list.length) {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = "Sin motivos cargados";
+        box.appendChild(chip);
+        return;
+      }
+      list.forEach(item => {
         const chip = document.createElement("span");
         chip.className = "chip";
         chip.textContent = item;
         box.appendChild(chip);
       });
-      if (!box.innerHTML) {
-        box.innerHTML = '<span class="chip">Sin motivos cargados</span>';
-      }
     }
 
-    function setBadge(el, text, type){
-      el.textContent = text || "--";
-      el.className = `status-badge ${type || "neutral"}`;
+    function renderRows(containerId, rows) {
+      const box = $(containerId);
+      box.innerHTML = "";
+      rows.forEach(([k, v]) => {
+        const row = document.createElement("div");
+        row.className = "data-row";
+        row.innerHTML = `<span class="k">${k}</span><span>${v}</span>`;
+        box.appendChild(row);
+      });
     }
 
-    function renderAlert(state){
-      const alertBox = $("marketAlert");
-      const firstAlert = state?.alerts?.[0];
-
-      if (firstAlert) {
-        alertBox.style.display = "block";
-        alertBox.textContent = `${firstAlert.title}: ${firstAlert.text}`;
+    function renderAlert(state) {
+      const el = $("marketAlert");
+      const alerts = state?.alerts || [];
+      if (alerts.length) {
+        el.style.display = "block";
+        el.textContent = alerts[0];
         return;
       }
-
       if (state?.market?.isHoliday) {
-        alertBox.style.display = "block";
-        alertBox.textContent = `Mercado cerrado: ${state.market.name || "festivo"}`;
+        el.style.display = "block";
+        el.textContent = `Festivo en EE. UU.: ${state.market.name || "mercado cerrado"}`;
         return;
       }
-
-      alertBox.style.display = "none";
-      alertBox.textContent = "";
+      el.style.display = "none";
+      el.textContent = "";
     }
 
-    function updateClocks(){
+    function updateClocks() {
       const now = new Date();
-      const et = new Intl.DateTimeFormat("es-ES", {
+      $("liveClock").textContent = "Hora ET: " + new Intl.DateTimeFormat("es-ES", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
-        timeZone: "America/New_York"
+        timeZone: "America/New_York",
+        timeZoneName: "short"
       }).format(now);
-      $("liveClock").textContent = `Hora ET: ${et}`;
-      $("browserClock").textContent = `Hora local: ${now.toLocaleTimeString()}`;
+
+      $("browserClock").textContent = "Hora local: " + new Intl.DateTimeFormat("es-ES", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }).format(now);
     }
 
-    async function loadState(){
-      document.body.classList.add("loading");
+    async function loadState() {
       try {
-        const res = await fetch(`./data/state.json?t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(`./data/state.json?t=${Date.now()}`, {
+          cache: "no-store"
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const state = await res.json();
         renderState(state);
       } catch (err) {
         $("headerMeta").textContent = `Error cargando snapshot: ${err.message}`;
-        $("decisionText").textContent = "error";
-        $("decisionText").className = "decision red";
+        const d = $("decisionText");
+        d.textContent = "error";
+        d.className = "decision red";
+        $("scoreValue").textContent = "Score --";
         $("phaseNote").textContent = "No se pudo cargar data/state.json";
         renderReasons(["Fallo de carga del JSON"]);
-      } finally {
-        document.body.classList.remove("loading");
       }
     }
 
-    function renderState(state){
-      const sessionCode = state?.session?.code || "";
-      const decisionTone = state?.decisionTone || "yellow";
-      const macroNext = state?.macro?.nextBig?.label || state?.macro?.summary || "--";
+    function renderState(state) {
+      $("headerMeta").textContent = `Última actualización del snapshot: ${fmtText(state.updatedAt)}`;
 
-      $("headerMeta").textContent = `Última actualización del snapshot: ${fmtText(state.updatedAtText || state.updatedAtNY)}`;
-      $("decisionText").textContent = fmtText(state.decisionLabel, "sin señal");
-      $("decisionText").className = `decision ${decisionTone}`;
-      $("scoreValue").textContent = fmtText(state.score, "--");
+      const decision = $("decisionText");
+      decision.textContent = fmtText(state.decisionLabel);
+      decision.className = `decision ${state.decisionTone || "blue"}`;
 
-      $("summaryBuffer").textContent = state?.trade?.bufferDynamicPct != null ? fmtPctRaw(state.trade.bufferDynamicPct) : "--";
-      $("summaryShort").textContent = fmtText(state?.trade?.shortStrike);
-      $("summaryCredit").textContent = fmtMoney(state?.trade?.netCredit);
-      $("summaryMacro").textContent = fmtText(state?.macro?.summary);
-      $("summaryOpex").textContent = humanizeOpex(state?.flags);
-      $("summaryPhase").textContent = fmtText(state?.execution?.phase);
+      $("scoreValue").textContent = `Score ${fmtText(state.score)}`;
+
+      $("chipBuffer").textContent = `Buffer ${fmtPctRaw(state.trade?.bufferPct)}`;
+      $("chipShort").textContent = `Short ${fmtMoney(state.trade?.shortStrike)}`;
+      $("chipCredit").textContent = `Crédito ${fmtMoney(state.trade?.netCredit)}`;
+      $("chipMacro").textContent = `Macro ${state.macro?.nextBig?.label ? "Próximo gran evento · " + state.macro.nextBig.label : "Sin macro alta hoy"}`;
+      $("chipOpex").textContent = `OPEX ${state.flags?.opexDay ? "Sí" : "No"}`;
+      $("chipPhase").textContent = `Fase ${fmtText(state.execution?.phase)}`;
 
       $("phaseNote").textContent = phaseMessage(state);
 
-      $("priceValue").textContent = fmtMoney(state.price);
-      $("shortStrikeValue").textContent = fmtText(state?.trade?.shortStrike);
-      $("creditValueTop").textContent = fmtMoney(state?.trade?.netCredit);
-      $("macroNextTop").textContent = fmtText(macroNext);
+      $("miniPrice").textContent = fmtMoney(state.price);
+      $("miniShort").textContent = fmtMoney(state.trade?.shortStrike);
+      $("miniCredit").textContent = fmtMoney(state.trade?.netCredit);
+      $("miniMacro").textContent = fmtText(state.macro?.nextBig?.label || "No disponible");
 
-      $("spotValue").textContent = fmtMoney(state.price);
-      $("changeValue").textContent = state?.change != null && state?.changePct != null
-        ? `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`
-        : "--";
-      $("vwapValue").textContent = fmtMoney(state?.vwap?.value);
-      $("sessionValue").textContent = humanizeSession(state?.session?.code, state?.session?.label);
-      $("prevCloseValue").textContent = fmtMoney(state?.prevClose);
+      const riskType = /alto/i.test(state.riskLabel || "") ? "danger" : /controlado/i.test(state.riskLabel || "") ? "success" : "warning";
+      setBadge($("riskBadge"), humanizeRisk(state.riskLabel), riskType);
 
-      $("bufferValue").textContent = state?.trade?.bufferDynamicPct != null ? fmtPctRaw(state.trade.bufferDynamicPct) : "--";
-      $("shortStrikeValue2").textContent = fmtText(state?.trade?.shortStrike);
-      $("breakevenValue").textContent = fmtMoney(state?.trade?.breakeven);
-      $("distToShortValue").textContent = state?.trade?.distToShort != null ? fmtMoney(state.trade.distToShort) : "--";
-      $("expectedMoveValue").textContent = state?.expectedMove?.movePct != null ? fmtPctRaw(state.expectedMove.movePct) : "--";
-      $("tradeQualityValue").textContent = fmtText(state?.score);
+      const sessionType = state.session?.code === "regular" ? "success" : state.session?.code === "closed" ? "danger" : "info";
+      setBadge($("sessionBadge"), humanizeSession(state.session?.code), sessionType);
 
-      $("expirationValue").textContent = humanizeExpiration(state?.options?.expiration);
-      $("quotesValue").textContent = humanizeQuotes(state?.options?.quotesUsable, sessionCode);
-      $("liquidityValue").textContent = humanizeLiquidity(state?.options?.liquidityOk, sessionCode);
-      $("deltaValue").textContent = state?.options?.shortCallDelta != null ? fmtNumber(state.options.shortCallDelta) : "--";
-      $("notesValue").textContent = fmtText(state?.options?.notes);
+      $("spotSource").textContent = humanizeSource(state.dataHealth?.spotSource);
+      $("optionsSource").textContent = humanizeSource(state.dataHealth?.optionsSource);
+      $("freshnessState").textContent = fmtText(state.dataHealth?.freshnessLabel);
+      $("snapshotState").textContent = fmtText(state.dataHealth?.snapshotLabel);
+      $("optionsStatus").textContent = humanizeOptionsStatus(state.dataHealth?.optionsDataStatus);
 
-      $("macroTodayValue").textContent = state?.macro?.todayHighImpact ? "Sí" : "No";
-      $("macroCriticalValue").textContent = state?.macro?.windowCritical ? "Sí" : "No";
-      $("macroScoreValue").textContent = fmtText(state?.macro?.score);
-      $("macroNextValue").textContent = fmtText(state?.macro?.nextBig?.label || state?.macro?.summary);
-      $("macroDateValue").textContent = fmtText(state?.macro?.nextBig?.datetimeNY);
-      $("macroCountdownValue").textContent = fmtText(state?.macro?.nextBig?.countdown);
+      renderRows("priceSessionBox", [
+        ["Spot", fmtMoney(state.price)],
+        ["Cambio", state.change == null || state.changePct == null ? "No disponible" : `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`],
+        ["VWAP", state.vwap == null && state.vwapDist == null ? "No disponible" : `${fmtMoney(state.vwap)} · ${fmtMoney(state.vwapDist)}`],
+        ["Sesión", humanizeSession(state.session?.code)],
+        ["Cierre previo", fmtMoney(state.prevClose)]
+      ]);
 
-      $("phaseValue").textContent = fmtText(state?.execution?.phase);
-      $("entryStartValue").textContent = fmtText(state?.execution?.entryStartET);
-      $("minutesStartValue").textContent = fmtText(state?.execution?.minutesToEntryStart);
-      $("entryCutoffValue").textContent = fmtText(state?.execution?.entryCutoffET);
-      $("minutesCutoffValue").textContent = fmtText(state?.execution?.minutesToEntryCutoff);
-      $("hardExitValue").textContent = fmtText(state?.execution?.hardExitET);
-      $("timeStopValue").textContent = state?.execution?.timeStopTriggered ? "Sí" : "No";
-      $("maxHoldValue").textContent = state?.execution?.maxHoldMinutes != null ? `${state.execution.maxHoldMinutes} min` : "--";
+      renderRows("setupBox", [
+        ["Buffer dinámico", fmtPctRaw(state.trade?.bufferPct)],
+        ["Short strike", fmtMoney(state.trade?.shortStrike)],
+        ["Breakeven", fmtMoney(state.trade?.breakeven)],
+        ["Distancia al short", fmtMoney(state.trade?.distanceToShort)],
+        ["Expected move", state.trade?.expectedMove == null && state.trade?.expectedMovePct == null ? "No disponible" : `${fmtMoney(state.trade?.expectedMove)} (${fmtPctRaw(state.trade?.expectedMovePct)})`],
+        ["Quality", `Estado ${fmtText(state.tradeQuality?.label)} · Score ${fmtText(state.tradeQuality?.score)}`]
+      ]);
 
-      $("bidAskValue").textContent = fmtText(state?.tradeQuality?.bidAskWidth);
-      $("spreadWidthPctValue").textContent = state?.tradeQuality?.spreadWidthPct != null ? fmtPctRaw(state.tradeQuality.spreadWidthPct) : "--";
-      $("shortOIValue").textContent = fmtText(state?.tradeQuality?.shortStrikeOI);
-      $("longOIValue").textContent = fmtText(state?.tradeQuality?.longStrikeOI);
-      $("spacingValue").textContent = state?.tradeQuality?.strikeSpacingOk === true ? "OK" : state?.tradeQuality?.strikeSpacingOk === false ? "No ideal" : "--";
-      $("opexValue").textContent = humanizeOpex(state?.flags);
+      renderRows("operabilityBox", [
+        ["Expiración", state.options?.quotesUsable ? fmtText(state.options?.expirationLabel) : `Objetivo · ${fmtText(state.options?.expirationLabel)}`],
+        ["Quotes válidas", yesNo(state.options?.quotesUsable)],
+        ["Liquidez", humanizeLiquidity(state)],
+        ["Delta short", state.options?.deltaShort == null ? `Objetivo ${fmtNumber(state.options?.deltaTarget)}` : fmtNumber(state.options?.deltaShort)],
+        ["Notas", fmtText(state.options?.notes)]
+      ]);
 
-      setBadge($("riskBadge"), fmtText(state?.riskLabel), state?.riskLabel?.toLowerCase().includes("alto") ? "danger" : "warning");
-      setBadge($("sessionBadge"), humanizeSession(state?.session?.code, state?.session?.label), sessionCode === "regular" ? "success" : sessionCode === "premarket" ? "info" : "neutral");
+      renderRows("macroBox", [
+        ["Macro hoy", state.macro?.todayHighImpact ? "Sí" : "Sin macro alta hoy"],
+        ["Ventana crítica", yesNo(state.macro?.windowCritical)],
+        ["Macro score", fmtText(state.macro?.score)],
+        ["Próximo gran evento", fmtText(state.macro?.nextBig?.label)],
+        ["Fecha ET", fmtText(state.macro?.nextBig?.dateEt)],
+        ["Countdown", fmtText(state.macro?.nextBig?.countdown)]
+      ]);
 
-      $("sourceValue").textContent = humanizeSource(state?.source);
-      $("optionsSourceValue").textContent = humanizeSource(state?.optionsMeta?.source);
-      $("freshnessValue").textContent = state?.dataHealth?.spotDegraded ? "Degradado" : "OK";
-      $("snapshotStatusValue").textContent = state?.dataHealth?.staleFromPreviousState ? "Previo" : "Actual";
+      renderRows("executionBox", [
+        ["Fase", fmtText(state.execution?.phase)],
+        ["Inicio ventana", fmtText(state.execution?.entryStartEt)],
+        ["Min. al inicio", fmtText(state.execution?.minsToEntryStart)],
+        ["Cutoff entrada", fmtText(state.execution?.entryCutoffEt)],
+        ["Min. al cutoff", fmtText(state.execution?.minsToCutoff)],
+        ["Salida dura", fmtText(state.execution?.hardExitEt)],
+        ["Time stop", yesNo(state.execution?.timeStopTriggered)],
+        ["Máx hold", state.execution?.maxHoldMinutes == null ? "No disponible" : `${state.execution.maxHoldMinutes} min`]
+      ]);
 
-      renderReasons(state?.reasons || []);
+      renderRows("liqOpexBox", [
+        ["Bid-ask spread", fmtMoney(state.options?.bidAskSpread)],
+        ["Spread %", fmtPctRaw(state.options?.spreadPct)],
+        ["OI short", state.options?.openInterestShort == null ? "No disponible" : fmtText(state.options.openInterestShort)],
+        ["OI long", state.options?.openInterestLong == null ? "No disponible" : fmtText(state.options.openInterestLong)],
+        ["Spacing", yesNo(state.options?.spacingOk)],
+        ["OPEX", state.flags?.opexQuarterly ? "Trimestral" : state.flags?.opexDay ? "Sí" : "No"]
+      ]);
+
+      renderReasons(state.reasons || []);
       renderAlert(state);
     }
 
-    function setupTheme(){
-      const root = document.documentElement;
-      let theme = root.getAttribute("data-theme") || "dark";
+    function setupTheme() {
       $("themeBtn").addEventListener("click", () => {
-        theme = theme === "dark" ? "light" : "dark";
-        root.setAttribute("data-theme", theme);
+        const current = document.documentElement.getAttribute("data-theme");
+        document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
       });
     }
 
-    function setupRefresh(){
+    function setupRefresh() {
       $("refreshBtn").addEventListener("click", loadState);
     }
 
