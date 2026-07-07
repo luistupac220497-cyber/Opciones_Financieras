@@ -9,273 +9,50 @@
   <meta http-equiv="Expires" content="0" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
   <style>
-    :root,[data-theme="light"]{
-      --bg:#f7f6f2;
-      --surface:#fbfbf9;
-      --surface-2:#f3f0ec;
-      --text:#28251d;
-      --muted:#7a7974;
-      --border:#d4d1ca;
-      --success:#437a22;
-      --warning:#d19900;
-      --danger:#a13544;
-      --info:#006494;
-      --shadow:0 12px 32px rgba(0,0,0,.08);
-    }
-    [data-theme="dark"]{
-      --bg:#171614;
-      --surface:#1c1b19;
-      --surface-2:#22211f;
-      --text:#cdccca;
-      --muted:#8d8b88;
-      --border:#393836;
-      --success:#6daa45;
-      --warning:#edb336;
-      --danger:#d163a7;
-      --info:#5591c7;
-      --shadow:0 12px 32px rgba(0,0,0,.28);
-    }
-
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{
-      font-family:"Satoshi",sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      line-height:1.45;
-    }
-
-    .app{
-      max-width:1400px;
-      margin:0 auto;
-      padding:20px;
-    }
-
-    .topbar,.hero,.section-card{
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:20px;
-      box-shadow:var(--shadow);
-    }
-
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:16px;
-      flex-wrap:wrap;
-      padding:18px 20px;
-      margin-bottom:18px;
-    }
-
-    .title-wrap h1{
-      margin:0 0 8px;
-      font-size:clamp(1.6rem,1.2rem + 1vw,2.3rem);
-    }
-
-    .meta{
-      display:grid;
-      gap:4px;
-      color:var(--muted);
-      font-size:.96rem;
-    }
-
-    .build-chip{
-      display:inline-flex;
-      margin-top:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:var(--surface-2);
-      border:1px solid var(--border);
-      color:var(--muted);
-      font-size:.86rem;
-    }
-
-    .top-actions{
-      display:flex;
-      gap:10px;
-    }
-
-    .icon-btn{
-      border:1px solid var(--border);
-      background:var(--surface-2);
-      color:var(--text);
-      border-radius:12px;
-      min-width:44px;
-      min-height:44px;
-      cursor:pointer;
-      font-size:1rem;
-    }
-
-    .market-alert{
-      display:none;
-      margin-bottom:18px;
-      padding:14px 16px;
-      border-radius:14px;
-      border:1px solid rgba(237,179,54,.24);
-      background:rgba(237,179,54,.12);
-    }
-
-    .hero{
-      display:grid;
-      grid-template-columns:2fr 1fr;
-      gap:18px;
-      padding:22px;
-      margin-bottom:18px;
-    }
-
-    .decision{
-      font-size:clamp(2rem,1.5rem + 2vw,3.2rem);
-      font-weight:900;
-      margin:0 0 12px;
-      text-transform:lowercase;
-    }
-
-    .decision.green{color:var(--success)}
-    .decision.yellow{color:var(--warning)}
-    .decision.red{color:var(--danger)}
-    .decision.blue{color:var(--info)}
-
-    .score-pill,.chip,.status-badge{
-      display:inline-flex;
-      align-items:center;
-      border-radius:999px;
-    }
-
-    .score-pill{
-      gap:8px;
-      padding:8px 12px;
-      margin-bottom:14px;
-      background:var(--surface-2);
-      border:1px solid var(--border);
-      font-weight:700;
-    }
-
-    .chips,.reasons-box,.status-wrap{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-
-    .chip{
-      background:var(--surface-2);
-      border:1px solid var(--border);
-      padding:8px 12px;
-      font-size:.94rem;
-    }
-
-    .phase-note{
-      color:var(--muted);
-      margin:14px 0 16px;
-    }
-
-    .mini-grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:14px;
-    }
-
-    .mini-card{
-      background:var(--surface-2);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:14px;
-    }
-
-    .mini-card .label{
-      color:var(--muted);
-      font-size:.9rem;
-      margin-bottom:8px;
-    }
-
-    .mini-card .value{
-      font-size:1.32rem;
-      font-weight:800;
-    }
-
-    .side-panel{
-      display:grid;
-      gap:14px;
-      align-content:start;
-    }
-
-    .section-card{
-      padding:16px;
-    }
-
-    .section-title{
-      margin:0 0 10px;
-      font-size:1.08rem;
-    }
-
-    .status-badge{
-      padding:8px 12px;
-      font-weight:700;
-      font-size:.92rem;
-      border:1px solid transparent;
-    }
-
+    :root,[data-theme="light"]{--bg:#f7f6f2;--surface:#fbfbf9;--surface-2:#f3f0ec;--text:#28251d;--muted:#7a7974;--border:#d4d1ca;--success:#437a22;--warning:#d19900;--danger:#a13544;--info:#006494;--shadow:0 12px 32px rgba(0,0,0,.08)}
+    [data-theme="dark"]{--bg:#171614;--surface:#1c1b19;--surface-2:#22211f;--text:#cdccca;--muted:#8d8b88;--border:#393836;--success:#6daa45;--warning:#edb336;--danger:#d163a7;--info:#5591c7;--shadow:0 12px 32px rgba(0,0,0,.28)}
+    *{box-sizing:border-box} html,body{margin:0;padding:0}
+    body{font-family:"Satoshi",sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+    .app{max-width:1400px;margin:0 auto;padding:20px}
+    .topbar,.hero,.section-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow)}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;padding:18px 20px;margin-bottom:18px}
+    .title-wrap h1{margin:0 0 8px;font-size:clamp(1.6rem,1.2rem + 1vw,2.3rem)}
+    .meta{display:grid;gap:4px;color:var(--muted);font-size:.96rem}
+    .build-chip{display:inline-flex;margin-top:8px;padding:6px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-size:.86rem}
+    .top-actions{display:flex;gap:10px}
+    .icon-btn{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:12px;min-width:44px;min-height:44px;cursor:pointer;font-size:1rem}
+    .market-alert{display:none;margin-bottom:18px;padding:14px 16px;border-radius:14px;border:1px solid rgba(237,179,54,.24);background:rgba(237,179,54,.12)}
+    .hero{display:grid;grid-template-columns:2fr 1fr;gap:18px;padding:22px;margin-bottom:18px}
+    .decision{font-size:clamp(2rem,1.5rem + 2vw,3.2rem);font-weight:900;margin:0 0 12px;text-transform:lowercase}
+    .decision.green{color:var(--success)} .decision.yellow{color:var(--warning)} .decision.red{color:var(--danger)} .decision.blue{color:var(--info)}
+    .score-pill,.chip,.status-badge{display:inline-flex;align-items:center;border-radius:999px}
+    .score-pill{gap:8px;padding:8px 12px;margin-bottom:14px;background:var(--surface-2);border:1px solid var(--border);font-weight:700}
+    .chips,.reasons-box,.status-wrap{display:flex;flex-wrap:wrap;gap:10px}
+    .chip{background:var(--surface-2);border:1px solid var(--border);padding:8px 12px;font-size:.94rem}
+    .phase-note{color:var(--muted);margin:14px 0 16px}
+    .mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .mini-card{background:var(--surface-2);border:1px solid var(--border);border-radius:16px;padding:14px}
+    .mini-card .label{color:var(--muted);font-size:.9rem;margin-bottom:8px}
+    .mini-card .value{font-size:1.32rem;font-weight:800}
+    .side-panel{display:grid;gap:14px;align-content:start}
+    .section-card{padding:16px}
+    .section-title{margin:0 0 10px;font-size:1.08rem}
+    .status-badge{padding:8px 12px;font-weight:700;font-size:.92rem;border:1px solid transparent}
     .status-danger{background:rgba(209,99,167,.14);color:var(--danger);border-color:rgba(209,99,167,.28)}
     .status-warning{background:rgba(237,179,54,.14);color:var(--warning);border-color:rgba(237,179,54,.28)}
     .status-success{background:rgba(109,170,69,.14);color:var(--success);border-color:rgba(109,170,69,.28)}
     .status-info{background:rgba(85,145,199,.14);color:var(--info);border-color:rgba(85,145,199,.28)}
     .status-neutral{background:var(--surface-2);color:var(--text);border-color:var(--border)}
-
-    .main-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:16px;
-    }
-
-    .data-list{
-      display:grid;
-      gap:10px;
-    }
-
-    .data-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:14px;
-      padding-bottom:8px;
-      border-bottom:1px solid var(--border);
-    }
-
-    .data-row:last-child{
-      border-bottom:none;
-      padding-bottom:0;
-    }
-
-    .data-row .k{
-      color:var(--muted);
-      min-width:42%;
-    }
-
-    .data-row .v{
-      text-align:right;
-      word-break:break-word;
-    }
-
+    .main-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .data-list{display:grid;gap:10px}
+    .data-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+    .data-row:last-child{border-bottom:none;padding-bottom:0}
+    .data-row .k{color:var(--muted);min-width:42%}
+    .data-row .v{text-align:right;word-break:break-word}
     .muted{color:var(--muted)}
-
-    .loading .decision,
-    .loading .value,
-    .loading .v{
-      opacity:.65;
-    }
-
-    @media (max-width:1100px){
-      .hero{grid-template-columns:1fr}
-      .mini-grid{grid-template-columns:repeat(2,1fr)}
-      .main-grid{grid-template-columns:1fr}
-    }
-
-    @media (max-width:640px){
-      .app{padding:14px}
-      .mini-grid{grid-template-columns:1fr}
-      .data-row{flex-direction:column;gap:4px}
-      .data-row .v{text-align:left}
-    }
+    .loading .decision,.loading .value,.loading .v{opacity:.65}
+    @media (max-width:1100px){.hero{grid-template-columns:1fr}.mini-grid{grid-template-columns:repeat(2,1fr)}.main-grid{grid-template-columns:1fr}}
+    @media (max-width:640px){.app{padding:14px}.mini-grid{grid-template-columns:1fr}.data-row{flex-direction:column;gap:4px}.data-row .v{text-align:left}}
   </style>
 </head>
 <body>
@@ -288,9 +65,8 @@
           <div id="liveClock">Hora ET: --</div>
           <div id="browserClock">Hora local: --</div>
         </div>
-        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v5</div>
+        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v6</div>
       </div>
-
       <div class="top-actions">
         <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">◐</button>
         <button id="refreshBtn" class="icon-btn" type="button" aria-label="Refrescar">↻</button>
@@ -318,22 +94,10 @@
         <div id="phaseNote" class="phase-note">--</div>
 
         <div class="mini-grid">
-          <div class="mini-card">
-            <div class="label">Precio</div>
-            <div id="miniPrice" class="value">--</div>
-          </div>
-          <div class="mini-card">
-            <div class="label">Short strike</div>
-            <div id="miniShort" class="value">--</div>
-          </div>
-          <div class="mini-card">
-            <div class="label">Net credit</div>
-            <div id="miniCredit" class="value">--</div>
-          </div>
-          <div class="mini-card">
-            <div class="label">Próximo gran evento</div>
-            <div id="miniEvent" class="value">--</div>
-          </div>
+          <div class="mini-card"><div class="label">Precio</div><div id="miniPrice" class="value">--</div></div>
+          <div class="mini-card"><div class="label">Short strike</div><div id="miniShort" class="value">--</div></div>
+          <div class="mini-card"><div class="label">Net credit</div><div id="miniCredit" class="value">--</div></div>
+          <div class="mini-card"><div class="label">Próximo gran evento</div><div id="miniEvent" class="value">--</div></div>
         </div>
       </div>
 
@@ -615,7 +379,6 @@
 
     async function loadState() {
       document.body.classList.add("loading");
-
       try {
         const res = await fetch(`./data/state.json?t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -641,8 +404,12 @@
       $("decisionText").className = `decision ${tone}`;
       $("scoreValue").textContent = `Score ${fmtText(state.score, "--")}`;
 
+      const shortText = state.trade?.shortStrike != null
+        ? `${fmtMoney(state.trade.shortStrike)}${state.options?.status !== "live" ? " · estimado" : ""}`
+        : "No disponible";
+
       $("chipBuffer").textContent = `Buffer ${fmtPctRaw(state.trade?.bufferPct)}`;
-      $("chipShort").textContent = `Short ${state.trade?.shortStrike ? fmtMoney(state.trade.shortStrike) : "No disponible"}`;
+      $("chipShort").textContent = `Short ${shortText}`;
       $("chipCredit").textContent = `Crédito ${state.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible"}`;
       $("chipMacro").textContent = state.macro?.nextBig?.label
         ? `Macro Próximo gran evento · ${state.macro.nextBig.label}`
@@ -656,7 +423,7 @@
       $("phaseNote").textContent = phaseMessage(state);
 
       $("miniPrice").textContent = fmtMoney(state.price);
-      $("miniShort").textContent = state.trade?.shortStrike != null ? fmtMoney(state.trade.shortStrike) : "No disponible";
+      $("miniShort").textContent = shortText;
       $("miniCredit").textContent = state.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible";
       $("miniEvent").textContent = state.macro?.nextBig?.label || state.earnings?.next?.symbol || "Sin evento";
 
@@ -691,7 +458,7 @@
 
       renderRows("setupBox", [
         ["Buffer dinámico", fmtPctRaw(state.trade?.bufferPct)],
-        ["Short strike", state.trade?.shortStrike != null ? fmtMoney(state.trade.shortStrike) : "No disponible"],
+        ["Short strike", shortText],
         ["Breakeven", state.trade?.breakeven != null ? fmtMoney(state.trade.breakeven) : "No disponible"],
         ["Distancia al short", state.trade?.distanceToShort != null ? fmtMoney(state.trade.distanceToShort) : "No disponible"],
         ["Expected move", state.trade?.expectedMove != null ? `${fmtMoney(state.trade.expectedMove)} · ${fmtPctRaw(state.trade.expectedMovePct)}` : "No disponible"],
