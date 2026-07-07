@@ -268,7 +268,7 @@
           <div id="liveClock">Hora ET: --</div>
           <div id="browserClock">Hora local: --</div>
         </div>
-        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v8</div>
+        <div class="build-chip" id="frontendBuild">Frontend build: 2026-07-07-v9</div>
       </div>
       <div class="top-actions">
         <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">◐</button>
@@ -437,6 +437,7 @@
 
     function humanizeSource(v) {
       const map = {
+        yahoo_quote: "Yahoo Finance",
         finnhub_quote: "Finnhub",
         finnhub_candles: "Finnhub",
         yahoo_options: "Yahoo Finance",
@@ -481,6 +482,13 @@
       if (flags?.opexQuarterly) return "Sí · trimestral";
       if (flags?.opexDay) return "Sí · mensual";
       return "No";
+    }
+
+    function bestEventText(state) {
+      if (state?.macro?.nextBig?.label) return state.macro.nextBig.label;
+      if (state?.earnings?.qqqNext?.symbol) return `${state.earnings.qqqNext.symbol}`;
+      if (state?.earnings?.next?.symbol) return `${state.earnings.next.symbol}`;
+      return "Sin evento";
     }
 
     function phaseMessage(state) {
@@ -610,6 +618,7 @@
       $("scoreValue").textContent = `Score ${fmtText(state.score, "--")}`;
 
       const estimated = state.trade?.shortStrikeMode === "estimated";
+      const liveChain = state.options?.status === "live";
       const shortText = state.trade?.shortStrike != null
         ? `${fmtMoney(state.trade.shortStrike)}${estimated ? " · estimado" : ""}`
         : "No disponible";
@@ -620,9 +629,11 @@
       $("chipMacro").textContent = state.macro?.nextBig?.label
         ? `Macro Próx. · ${state.macro.nextBig.label}`
         : `Macro ${fmtText(state.macro?.summary)}`;
-      $("chipEarnings").textContent = state.earnings?.next?.symbol
-        ? `Earnings Próximo · ${state.earnings.next.symbol}`
-        : `Earnings ${fmtText(state.earnings?.summary)}`;
+      $("chipEarnings").textContent = state.earnings?.qqqNext?.symbol
+        ? `Earnings QQQ · ${state.earnings.qqqNext.symbol}`
+        : state.earnings?.next?.symbol
+          ? `Earnings Próximo · ${state.earnings.next.symbol}`
+          : `Earnings ${fmtText(state.earnings?.summary)}`;
       $("chipOpex").textContent = `OPEX ${humanizeOpex(state.flags)}`;
       $("chipPhase").textContent = `Fase ${fmtText(state.execution?.phase)}`;
 
@@ -631,7 +642,7 @@
       $("miniPrice").textContent = fmtMoney(state.price);
       $("miniShort").textContent = shortText;
       $("miniCredit").textContent = state.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible";
-      $("miniEvent").textContent = state.macro?.nextBig?.label || state.earnings?.next?.symbol || "Sin evento";
+      $("miniEvent").textContent = bestEventText(state);
 
       const risk = (state.riskLabel || "").toLowerCase();
       if (risk.includes("alto")) setBadge($("riskBadge"), state.riskLabel, "danger");
@@ -678,6 +689,7 @@
         ["Quotes válidas", humanizeQuotes(state.options?.quotesUsable)],
         ["Liquidez", humanizeLiquidity(state.options?.liquidityOk)],
         ["Delta short", state.options?.deltaShort != null ? `${fmtNumber(state.options.deltaShort)} (objetivo ${fmtNumber(state.options.deltaTarget)})` : `Objetivo ${fmtNumber(state.options?.deltaTarget)}`],
+        ["Cadena", liveChain ? "Live" : fmtText(state.options?.status)],
         ["Notas", fmtText(state.options?.notes)]
       ]);
 
