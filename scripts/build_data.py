@@ -346,18 +346,24 @@ def fetch_macro_calendar(current_dt):
                 continue
 
             raw_time = row.get("time")
-            if not raw_time:
-                continue
-
             dt = None
-            try:
-                dt = datetime.fromisoformat(raw_time.replace("Z", "+00:00")).astimezone(NY)
-            except Exception:
+
+            if raw_time:
                 try:
-                    date_str = row.get("date")
-                    hhmm = (row.get("hour") or "00:00").split(":")
+                    dt = datetime.fromisoformat(str(raw_time).replace("Z", "+00:00")).astimezone(NY)
+                except Exception:
+                    dt = None
+
+            if dt is None:
+                date_str = row.get("date")
+                if not date_str:
+                    continue
+                try:
+                    hhmm = str(row.get("hour") or "00:00").split(":")
+                    hh = int(hhmm[0])
+                    mm = int(hhmm[1]) if len(hhmm) > 1 else 0
                     dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
-                        hour=int(hhmm[0]), minute=int(hhmm[1]), second=0, microsecond=0, tzinfo=NY
+                        hour=hh, minute=mm, second=0, microsecond=0, tzinfo=NY
                     )
                 except Exception:
                     continue
@@ -522,9 +528,7 @@ def compute_expected_move_from_chain(spot, iv, current_dt, expiration_dt):
 
 def estimate_expected_move_pct_fallback(current_dt):
     mins_to_close = max(
-        (
-            current_dt.replace(hour=16, minute=0, second=0, microsecond=0) - current_dt
-        ).total_seconds() / 60.0,
+        (current_dt.replace(hour=16, minute=0, second=0, microsecond=0) - current_dt).total_seconds() / 60.0,
         60.0
     )
     day_fraction = mins_to_close / 390.0
@@ -596,6 +600,7 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
             "trade": {
                 "bufferPct": None,
                 "shortStrike": None,
+                "shortStrikeMode": "estimated",
                 "netCredit": None,
                 "breakeven": None,
                 "distanceToShort": None,
@@ -723,6 +728,7 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
             "trade": {
                 "bufferPct": buffer_pct,
                 "shortStrike": short_strike,
+                "shortStrikeMode": "live",
                 "netCredit": net_credit,
                 "breakeven": breakeven,
                 "distanceToShort": distance_to_short,
@@ -761,6 +767,7 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
             "trade": {
                 "bufferPct": None,
                 "shortStrike": None,
+                "shortStrikeMode": "estimated",
                 "netCredit": None,
                 "breakeven": None,
                 "distanceToShort": None,
@@ -850,7 +857,7 @@ def fetch_earnings_calendar(symbols, current_dt):
             summary = f"Earnings propios muy próximos · {qqq_next['symbol']}"
         elif days_to_qqq <= 3:
             score -= 10
-            summary = f"Earnings propios próximos · {qqqNext['symbol']}"
+            summary = f"Earnings propios próximos · {qqq_next['symbol']}"
 
     if not qqq_next and primary_watch:
         hw_dt = datetime.strptime(primary_watch[0]["date"], "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
@@ -1096,6 +1103,7 @@ def build_state():
     if options_bundle["trade"].get("shortStrike") is None and quote["price"] is not None:
         proposed_short = compute_dynamic_short_strike(quote["price"], dynamic_buffer_pct, step=1.0)
         options_bundle["trade"]["shortStrike"] = proposed_short
+        options_bundle["trade"]["shortStrikeMode"] = "estimated"
         options_bundle["trade"]["distanceToShort"] = round(proposed_short - quote["price"], 2) if proposed_short is not None else None
 
     vwap = vwap_block.get("vwap")
