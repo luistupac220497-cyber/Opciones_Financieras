@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-
 NY = ZoneInfo("America/New_York")
 UTC = ZoneInfo("UTC")
 
@@ -15,7 +14,7 @@ DATA_DIR = "data"
 STATE_PATH = os.path.join(DATA_DIR, "state.json")
 
 QQQ_OPTIONS_OPEN_ET = time(9, 30)
-QQQ_OPTIONS_CLOSE_ET = time(16, 15)
+QQQ_OPTIONS_CLOSE_ET = time(16, 0)
 
 
 def ensure_dirs():
@@ -89,7 +88,8 @@ def build_macro_block(current_dt):
             relevant.append(ev)
         if ev["dt"].date() == current_dt.date() and ev["impact"] == "alto":
             today_high.append(ev)
-        if -60 <= (ev["dt"] - current_dt).total_seconds() / 60 <= 90 and ev["veto"]:
+        mins = (ev["dt"] - current_dt).total_seconds() / 60
+        if -60 <= mins <= 90 and ev["veto"]:
             window_critical = True
         if ev["dt"] > current_dt and ev["impact"] == "alto" and next_big is None:
             next_big = ev
@@ -109,8 +109,6 @@ def build_macro_block(current_dt):
             score -= 6
         elif hours_to_next <= 72:
             score -= 2
-        else:
-            score -= 0
         summary = f"Sin macro alta hoy; próximo gran evento · {next_big['label']}"
 
     return {
@@ -151,11 +149,7 @@ def get_opex_flags(current_dt):
 
     monthly = weekday == 4 and d == third_friday(d.year, d.month)
     quarterly = monthly and d.month in (3, 6, 9, 12)
-
-    return {
-        "opexDay": monthly,
-        "opexQuarterly": quarterly,
-    }
+    return {"opexDay": monthly, "opexQuarterly": quarterly}
 
 
 def get_finnhub_api_key():
@@ -286,7 +280,6 @@ def build_execution_block(current_dt, session_code):
 
     mins_to_start = int((entry_start - current_dt).total_seconds() // 60)
     mins_to_cutoff = int((entry_cutoff - current_dt).total_seconds() // 60)
-
     entry_window_open = session_code == "regular" and entry_start <= current_dt <= entry_cutoff
     time_stop_triggered = current_dt >= hard_exit
     minutes_since_start = int((current_dt - entry_start).total_seconds() // 60)
@@ -331,8 +324,8 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "expiration": "market_closed",
                 "expirationLabel": "Mercado cerrado",
                 "quotesUsable": False,
-                "liquidityOk": False,
-                "liquidityLabel": "Cerrado",
+                "liquidityOk": None,
+                "liquidityLabel": "No evaluable",
                 "deltaShort": None,
                 "deltaTarget": 0.20,
                 "bidAskSpread": None,
@@ -341,7 +334,7 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "openInterestLong": None,
                 "spacingOk": None,
                 "status": "unavailable",
-                "notes": "Mercado fuera de sesión regular; cadena operativa desactivada",
+                "notes": "Fuera de horario regular de opciones; no se evalúan liquidez, OI, spread ni crédito",
             },
             "trade": {
                 "bufferPct": 1.07,
@@ -376,7 +369,7 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
             "openInterestLong": None,
             "spacingOk": True,
             "status": "theoretical",
-            "notes": "Sesión regular activa, pero la cadena pública de Nasdaq no devolvió datos utilizables; se muestra setup teórico sin strikes/créditos operables reales",
+            "notes": "Sesión regular activa, pero la cadena pública de Nasdaq no devolvió datos utilizables; setup teórico sin strikes/créditos operables reales",
         },
         "trade": {
             "bufferPct": 1.07,
@@ -396,6 +389,15 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
 
 def score_trade_quality(state):
     options = state["options"]
+    session_code = state["session"]["code"]
+
+    if session_code != "regular" or options.get("status") == "unavailable":
+        return {
+            "score": 0,
+            "reasons": ["Fuera de horario de opciones; métricas no evaluables aún"],
+            "label": "Pendiente de apertura",
+        }
+
     score = 0
     reasons = []
 
@@ -431,11 +433,11 @@ def score_trade_quality(state):
         score -= 3
         reasons.append("Spacing pobre")
 
-    if not options.get("quotesUsable"):
+    if options.get("quotesUsable") is False:
         score -= 8
         reasons.append("Quotes no operables")
 
-    if not options.get("liquidityOk"):
+    if options.get("liquidityOk") is False:
         score -= 6
         reasons.append("Liquidez insuficiente")
 
@@ -453,10 +455,10 @@ def decide_trade(state):
 
     macro = state["macro"]
     execution = state["execution"]
-    options = state["options"]
     flags = state["flags"]
     data_health = state["dataHealth"]
     tq = state["tradeQuality"]
+    session_code = state["session"]["code"]
 
     score += macro["score"]
     score += tq["score"]
@@ -467,11 +469,17 @@ def decide_trade(state):
     elif macro["todayHighImpact"]:
         reasons.append("Hay macro alta hoy")
 
-    if state["session"]["code"] != "regular":
-        score -= 12
-        reasons.append("Fuera de sesión regular")
+    if session_code == "closed":
+        score -= 4
+        reasons.append("Mercado cerrado")
+    elif session_code == "premarket":
+        score -= 3
+        reasons.append("Pre-market; esperar apertura")
+    elif session_code == "afterhours":
+        score -= 4
+        reasons.append("After hours; no abrir nuevas posiciones")
 
-    if state["session"]["code"] == "regular" and not execution["entryWindowOpen"] and execution["minsToEntryStart"] > 0:
+    if session_code == "regular" and not execution["entryWindowOpen"] and execution["minsToEntryStart"] > 0:
         score -= 4
         reasons.append("Aún no ha empezado la ventana de entrada")
 
@@ -495,9 +503,15 @@ def decide_trade(state):
     if next_big and macro["score"] < 0 and not macro["todayHighImpact"]:
         reasons.append(f"Próximo gran evento · {next_big['label']}")
 
-    reasons.extend([r for r in tq["reasons"] if r not in reasons])
+    for r in tq["reasons"]:
+        if r not in reasons:
+            reasons.append(r)
 
-    if score <= -20:
+    if session_code != "regular":
+        decision_label = "esperar apertura"
+        decision_tone = "blue"
+        risk_label = "Riesgo medio"
+    elif score <= -20:
         decision_label = "no entrar"
         decision_tone = "red"
         risk_label = "Riesgo alto"
@@ -536,6 +550,7 @@ def build_state():
     base_state = {
         "symbol": "QQQ",
         "updatedAt": fmt_dt(current_dt),
+        "generatedAtUnix": int(current_dt.timestamp()),
         "price": quote["price"],
         "change": quote["change"],
         "changePct": quote["changePct"],
