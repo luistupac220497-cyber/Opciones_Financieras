@@ -401,7 +401,9 @@
       $("chipBuffer").textContent = `Buffer ${fmtPctRaw(state.trade?.bufferPct)}`;
       $("chipShort").textContent = `Short ${shortText}`;
       $("chipCredit").textContent = `Crédito ${state.trade?.netCredit != null ? fmtMoney(state.trade.netCredit) : "No disponible"}`;
-      $("chipMacro").textContent = `Macro ${fmtText(state.macro?.summary)}`;
+      $("chipMacro").textContent = state.macro?.nextBig?.label
+        ? `Macro Próx. · ${state.macro.nextBig.label}`
+        : `Macro ${fmtText(state.macro?.summary)}`;
       $("chipEarnings").textContent = state.earnings?.next?.symbol
         ? `Earnings Próximo · ${state.earnings.next.symbol}`
         : `Earnings ${fmtText(state.earnings?.summary)}`;
