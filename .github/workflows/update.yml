@@ -8,29 +8,77 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: qqq-dashboard-data
+  cancel-in-progress: false
+
 jobs:
   build-data:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Show workflow context
+        run: |
+          echo "event_name=${GITHUB_EVENT_NAME}"
+          echo "ref=${GITHUB_REF}"
+          echo "ref_name=${GITHUB_REF_NAME}"
+          echo "sha=${GITHUB_SHA}"
+          echo "repository=${GITHUB_REPOSITORY}"
+          echo "actor=${GITHUB_ACTOR}"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+
+      - name: Show Python version
+        run: |
+          python --version
+          pip --version
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "requirements.txt no encontrado"
+            exit 1
+          fi
 
       - name: Verify FINNHUB_API_KEY
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
         run: |
-          python -c "import os; print('OK' if os.getenv('FINNHUB_API_KEY') else 'MISSING')"
+          python -c "import os; print('FINNHUB_API_KEY=' + ('OK' if os.getenv('FINNHUB_API_KEY') else 'MISSING'))"
+          if [ -z "${FINNHUB_API_KEY}" ]; then
+            echo "Secret FINNHUB no disponible"
+            exit 1
+          fi
+
+      - name: Debug repo state
+        run: |
+          echo "===== GIT STATUS ====="
+          git status --short
+          echo "===== HEAD ====="
+          git log --oneline -n 3
+          echo "===== WORKFLOW FILE ====="
+          ls -la .github/workflows || true
+          echo "===== SCRIPT MARKERS ====="
+          grep -n "fetch_best_quote\|fetch_quote_yahoo\|yahoo_quote\|build_state" scripts/build_data.py || true
+          echo "===== FIRST 80 LINES OF SCRIPT ====="
+          sed -n '1,80p' scripts/build_data.py || true
+
+      - name: Validate Python syntax
+        run: |
+          python -m py_compile scripts/build_data.py
 
       - name: Generate state.json
         env:
@@ -38,12 +86,37 @@ jobs:
         run: |
           python scripts/build_data.py
 
+      - name: Inspect generated state
+        run: |
+          echo "===== data/state.json ====="
+          test -f data/state.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path("data/state.json")
+          data = json.loads(p.read_text(encoding="utf-8"))
+
+          print("updatedAt:", data.get("updatedAt"))
+          print("generatedAtUnix:", data.get("generatedAtUnix"))
+          print("price:", data.get("price"))
+          print("change:", data.get("change"))
+          print("changePct:", data.get("changePct"))
+          print("spotSource:", data.get("dataHealth", {}).get("spotSource"))
+          print("spotDegraded:", data.get("dataHealth", {}).get("spotDegraded"))
+          print("snapshotLabel:", data.get("dataHealth", {}).get("snapshotLabel"))
+          print("optionsStatus:", data.get("dataHealth", {}).get("optionsDataStatus"))
+          print("decisionLabel:", data.get("decisionLabel"))
+          print("session:", data.get("session", {}).get("code"))
+          PY
+
       - name: Commit updated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/state.json
-          git diff --cached --quiet || git commit -m "Update dashboard data"
+          git diff --cached --quiet && echo "No hay cambios para commit" || git commit -m "Update dashboard data"
 
       - name: Push changes
-        run: git push
+        run: |
+          git push
