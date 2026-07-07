@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-07 04:10 ET",
-  "generatedAtUnix": 1783411849,
+  "updatedAt": "2026-07-07 04:21 ET",
+  "generatedAtUnix": 1783412474,
   "price": 722.82,
   "change": 10.22,
   "changePct": 1.4342,
@@ -26,10 +26,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 379,
-    "minutesSinceEntryStart": -380,
+    "minsToEntryStart": 368,
+    "minutesSinceEntryStart": -369,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 559,
+    "minsToCutoff": 548,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -60,76 +60,73 @@
   "macro": {
     "todayHighImpact": false,
     "windowCritical": false,
-    "score": -2,
-    "items": [
+    "score": 0,
+    "items": [],
+    "nextBig": null,
+    "summary": "Macro no disponible (403 Client Error: Forbidden for url: https://finnhub.io/api/v1/calendar/economic?from=2026-07-06&to=2026-07-28&token=d93)",
+    "source": "finnhub_economic_calendar"
+  },
+  "earnings": {
+    "today": [],
+    "next": {
+      "symbol": "TSLA",
+      "date": "2026-07-22",
+      "dateEt": "2026-07-22 16:00 ET",
+      "countdown": "15d 11h",
+      "epsEstimate": 0.4784,
+      "hour": "amc",
+      "quarter": 2,
+      "year": 2026,
+      "revenueEstimate": 25534054668,
+      "weight": "primary"
+    },
+    "qqqNext": null,
+    "watchlist": [
       {
-        "label": "Actas del FOMC",
-        "impact": "alto",
-        "kind": "fomc_minutes",
-        "dateEt": "2026-07-08 14:00 ET",
-        "countdown": "1d 9h",
-        "veto": false
+        "symbol": "TSLA",
+        "date": "2026-07-22",
+        "dateEt": "2026-07-22 16:00 ET",
+        "countdown": "15d 11h",
+        "epsEstimate": 0.4784,
+        "hour": "amc",
+        "quarter": 2,
+        "year": 2026,
+        "revenueEstimate": 25534054668,
+        "weight": "primary"
       },
       {
-        "label": "IPC (CPI)",
-        "impact": "alto",
-        "kind": "cpi",
-        "dateEt": "2026-07-15 08:30 ET",
-        "countdown": "8d 4h",
-        "veto": true
+        "symbol": "MSFT",
+        "date": "2026-07-28",
+        "dateEt": "2026-07-28 16:00 ET",
+        "countdown": "21d 11h",
+        "epsEstimate": 4.3265,
+        "hour": "amc",
+        "quarter": 4,
+        "year": 2026,
+        "revenueEstimate": 89370759268,
+        "weight": "primary"
       },
       {
-        "label": "Ventas minoristas",
-        "impact": "medio",
-        "kind": "retail_sales",
-        "dateEt": "2026-07-16 08:30 ET",
-        "countdown": "9d 4h",
-        "veto": false
-      },
-      {
-        "label": "PPI",
-        "impact": "medio",
-        "kind": "ppi",
-        "dateEt": "2026-07-17 08:30 ET",
-        "countdown": "10d 4h",
-        "veto": false
-      },
-      {
-        "label": "Nóminas no agrícolas (NFP)",
-        "impact": "alto",
-        "kind": "nfp",
-        "dateEt": "2026-07-23 08:30 ET",
-        "countdown": "16d 4h",
-        "veto": true
-      },
-      {
-        "label": "Decisión de tipos FOMC",
-        "impact": "alto",
-        "kind": "fomc",
-        "dateEt": "2026-07-29 14:00 ET",
-        "countdown": "22d 9h",
-        "veto": true
+        "symbol": "GOOGL",
+        "date": "2026-07-28",
+        "dateEt": "2026-07-28 16:00 ET",
+        "countdown": "21d 11h",
+        "epsEstimate": 2.9539,
+        "hour": "amc",
+        "quarter": 2,
+        "year": 2026,
+        "revenueEstimate": 120188455372,
+        "weight": "primary"
       }
     ],
-    "nextBig": {
-      "label": "Actas del FOMC",
-      "impact": "alto",
-      "kind": "fomc_minutes",
-      "dateEt": "2026-07-08 14:00 ET",
-      "countdown": "1d 9h"
-    },
-    "summary": "Sin macro alta hoy; próximo gran evento · Actas del FOMC"
+    "secondaryWatchlist": [],
+    "score": 0,
+    "summary": "Sin earnings relevantes cercanos",
+    "source": "finnhub_earnings_calendar"
   },
   "flags": {
     "opexDay": false,
     "opexQuarterly": false
-  },
-  "earnings": {
-    "next": {
-      "symbol": "TSLA",
-      "date": "2026-07-22",
-      "label": "Tesla"
-    }
   },
   "market": {
     "isHoliday": false,
@@ -140,6 +137,8 @@
     "spotSource": "finnhub_quote",
     "optionsSource": "yahoo_options",
     "vwapSource": "finnhub_candles",
+    "macroSource": "finnhub_economic_calendar",
+    "earningsSource": "finnhub_earnings_calendar",
     "spotDegraded": false,
     "spotDegradedReason": null,
     "spotStaleFromPreviousState": false,
@@ -154,13 +153,13 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -5,
+  "score": -3,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
+    "Earnings próximos mega-cap · TSLA",
     "Pre-market; esperar apertura",
-    "Próximo gran evento · Actas del FOMC",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
