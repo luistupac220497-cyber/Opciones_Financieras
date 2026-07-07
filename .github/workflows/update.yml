@@ -3,7 +3,7 @@ name: Update QQQ Dashboard Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/15 * * * 1-5"
+    - cron: "7 * * * 1-5"
 
 permissions:
   contents: write
