@@ -1,7 +1,6 @@
 import json
 import math
 import os
-import re
 import time as time_module
 from datetime import datetime, timedelta, time
 from zoneinfo import ZoneInfo
@@ -17,6 +16,29 @@ STATE_PATH = os.path.join(DATA_DIR, "state.json")
 
 QQQ_OPTIONS_OPEN_ET = time(9, 30)
 QQQ_OPTIONS_CLOSE_ET = time(16, 0)
+
+EARNINGS_WATCHLIST = ["QQQ", "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "TSLA", "SPCX"]
+PRIMARY_EARNINGS_WATCHLIST = {"QQQ", "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "TSLA"}
+SECONDARY_EARNINGS_WATCHLIST = {"SPCX"}
+
+MACRO_KEYWORDS = {
+    "fomc": {"label": "FOMC", "impact": "alto", "veto": True},
+    "fed": {"label": "Fed", "impact": "alto", "veto": True},
+    "cpi": {"label": "IPC (CPI)", "impact": "alto", "veto": True},
+    "consumer price index": {"label": "IPC (CPI)", "impact": "alto", "veto": True},
+    "ppi": {"label": "PPI", "impact": "medio", "veto": False},
+    "producer price index": {"label": "PPI", "impact": "medio", "veto": False},
+    "nonfarm payrolls": {"label": "Nóminas no agrícolas (NFP)", "impact": "alto", "veto": True},
+    "nfp": {"label": "Nóminas no agrícolas (NFP)", "impact": "alto", "veto": True},
+    "payroll": {"label": "Nóminas no agrícolas (NFP)", "impact": "alto", "veto": True},
+    "retail sales": {"label": "Ventas minoristas", "impact": "medio", "veto": False},
+    "pmi": {"label": "PMI", "impact": "medio", "veto": False},
+    "ism": {"label": "ISM", "impact": "medio", "veto": False},
+    "jobless claims": {"label": "Peticiones de desempleo", "impact": "medio", "veto": False},
+    "unemployment rate": {"label": "Tasa de desempleo", "impact": "alto", "veto": True},
+    "interest rate": {"label": "Decisión de tipos", "impact": "alto", "veto": True},
+    "minutes": {"label": "Actas del FOMC", "impact": "alto", "veto": False},
+}
 
 
 def ensure_dirs():
@@ -65,10 +87,6 @@ def safe_float(v):
         return None
 
 
-def clamp(v, lo, hi):
-    return max(lo, min(hi, v))
-
-
 def std_norm_cdf(x):
     return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
 
@@ -84,104 +102,6 @@ def approx_call_delta(spot, strike, iv_annual, t_years):
         return std_norm_cdf(d1)
     except Exception:
         return None
-
-
-def parse_event(dt_str, label, impact="alto", kind="macro", veto=False):
-    dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(tzinfo=NY)
-    return {
-        "dt": dt,
-        "label": label,
-        "impact": impact,
-        "kind": kind,
-        "veto": veto,
-    }
-
-
-def macro_events_2026():
-    return [
-        parse_event("2026-07-08 14:00", "Actas del FOMC", impact="alto", kind="fomc_minutes", veto=False),
-        parse_event("2026-07-15 08:30", "IPC (CPI)", impact="alto", kind="cpi", veto=True),
-        parse_event("2026-07-16 08:30", "Ventas minoristas", impact="medio", kind="retail_sales", veto=False),
-        parse_event("2026-07-17 08:30", "PPI", impact="medio", kind="ppi", veto=False),
-        parse_event("2026-07-23 08:30", "Nóminas no agrícolas (NFP)", impact="alto", kind="nfp", veto=True),
-        parse_event("2026-07-29 14:00", "Decisión de tipos FOMC", impact="alto", kind="fomc", veto=True),
-    ]
-
-
-def build_macro_block(current_dt):
-    events = macro_events_2026()
-    relevant = []
-    today_high = []
-    next_big = None
-    window_critical = False
-
-    for ev in events:
-        if ev["dt"] >= current_dt - timedelta(hours=6):
-            relevant.append(ev)
-        if ev["dt"].date() == current_dt.date() and ev["impact"] == "alto":
-            today_high.append(ev)
-        mins = (ev["dt"] - current_dt).total_seconds() / 60
-        if -60 <= mins <= 90 and ev["veto"]:
-            window_critical = True
-        if ev["dt"] > current_dt and ev["impact"] == "alto" and next_big is None:
-            next_big = ev
-
-    score = 0
-    summary = "Sin macro alta hoy"
-
-    if window_critical:
-        score -= 25
-        summary = "Ventana crítica por macro de alto impacto"
-    elif today_high:
-        score -= 12
-        summary = f"Macro alta hoy · {today_high[0]['label']}"
-    elif next_big:
-        hours_to_next = (next_big["dt"] - current_dt).total_seconds() / 3600
-        if hours_to_next <= 24:
-            score -= 6
-        elif hours_to_next <= 72:
-            score -= 2
-        summary = f"Sin macro alta hoy; próximo gran evento · {next_big['label']}"
-
-    return {
-        "todayHighImpact": bool(today_high),
-        "windowCritical": window_critical,
-        "score": score,
-        "items": [
-            {
-                "label": ev["label"],
-                "impact": ev["impact"],
-                "kind": ev["kind"],
-                "dateEt": fmt_dt(ev["dt"]),
-                "countdown": fmt_countdown(ev["dt"], current_dt),
-                "veto": ev["veto"],
-            }
-            for ev in relevant[:10]
-        ],
-        "nextBig": None if not next_big else {
-            "label": next_big["label"],
-            "impact": next_big["impact"],
-            "kind": next_big["kind"],
-            "dateEt": fmt_dt(next_big["dt"]),
-            "countdown": fmt_countdown(next_big["dt"], current_dt),
-        },
-        "summary": summary,
-    }
-
-
-def get_opex_flags(current_dt):
-    d = current_dt.date()
-    weekday = current_dt.weekday()
-
-    def third_friday(year, month):
-        first = datetime(year, month, 1).date()
-        first_friday_offset = (4 - first.weekday()) % 7
-        first_friday = first + timedelta(days=first_friday_offset)
-        return first_friday + timedelta(weeks=2)
-
-    monthly = weekday == 4 and d == third_friday(d.year, d.month)
-    quarterly = monthly and d.month in (3, 6, 9, 12)
-    return {"opexDay": monthly, "opexQuarterly": quarterly}
 
 
 def get_finnhub_api_key():
@@ -300,7 +220,7 @@ def fetch_intraday_vwap(symbol, current_dt):
         data = r.json()
 
         if data.get("s") != "ok":
-            return {"vwap": None, "vwapDist": None, "source": "finnhub_candles", "status": data.get("s", "no_data")}
+            return {"vwap": None, "source": "finnhub_candles", "status": data.get("s", "no_data")}
 
         closes = data.get("c", [])
         highs = data.get("h", [])
@@ -309,7 +229,6 @@ def fetch_intraday_vwap(symbol, current_dt):
 
         pv_sum = 0.0
         v_sum = 0.0
-
         for c, h, l, v in zip(closes, highs, lows, volumes):
             if v is None or v <= 0:
                 continue
@@ -318,13 +237,12 @@ def fetch_intraday_vwap(symbol, current_dt):
             v_sum += float(v)
 
         if v_sum <= 0:
-            return {"vwap": None, "vwapDist": None, "source": "finnhub_candles", "status": "no_volume"}
+            return {"vwap": None, "source": "finnhub_candles", "status": "no_volume"}
 
-        vwap = pv_sum / v_sum
-        return {"vwap": round(vwap, 2), "vwapDist": None, "source": "finnhub_candles", "status": "ok"}
+        return {"vwap": round(pv_sum / v_sum, 2), "source": "finnhub_candles", "status": "ok"}
 
     except Exception:
-        return {"vwap": None, "vwapDist": None, "source": "finnhub_candles", "status": "error"}
+        return {"vwap": None, "source": "finnhub_candles", "status": "error"}
 
 
 def infer_session_from_time(current_dt):
@@ -380,10 +298,156 @@ def build_execution_block(current_dt, session_code):
     }
 
 
-def round_to_strike(price, step=1):
-    if price is None:
-        return None
-    return math.ceil(price / step) * step
+def normalize_macro_event_name(raw_name):
+    if not raw_name:
+        return None, None, None
+    name = raw_name.strip()
+    lower = name.lower()
+
+    for key, meta in MACRO_KEYWORDS.items():
+        if key in lower:
+            return meta["label"], meta["impact"], meta["veto"]
+
+    return name, "bajo", False
+
+
+def fetch_macro_calendar(current_dt):
+    api_key = get_finnhub_api_key()
+    frm = fmt_date(current_dt - timedelta(days=1))
+    to = fmt_date(current_dt + timedelta(days=21))
+
+    try:
+        url = "https://finnhub.io/api/v1/calendar/economic"
+        params = {
+            "from": frm,
+            "to": to,
+            "token": api_key,
+        }
+        r = requests.get(url, params=params, timeout=20)
+        r.raise_for_status()
+        data = r.json()
+        rows = data.get("economicCalendar", []) or []
+
+        items = []
+        seen = set()
+
+        for row in rows:
+            country = (row.get("country") or "").upper()
+            if country not in ("US", "USA", "UNITED STATES"):
+                continue
+
+            raw_event = row.get("event") or row.get("name") or row.get("title")
+            label, impact, veto = normalize_macro_event_name(raw_event)
+            if not label:
+                continue
+            if impact == "bajo":
+                continue
+
+            date_str = row.get("date")
+            time_str = row.get("time") or "00:00"
+            if not date_str:
+                continue
+
+            try:
+                hh, mm = time_str.split(":")
+                dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
+                    hour=int(hh), minute=int(mm), second=0, microsecond=0, tzinfo=NY
+                )
+            except Exception:
+                dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
+                    hour=0, minute=0, second=0, microsecond=0, tzinfo=NY
+                )
+
+            key = (label, dt.isoformat())
+            if key in seen:
+                continue
+            seen.add(key)
+
+            items.append({
+                "label": label,
+                "impact": impact,
+                "kind": "macro",
+                "dateEt": fmt_dt(dt),
+                "countdown": fmt_countdown(dt, current_dt),
+                "veto": veto,
+                "_dt": dt,
+            })
+
+        items.sort(key=lambda x: x["_dt"])
+
+        today_high = [x for x in items if x["_dt"].date() == current_dt.date() and x["impact"] == "alto"]
+        next_big = next((x for x in items if x["_dt"] > current_dt and x["impact"] == "alto"), None)
+
+        window_critical = False
+        for ev in items:
+            mins = (ev["_dt"] - current_dt).total_seconds() / 60
+            if ev["veto"] and -60 <= mins <= 90:
+                window_critical = True
+                break
+
+        score = 0
+        summary = "Sin macro alta hoy"
+
+        if window_critical:
+            score -= 25
+            summary = "Ventana crítica por macro de alto impacto"
+        elif today_high:
+            score -= 12
+            summary = f"Macro alta hoy · {today_high[0]['label']}"
+        elif next_big:
+            hours_to_next = (next_big["_dt"] - current_dt).total_seconds() / 3600
+            if hours_to_next <= 24:
+                score -= 6
+            elif hours_to_next <= 72:
+                score -= 2
+            summary = f"Sin macro alta hoy; próximo gran evento · {next_big['label']}"
+
+        clean_items = []
+        for x in items[:12]:
+            y = dict(x)
+            y.pop("_dt", None)
+            clean_items.append(y)
+
+        clean_next_big = None
+        if next_big:
+            clean_next_big = dict(next_big)
+            clean_next_big.pop("_dt", None)
+
+        return {
+            "todayHighImpact": bool(today_high),
+            "windowCritical": window_critical,
+            "score": score,
+            "items": clean_items,
+            "nextBig": clean_next_big,
+            "summary": summary,
+            "source": "finnhub_economic_calendar",
+        }
+
+    except Exception as e:
+        return {
+            "todayHighImpact": False,
+            "windowCritical": False,
+            "score": 0,
+            "items": [],
+            "nextBig": None,
+            "summary": f"Macro no disponible ({str(e)[:120]})",
+            "source": "finnhub_economic_calendar",
+        }
+
+
+def get_opex_flags(current_dt):
+    d = current_dt.date()
+    weekday = current_dt.weekday()
+
+    def third_friday(year, month):
+        first = datetime(year, month, 1).date()
+        first_friday_offset = (4 - first.weekday()) % 7
+        first_friday = first + timedelta(days=first_friday_offset)
+        return first_friday + timedelta(weeks=2)
+
+    monthly = weekday == 4 and d == third_friday(d.year, d.month)
+    quarterly = monthly and d.month in (3, 6, 9, 12)
+    return {"opexDay": monthly, "opexQuarterly": quarterly}
 
 
 def yahoo_session():
@@ -401,8 +465,7 @@ def fetch_yahoo_options_chain(symbol):
     r = s.get(url, timeout=20)
     r.raise_for_status()
     data = r.json()
-    result = data["optionChain"]["result"][0]
-    return result
+    return data["optionChain"]["result"][0]
 
 
 def choose_expiration(result, current_dt):
@@ -416,7 +479,6 @@ def choose_expiration(result, current_dt):
         if dt.date() >= current_dt.date():
             target = ts
             break
-
     if target is None:
         target = expirations[0]
 
@@ -430,6 +492,7 @@ def extract_option_rows(result, expiration_ts):
         opt_list = result.get("options", [])
         if opt_list:
             current = opt_list[0]
+
     if current is None or current.get("expirationDate") != expiration_ts:
         s = yahoo_session()
         symbol = result["quote"]["symbol"]
@@ -499,7 +562,6 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
 
         current = extract_option_rows(result, expiration_ts)
         calls = current.get("calls", []) or []
-
         if not calls:
             raise RuntimeError("No hay calls disponibles")
 
@@ -543,13 +605,11 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "iv": iv,
                 "delta": delta,
                 "symbol": row.get("contractSymbol"),
-                "inTheMoney": row.get("inTheMoney"),
             })
 
         otm_calls = [x for x in enriched if x["strike"] is not None and spot_price is not None and x["strike"] >= spot_price]
         if min_strike is not None:
             otm_calls = [x for x in otm_calls if x["strike"] >= min_strike]
-
         if not otm_calls:
             otm_calls = enriched
 
@@ -563,19 +623,14 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
         short_leg = sorted(otm_calls, key=ranking)[0]
 
         expected_move, expected_move_pct = compute_expected_move_from_chain(
-            spot_price,
-            short_leg.get("iv"),
-            current_dt,
-            expiration_dt
+            spot_price, short_leg.get("iv"), current_dt, expiration_dt
         )
-
         if expected_move is None and spot_price is not None:
             expected_move = round(spot_price * 0.0085, 2)
             expected_move_pct = 0.85
 
         short_strike = short_leg.get("strike")
         distance_to_short = None if spot_price is None or short_strike is None else round(short_strike - spot_price, 2)
-
         net_credit = short_leg.get("mid")
         breakeven = None if short_strike is None or net_credit is None else round(short_strike + net_credit, 2)
 
@@ -591,7 +646,6 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
         ):
             liquidity_ok = True
 
-        spacing_ok = True
         quotes_usable = net_credit is not None and short_leg.get("bid") is not None and short_leg.get("ask") is not None
 
         return {
@@ -607,7 +661,7 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "spreadPct": round(short_leg["spreadPct"] * 100.0, 2) if short_leg.get("spreadPct") is not None else None,
                 "openInterestShort": short_leg.get("oi"),
                 "openInterestLong": None,
-                "spacingOk": spacing_ok,
+                "spacingOk": True,
                 "status": "live" if quotes_usable else "theoretical",
                 "notes": f"Cadena obtenida desde Yahoo Finance; short seleccionado {short_leg.get('symbol') or 'N/A'}",
                 "impliedVolatility": short_leg.get("iv"),
@@ -629,11 +683,6 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
         }
 
     except Exception as e:
-        short_strike = round_to_strike(spot_price * 1.0107 if spot_price else None, step=1)
-        distance_to_short = None if spot_price is None or short_strike is None else round(short_strike - spot_price, 2)
-        fallback_em = round(spot_price * 0.0085, 2) if spot_price else None
-
-        status = "theoretical" if in_options_hours else "unavailable"
         return {
             "options": {
                 "expiration": "nearest" if in_options_hours else "market_closed",
@@ -648,18 +697,18 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "openInterestShort": None,
                 "openInterestLong": None,
                 "spacingOk": True if in_options_hours else None,
-                "status": status,
+                "status": "theoretical" if in_options_hours else "unavailable",
                 "notes": f"No se pudo usar cadena real ({str(e)[:140]}). Se muestra setup teórico.",
                 "impliedVolatility": None,
             },
             "trade": {
                 "bufferPct": 1.07,
-                "shortStrike": short_strike if in_options_hours else None,
+                "shortStrike": None,
                 "netCredit": None,
                 "breakeven": None,
-                "distanceToShort": distance_to_short if in_options_hours else None,
-                "expectedMove": fallback_em if in_options_hours else None,
-                "expectedMovePct": 0.85 if in_options_hours and fallback_em else None,
+                "distanceToShort": None,
+                "expectedMove": round(spot_price * 0.0085, 2) if in_options_hours and spot_price else None,
+                "expectedMovePct": 0.85 if in_options_hours and spot_price else None,
             },
             "optionsMeta": {
                 "source": "yahoo_options",
@@ -667,6 +716,115 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "expirationDate": None,
             }
         }
+
+
+def fetch_earnings_calendar(symbols, current_dt):
+    api_key = get_finnhub_api_key()
+    start_date = fmt_date(current_dt)
+    end_date = fmt_date(current_dt + timedelta(days=21))
+
+    items = []
+    by_symbol = {}
+
+    for sym in symbols:
+        try:
+            url = "https://finnhub.io/api/v1/calendar/earnings"
+            params = {
+                "from": start_date,
+                "to": end_date,
+                "symbol": sym,
+                "token": api_key,
+            }
+            r = requests.get(url, params=params, timeout=20)
+            r.raise_for_status()
+            data = r.json()
+            earnings = data.get("earningsCalendar", []) or []
+
+            future_rows = []
+            for row in earnings:
+                date_str = row.get("date")
+                if not date_str:
+                    continue
+
+                dt = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
+                if dt < current_dt - timedelta(days=1):
+                    continue
+
+                symbol = row.get("symbol") or sym
+                weight = "primary" if symbol in PRIMARY_EARNINGS_WATCHLIST else "secondary"
+
+                future_rows.append({
+                    "symbol": symbol,
+                    "date": date_str,
+                    "dateEt": fmt_dt(dt),
+                    "countdown": fmt_countdown(dt, current_dt),
+                    "epsEstimate": row.get("epsEstimate"),
+                    "hour": row.get("hour"),
+                    "quarter": row.get("quarter"),
+                    "year": row.get("year"),
+                    "revenueEstimate": row.get("revenueEstimate"),
+                    "weight": weight,
+                })
+
+            future_rows.sort(key=lambda x: x["date"])
+            if future_rows:
+                by_symbol[sym] = future_rows[0]
+                items.extend(future_rows[:2])
+
+        except Exception:
+            continue
+
+    items.sort(key=lambda x: (x["date"], 0 if x["weight"] == "primary" else 1))
+
+    next_any = items[0] if items else None
+    qqq_next = by_symbol.get("QQQ")
+    primary_watch = [x for x in items if x["symbol"] != "QQQ" and x["weight"] == "primary"][:6]
+    secondary_watch = [x for x in items if x["symbol"] != "QQQ" and x["weight"] == "secondary"][:6]
+    today = [x for x in items if x["date"] == fmt_date(current_dt)]
+
+    score = 0
+    summary = "Sin earnings relevantes cercanos"
+
+    if qqq_next:
+        qqq_dt = datetime.strptime(qqq_next["date"], "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
+        days_to_qqq = (qqq_dt.date() - current_dt.date()).days
+        if days_to_qqq <= 1:
+            score -= 18
+            summary = f"Earnings propios muy próximos · {qqq_next['symbol']}"
+        elif days_to_qqq <= 3:
+            score -= 10
+            summary = f"Earnings propios próximos · {qqq_next['symbol']}"
+
+    if not qqq_next and primary_watch:
+        hw_dt = datetime.strptime(primary_watch[0]["date"], "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
+        days_to_hw = (hw_dt.date() - current_dt.date()).days
+        if days_to_hw <= 1:
+            score -= 8
+            summary = f"Mega-cap earnings muy próximos · {primary_watch[0]['symbol']}"
+        elif days_to_hw <= 3:
+            score -= 4
+            summary = f"Mega-cap earnings próximos · {primary_watch[0]['symbol']}"
+
+    if not qqq_next and not primary_watch and secondary_watch:
+        sec_dt = datetime.strptime(secondary_watch[0]["date"], "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
+        days_to_sec = (sec_dt.date() - current_dt.date()).days
+        if days_to_sec <= 1:
+            score -= 2
+            summary = f"Catalyst secundario próximo · {secondary_watch[0]['symbol']}"
+        elif days_to_sec <= 3:
+            score -= 1
+            summary = f"Catalyst secundario cercano · {secondary_watch[0]['symbol']}"
+
+    return {
+        "today": today[:10],
+        "next": next_any,
+        "qqqNext": qqq_next,
+        "watchlist": primary_watch,
+        "secondaryWatchlist": secondary_watch,
+        "score": score,
+        "summary": summary,
+        "source": "finnhub_earnings_calendar",
+    }
 
 
 def score_trade_quality(state):
@@ -696,13 +854,13 @@ def score_trade_quality(state):
             score -= 3
             reasons.append("Delta lejos del objetivo")
     else:
-        reasons.append("Delta real no disponible")
         score -= 3
+        reasons.append("Delta real no disponible")
 
     credit = state["trade"].get("netCredit")
     if credit is None:
-        reasons.append("Crédito no disponible")
         score -= 4
+        reasons.append("Crédito no disponible")
     elif credit >= 0.6:
         score += 4
         reasons.append("Crédito atractivo")
@@ -715,8 +873,8 @@ def score_trade_quality(state):
 
     oi_short = options.get("openInterestShort")
     if oi_short is None:
-        reasons.append("OI no disponible")
         score -= 4
+        reasons.append("OI no disponible")
     elif oi_short >= 500:
         score += 4
         reasons.append("OI sólido")
@@ -729,8 +887,8 @@ def score_trade_quality(state):
 
     spread_pct = options.get("spreadPct")
     if spread_pct is None:
-        reasons.append("Spread no disponible")
         score -= 4
+        reasons.append("Spread no disponible")
     elif spread_pct <= 10:
         score += 4
         reasons.append("Spread limpio")
@@ -770,6 +928,7 @@ def decide_trade(state):
     alerts = []
 
     macro = state["macro"]
+    earnings = state["earnings"]
     execution = state["execution"]
     flags = state["flags"]
     data_health = state["dataHealth"]
@@ -777,6 +936,7 @@ def decide_trade(state):
     session_code = state["session"]["code"]
 
     score += macro["score"]
+    score += earnings["score"]
     score += tq["score"]
 
     if macro["windowCritical"]:
@@ -784,6 +944,14 @@ def decide_trade(state):
         alerts.append("Macro crítica en ventana operativa")
     elif macro["todayHighImpact"]:
         reasons.append("Hay macro alta hoy")
+
+    if earnings.get("qqqNext"):
+        reasons.append(f"Earnings próximos propios · {earnings['qqqNext']['symbol']}")
+        alerts.append(f"Earnings propios cercanos · {earnings['qqqNext']['symbol']} {earnings['qqqNext']['date']}")
+    elif earnings.get("watchlist"):
+        reasons.append(f"Earnings próximos mega-cap · {earnings['watchlist'][0]['symbol']}")
+    elif earnings.get("secondaryWatchlist"):
+        reasons.append(f"Catalyst secundario próximo · {earnings['secondaryWatchlist'][0]['symbol']}")
 
     if session_code == "closed":
         score -= 4
@@ -859,7 +1027,8 @@ def build_state():
     quote = fetch_quote_finnhub("QQQ")
     session = infer_session_from_time(current_dt)
     flags = get_opex_flags(current_dt)
-    macro = build_macro_block(current_dt)
+    macro = fetch_macro_calendar(current_dt)
+    earnings = fetch_earnings_calendar(EARNINGS_WATCHLIST, current_dt)
     execution = build_execution_block(current_dt, session["code"])
     vwap_block = fetch_intraday_vwap("QQQ", current_dt)
     options_bundle = fetch_options_source("QQQ", quote["price"], current_dt, session["code"])
@@ -869,7 +1038,7 @@ def build_state():
     if quote["price"] is not None and vwap is not None:
         vwap_dist = round(quote["price"] - vwap, 2)
 
-    base_state = {
+    state = {
         "symbol": "QQQ",
         "updatedAt": fmt_dt(current_dt),
         "generatedAtUnix": int(current_dt.timestamp()),
@@ -887,14 +1056,8 @@ def build_state():
         "options": options_bundle["options"],
         "optionsMeta": options_bundle["optionsMeta"],
         "macro": macro,
+        "earnings": earnings,
         "flags": flags,
-        "earnings": {
-            "next": {
-                "symbol": "TSLA",
-                "date": "2026-07-22",
-                "label": "Tesla"
-            }
-        },
         "market": {
             "isHoliday": False,
             "name": None,
@@ -904,6 +1067,8 @@ def build_state():
             "spotSource": quote["source"],
             "optionsSource": options_bundle["optionsMeta"]["source"],
             "vwapSource": vwap_block["source"],
+            "macroSource": macro["source"],
+            "earningsSource": earnings["source"],
             "spotDegraded": quote["degraded"],
             "spotDegradedReason": quote["degradedReason"],
             "spotStaleFromPreviousState": quote["staleFromPreviousState"],
@@ -913,10 +1078,10 @@ def build_state():
         }
     }
 
-    base_state["tradeQuality"] = score_trade_quality(base_state)
-    decision = decide_trade(base_state)
-    base_state.update(decision)
-    return base_state
+    state["tradeQuality"] = score_trade_quality(state)
+    decision = decide_trade(state)
+    state.update(decision)
+    return state
 
 
 def main():
