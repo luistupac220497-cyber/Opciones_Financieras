@@ -3,7 +3,7 @@ name: Update QQQ Dashboard Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "10 * * * 1-5"
+    - cron: "*/10 * * * 1-5"
 
 permissions:
   contents: write
@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,50 +27,23 @@ jobs:
           pip install -r requirements.txt
 
       - name: Verify FINNHUB_API_KEY
-        run: python -c "import os; print('OK' if os.getenv('FINNHUB_API_KEY') else 'MISSING')"
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
-
-      - name: Compile Python
-        run: python -m py_compile scripts/build_data.py
+        run: |
+          python -c "import os; print('OK' if os.getenv('FINNHUB_API_KEY') else 'MISSING')"
 
       - name: Generate state.json
-        run: python scripts/build_data.py
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB }}
-
-      - name: Show key fields
         run: |
-          python - <<'PY'
-          import json
-          with open("data/state.json", "r", encoding="utf-8") as f:
-              s = json.load(f)
-          print("updatedAt:", s.get("updatedAt"))
-          print("price:", s.get("price"))
-          print("vwap:", s.get("vwap"))
-          print("expectedMove:", s.get("expectedMove"))
-          print("shortStrike:", s.get("trade", {}).get("shortStrike"))
-          print("netCredit:", s.get("trade", {}).get("netCredit"))
-          print("session:", s.get("session", {}).get("code"))
-          print("optionsStatus:", s.get("dataHealth", {}).get("optionsDataStatus"))
-          print("decision:", s.get("decisionLabel"))
-          print("score:", s.get("score"))
-          PY
-
-      - name: Check git diff
-        id: verify_diff
-        run: |
-          git diff --quiet data/state.json || echo "changed=true" >> $GITHUB_OUTPUT
+          python scripts/build_data.py
 
       - name: Commit updated data
-        if: steps.verify_diff.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/state.json
-          git commit -m "Update dashboard data"
-          git push
+          git diff --cached --quiet || git commit -m "Update dashboard data"
 
-      - name: No changes detected
-        if: steps.verify_diff.outputs.changed != 'true'
-        run: echo "No hubo cambios reales en data/state.json"
+      - name: Push changes
+        run: git push
