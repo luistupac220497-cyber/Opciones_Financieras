@@ -7,8 +7,8 @@
   "prevClose": 712.6,
   "source": "finnhub_quote",
   "session": {
-    "code": "afterhours",
-    "label": "After hours"
+    "code": "closed",
+    "label": "Mercado cerrado"
   },
   "vwap": {
     "value": null,
@@ -40,9 +40,9 @@
     "entryStartET": "10:30 ET",
     "entryCutoffET": "13:30 ET",
     "hardExitET": "15:15 ET",
-    "minutesToEntryStart": -560,
-    "minutesToEntryCutoff": -380,
-    "minutesToHardExit": -275,
+    "minutesToEntryStart": -570,
+    "minutesToEntryCutoff": -390,
+    "minutesToHardExit": -285,
     "maxHoldMinutes": 60,
     "entryWindowOpen": false,
     "timeStopTriggered": false,
@@ -69,7 +69,7 @@
       "impact": "alto",
       "datetimeNY": "2026-07-08 14:00 ET",
       "dateNY": "2026-07-08",
-      "countdown": "1d 18h",
+      "countdown": "1d 17h",
       "veto": true
     },
     "summary": "Próximo gran evento · Actas del FOMC"
