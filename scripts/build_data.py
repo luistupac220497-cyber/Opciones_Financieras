@@ -87,6 +87,10 @@ def safe_float(v):
         return None
 
 
+def clamp(value, min_value, max_value):
+    return max(min_value, min(value, max_value))
+
+
 def std_norm_cdf(x):
     return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
 
@@ -338,25 +342,25 @@ def fetch_macro_calendar(current_dt):
 
             raw_event = row.get("event") or row.get("name") or row.get("title")
             label, impact, veto = normalize_macro_event_name(raw_event)
-            if not label:
-                continue
-            if impact == "bajo":
+            if not label or impact == "bajo":
                 continue
 
-            date_str = row.get("date")
-            time_str = row.get("time") or "00:00"
-            if not date_str:
+            raw_time = row.get("time")
+            if not raw_time:
                 continue
 
+            dt = None
             try:
-                hh, mm = time_str.split(":")
-                dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
-                    hour=int(hh), minute=int(mm), second=0, microsecond=0, tzinfo=NY
-                )
+                dt = datetime.fromisoformat(raw_time.replace("Z", "+00:00")).astimezone(NY)
             except Exception:
-                dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
-                    hour=0, minute=0, second=0, microsecond=0, tzinfo=NY
-                )
+                try:
+                    date_str = row.get("date")
+                    hhmm = (row.get("hour") or "00:00").split(":")
+                    dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
+                        hour=int(hhmm[0]), minute=int(hhmm[1]), second=0, microsecond=0, tzinfo=NY
+                    )
+                except Exception:
+                    continue
 
             key = (label, dt.isoformat())
             if key in seen:
@@ -516,6 +520,57 @@ def compute_expected_move_from_chain(spot, iv, current_dt, expiration_dt):
     return round(em, 2), round((em / spot) * 100.0, 2)
 
 
+def estimate_expected_move_pct_fallback(current_dt):
+    mins_to_close = max(
+        (
+            current_dt.replace(hour=16, minute=0, second=0, microsecond=0) - current_dt
+        ).total_seconds() / 60.0,
+        60.0
+    )
+    day_fraction = mins_to_close / 390.0
+
+    if day_fraction >= 0.85:
+        return 1.10
+    if day_fraction >= 0.60:
+        return 0.95
+    if day_fraction >= 0.35:
+        return 0.80
+    return 0.65
+
+
+def compute_dynamic_buffer_pct(session, macro, earnings, trade, current_dt):
+    expected_move_pct = trade.get("expectedMovePct")
+    if expected_move_pct is None:
+        expected_move_pct = estimate_expected_move_pct_fallback(current_dt)
+
+    base_buffer = expected_move_pct * 0.55
+
+    if session.get("code") == "premarket":
+        base_buffer *= 1.10
+
+    if macro.get("todayHighImpact"):
+        base_buffer *= 1.20
+
+    if macro.get("windowCritical"):
+        base_buffer *= 1.35
+
+    if earnings.get("qqqNext"):
+        base_buffer *= 1.25
+    elif earnings.get("watchlist"):
+        base_buffer *= 1.12
+    elif earnings.get("secondaryWatchlist"):
+        base_buffer *= 1.05
+
+    return round(clamp(base_buffer, 0.45, 2.20), 2)
+
+
+def compute_dynamic_short_strike(spot_price, buffer_pct, step=1.0):
+    if spot_price is None or buffer_pct is None:
+        return None
+    raw_strike = spot_price * (1 + buffer_pct / 100.0)
+    return math.ceil(raw_strike / step) * step
+
+
 def fetch_options_source(symbol, spot_price, current_dt, session_code):
     in_options_hours = session_code == "regular" and QQQ_OPTIONS_OPEN_ET <= current_dt.time() <= QQQ_OPTIONS_CLOSE_ET
 
@@ -539,7 +594,7 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "impliedVolatility": None,
             },
             "trade": {
-                "bufferPct": 1.07,
+                "bufferPct": None,
                 "shortStrike": None,
                 "netCredit": None,
                 "breakeven": None,
@@ -564,9 +619,6 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
         calls = current.get("calls", []) or []
         if not calls:
             raise RuntimeError("No hay calls disponibles")
-
-        buffer_pct = 1.07
-        min_strike = spot_price * 1.005 if spot_price else None
 
         enriched = []
         for row in calls:
@@ -608,8 +660,6 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
             })
 
         otm_calls = [x for x in enriched if x["strike"] is not None and spot_price is not None and x["strike"] >= spot_price]
-        if min_strike is not None:
-            otm_calls = [x for x in otm_calls if x["strike"] >= min_strike]
         if not otm_calls:
             otm_calls = enriched
 
@@ -626,13 +676,17 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
             spot_price, short_leg.get("iv"), current_dt, expiration_dt
         )
         if expected_move is None and spot_price is not None:
-            expected_move = round(spot_price * 0.0085, 2)
-            expected_move_pct = 0.85
+            expected_move_pct = estimate_expected_move_pct_fallback(current_dt)
+            expected_move = round(spot_price * expected_move_pct / 100.0, 2)
 
         short_strike = short_leg.get("strike")
         distance_to_short = None if spot_price is None or short_strike is None else round(short_strike - spot_price, 2)
         net_credit = short_leg.get("mid")
         breakeven = None if short_strike is None or net_credit is None else round(short_strike + net_credit, 2)
+
+        buffer_pct = None
+        if spot_price is not None and short_strike is not None:
+            buffer_pct = round(((short_strike / spot_price) - 1) * 100.0, 2)
 
         spread_pct_value = short_leg.get("spreadPct")
         liquidity_ok = False
@@ -683,6 +737,9 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
         }
 
     except Exception as e:
+        expected_move_pct = estimate_expected_move_pct_fallback(current_dt) if spot_price else None
+        expected_move = round(spot_price * expected_move_pct / 100.0, 2) if spot_price and expected_move_pct else None
+
         return {
             "options": {
                 "expiration": "nearest" if in_options_hours else "market_closed",
@@ -702,13 +759,13 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "impliedVolatility": None,
             },
             "trade": {
-                "bufferPct": 1.07,
+                "bufferPct": None,
                 "shortStrike": None,
                 "netCredit": None,
                 "breakeven": None,
                 "distanceToShort": None,
-                "expectedMove": round(spot_price * 0.0085, 2) if in_options_hours and spot_price else None,
-                "expectedMovePct": 0.85 if in_options_hours and spot_price else None,
+                "expectedMove": expected_move,
+                "expectedMovePct": expected_move_pct,
             },
             "optionsMeta": {
                 "source": "yahoo_options",
@@ -793,7 +850,7 @@ def fetch_earnings_calendar(symbols, current_dt):
             summary = f"Earnings propios muy próximos · {qqq_next['symbol']}"
         elif days_to_qqq <= 3:
             score -= 10
-            summary = f"Earnings propios próximos · {qqq_next['symbol']}"
+            summary = f"Earnings propios próximos · {qqqNext['symbol']}"
 
     if not qqq_next and primary_watch:
         hw_dt = datetime.strptime(primary_watch[0]["date"], "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
@@ -1032,6 +1089,14 @@ def build_state():
     execution = build_execution_block(current_dt, session["code"])
     vwap_block = fetch_intraday_vwap("QQQ", current_dt)
     options_bundle = fetch_options_source("QQQ", quote["price"], current_dt, session["code"])
+
+    dynamic_buffer_pct = compute_dynamic_buffer_pct(session, macro, earnings, options_bundle["trade"], current_dt)
+    options_bundle["trade"]["bufferPct"] = dynamic_buffer_pct
+
+    if options_bundle["trade"].get("shortStrike") is None and quote["price"] is not None:
+        proposed_short = compute_dynamic_short_strike(quote["price"], dynamic_buffer_pct, step=1.0)
+        options_bundle["trade"]["shortStrike"] = proposed_short
+        options_bundle["trade"]["distanceToShort"] = round(proposed_short - quote["price"], 2) if proposed_short is not None else None
 
     vwap = vwap_block.get("vwap")
     vwap_dist = None
