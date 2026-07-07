@@ -1,14 +1,14 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-07 03:55 ET",
-  "generatedAtUnix": 1783410905,
+  "updatedAt": "2026-07-07 04:00 ET",
+  "generatedAtUnix": 1783411256,
   "price": 722.82,
   "change": 10.22,
   "changePct": 1.4342,
   "prevClose": 712.6,
   "session": {
-    "code": "closed",
-    "label": "Mercado cerrado"
+    "code": "premarket",
+    "label": "Pre-market"
   },
   "vwap": null,
   "vwapDist": null,
@@ -26,10 +26,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 394,
-    "minutesSinceEntryStart": -395,
+    "minsToEntryStart": 389,
+    "minutesSinceEntryStart": -390,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 574,
+    "minsToCutoff": 569,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -65,7 +65,7 @@
         "impact": "alto",
         "kind": "fomc_minutes",
         "dateEt": "2026-07-08 14:00 ET",
-        "countdown": "1d 10h",
+        "countdown": "1d 9h",
         "veto": false
       },
       {
@@ -105,7 +105,7 @@
         "impact": "alto",
         "kind": "fomc",
         "dateEt": "2026-07-29 14:00 ET",
-        "countdown": "22d 10h",
+        "countdown": "22d 9h",
         "veto": true
       }
     ],
@@ -114,7 +114,7 @@
       "impact": "alto",
       "kind": "fomc_minutes",
       "dateEt": "2026-07-08 14:00 ET",
-      "countdown": "1d 10h"
+      "countdown": "1d 9h"
     },
     "summary": "Sin macro alta hoy; próximo gran evento · Actas del FOMC"
   },
@@ -151,12 +151,12 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -6,
+  "score": -5,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
-    "Mercado cerrado",
+    "Pre-market; esperar apertura",
     "Próximo gran evento · Actas del FOMC",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
