@@ -1,11 +1,13 @@
 import json
 import math
 import os
+import re
 import time as time_module
 from datetime import datetime, timedelta, time
 from zoneinfo import ZoneInfo
 
 import requests
+
 
 NY = ZoneInfo("America/New_York")
 UTC = ZoneInfo("UTC")
@@ -52,6 +54,36 @@ def fmt_countdown(target, current):
     if hours > 0:
         return f"{hours}h {minutes}m"
     return f"{minutes}m"
+
+
+def safe_float(v):
+    try:
+        if v is None or v == "":
+            return None
+        return float(v)
+    except Exception:
+        return None
+
+
+def clamp(v, lo, hi):
+    return max(lo, min(hi, v))
+
+
+def std_norm_cdf(x):
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+
+def approx_call_delta(spot, strike, iv_annual, t_years):
+    if not spot or not strike or not iv_annual or iv_annual <= 0 or not t_years or t_years <= 0:
+        return None
+    try:
+        sigma_sqrt_t = iv_annual * math.sqrt(t_years)
+        if sigma_sqrt_t <= 0:
+            return None
+        d1 = (math.log(spot / strike) + 0.5 * (iv_annual ** 2) * t_years) / sigma_sqrt_t
+        return std_norm_cdf(d1)
+    except Exception:
+        return None
 
 
 def parse_event(dt_str, label, impact="alto", kind="macro", veto=False):
@@ -182,7 +214,6 @@ def fallback_quote_from_previous(previous_state, reason_code, reason_text):
         "degradedReason": reason_text,
         "staleFromPreviousState": False,
     }
-
     if previous_state:
         quote["price"] = previous_state.get("price")
         quote["change"] = previous_state.get("change")
@@ -190,7 +221,6 @@ def fallback_quote_from_previous(previous_state, reason_code, reason_text):
         quote["prevClose"] = previous_state.get("prevClose")
         quote["updatedAt"] = previous_state.get("updatedAt")
         quote["staleFromPreviousState"] = True
-
     return quote
 
 
@@ -217,21 +247,15 @@ def fetch_quote_finnhub(symbol, retries=3, sleep_seconds=2):
             r.raise_for_status()
             data = r.json()
 
-            price = data.get("c")
-            change = data.get("d")
-            change_pct = data.get("dp")
-            prev_close = data.get("pc")
-            ts = data.get("t")
-
             updated_at = None
-            if ts:
-                updated_at = datetime.fromtimestamp(ts, tz=UTC).astimezone(NY)
+            if data.get("t"):
+                updated_at = datetime.fromtimestamp(data["t"], tz=UTC).astimezone(NY)
 
             return {
-                "price": price,
-                "change": change,
-                "changePct": change_pct,
-                "prevClose": prev_close,
+                "price": safe_float(data.get("c")),
+                "change": safe_float(data.get("d")),
+                "changePct": safe_float(data.get("dp")),
+                "prevClose": safe_float(data.get("pc")),
                 "updatedAt": fmt_dt(updated_at),
                 "source": "finnhub_quote",
                 "degraded": False,
@@ -254,6 +278,53 @@ def fetch_quote_finnhub(symbol, retries=3, sleep_seconds=2):
             return fallback_quote_from_previous(previous_state, "finnhub_unexpected_error", str(e))
 
     return fallback_quote_from_previous(previous_state, "finnhub_unknown", "Error desconocido")
+
+
+def fetch_intraday_vwap(symbol, current_dt):
+    try:
+        api_key = get_finnhub_api_key()
+        start_ny = current_dt.replace(hour=4, minute=0, second=0, microsecond=0)
+        frm = int(start_ny.astimezone(UTC).timestamp())
+        to = int(current_dt.astimezone(UTC).timestamp())
+
+        url = "https://finnhub.io/api/v1/stock/candle"
+        params = {
+            "symbol": symbol,
+            "resolution": "5",
+            "from": frm,
+            "to": to,
+            "token": api_key,
+        }
+        r = requests.get(url, params=params, timeout=20)
+        r.raise_for_status()
+        data = r.json()
+
+        if data.get("s") != "ok":
+            return {"vwap": None, "vwapDist": None, "source": "finnhub_candles", "status": data.get("s", "no_data")}
+
+        closes = data.get("c", [])
+        highs = data.get("h", [])
+        lows = data.get("l", [])
+        volumes = data.get("v", [])
+
+        pv_sum = 0.0
+        v_sum = 0.0
+
+        for c, h, l, v in zip(closes, highs, lows, volumes):
+            if v is None or v <= 0:
+                continue
+            typical = (float(h) + float(l) + float(c)) / 3.0
+            pv_sum += typical * float(v)
+            v_sum += float(v)
+
+        if v_sum <= 0:
+            return {"vwap": None, "vwapDist": None, "source": "finnhub_candles", "status": "no_volume"}
+
+        vwap = pv_sum / v_sum
+        return {"vwap": round(vwap, 2), "vwapDist": None, "source": "finnhub_candles", "status": "ok"}
+
+    except Exception:
+        return {"vwap": None, "vwapDist": None, "source": "finnhub_candles", "status": "error"}
 
 
 def infer_session_from_time(current_dt):
@@ -315,10 +386,77 @@ def round_to_strike(price, step=1):
     return math.ceil(price / step) * step
 
 
+def yahoo_session():
+    s = requests.Session()
+    s.headers.update({
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json,text/plain,*/*",
+    })
+    return s
+
+
+def fetch_yahoo_options_chain(symbol):
+    s = yahoo_session()
+    url = f"https://query2.finance.yahoo.com/v7/finance/options/{symbol}"
+    r = s.get(url, timeout=20)
+    r.raise_for_status()
+    data = r.json()
+    result = data["optionChain"]["result"][0]
+    return result
+
+
+def choose_expiration(result, current_dt):
+    expirations = result.get("expirationDates", []) or []
+    if not expirations:
+        return None, None
+
+    target = None
+    for ts in expirations:
+        dt = datetime.fromtimestamp(ts, tz=UTC).astimezone(NY)
+        if dt.date() >= current_dt.date():
+            target = ts
+            break
+
+    if target is None:
+        target = expirations[0]
+
+    target_dt = datetime.fromtimestamp(target, tz=UTC).astimezone(NY)
+    return target, target_dt
+
+
+def extract_option_rows(result, expiration_ts):
+    current = None
+    if result.get("expirationDates") and expiration_ts == result.get("expirationDates", [None])[0]:
+        opt_list = result.get("options", [])
+        if opt_list:
+            current = opt_list[0]
+    if current is None or current.get("expirationDate") != expiration_ts:
+        s = yahoo_session()
+        symbol = result["quote"]["symbol"]
+        url = f"https://query2.finance.yahoo.com/v7/finance/options/{symbol}?date={expiration_ts}"
+        r = s.get(url, timeout=20)
+        r.raise_for_status()
+        data = r.json()
+        current = data["optionChain"]["result"][0]["options"][0]
+    return current
+
+
+def compute_expected_move_from_chain(spot, iv, current_dt, expiration_dt):
+    if not spot or not iv or not expiration_dt:
+        return None, None
+    end_dt = expiration_dt.replace(hour=16, minute=0, second=0, microsecond=0)
+    t_days = max((end_dt - current_dt).total_seconds() / 86400.0, 0)
+    t_years = t_days / 365.0
+    if t_years <= 0:
+        return None, None
+    em = spot * iv * math.sqrt(t_years)
+    return round(em, 2), round((em / spot) * 100.0, 2)
+
+
 def fetch_options_source(symbol, spot_price, current_dt, session_code):
     in_options_hours = session_code == "regular" and QQQ_OPTIONS_OPEN_ET <= current_dt.time() <= QQQ_OPTIONS_CLOSE_ET
 
-    if not in_options_hours:
+    if session_code != "regular":
         return {
             "options": {
                 "expiration": "market_closed",
@@ -335,6 +473,7 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "spacingOk": None,
                 "status": "unavailable",
                 "notes": "Fuera de horario regular de opciones; no se evalúan liquidez, OI, spread ni crédito",
+                "impliedVolatility": None,
             },
             "trade": {
                 "bufferPct": 1.07,
@@ -346,45 +485,188 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
                 "expectedMovePct": None,
             },
             "optionsMeta": {
-                "source": "nasdaq_public",
+                "source": "yahoo_options",
                 "snapshot": "no_live_chain",
+                "expirationDate": None,
             }
         }
 
-    short_strike = round_to_strike(spot_price * 1.0107 if spot_price else None, step=1)
-    distance_to_short = None if spot_price is None or short_strike is None else round(short_strike - spot_price, 2)
+    try:
+        result = fetch_yahoo_options_chain(symbol)
+        expiration_ts, expiration_dt = choose_expiration(result, current_dt)
+        if not expiration_ts:
+            raise RuntimeError("No hay expiraciones disponibles")
 
-    return {
-        "options": {
-            "expiration": "nearest",
-            "expirationLabel": "0DTE o vencimiento más cercano",
-            "quotesUsable": False,
-            "liquidityOk": False,
-            "liquidityLabel": "Débil",
-            "deltaShort": None,
-            "deltaTarget": 0.20,
-            "bidAskSpread": None,
-            "spreadPct": None,
-            "openInterestShort": None,
-            "openInterestLong": None,
-            "spacingOk": True,
-            "status": "theoretical",
-            "notes": "Sesión regular activa, pero la cadena pública de Nasdaq no devolvió datos utilizables; setup teórico sin strikes/créditos operables reales",
-        },
-        "trade": {
-            "bufferPct": 1.07,
-            "shortStrike": short_strike,
-            "netCredit": None,
-            "breakeven": None,
-            "distanceToShort": distance_to_short,
-            "expectedMove": None,
-            "expectedMovePct": None,
-        },
-        "optionsMeta": {
-            "source": "nasdaq_public",
-            "snapshot": "theoretical_setup_only",
+        current = extract_option_rows(result, expiration_ts)
+        calls = current.get("calls", []) or []
+
+        if not calls:
+            raise RuntimeError("No hay calls disponibles")
+
+        buffer_pct = 1.07
+        min_strike = spot_price * 1.005 if spot_price else None
+
+        enriched = []
+        for row in calls:
+            strike = safe_float(row.get("strike"))
+            bid = safe_float(row.get("bid"))
+            ask = safe_float(row.get("ask"))
+            oi = row.get("openInterest")
+            iv = safe_float(row.get("impliedVolatility"))
+            last_price = safe_float(row.get("lastPrice"))
+
+            mid = None
+            if bid is not None and ask is not None and ask >= bid:
+                mid = round((bid + ask) / 2.0, 2)
+            elif last_price is not None:
+                mid = last_price
+
+            spread = None
+            spread_pct = None
+            if bid is not None and ask is not None and ask >= bid:
+                spread = round(ask - bid, 2)
+                if mid and mid > 0:
+                    spread_pct = round(spread / mid, 4)
+
+            t_days = max((expiration_dt.replace(hour=16, minute=0, second=0, microsecond=0) - current_dt).total_seconds() / 86400.0, 0.001)
+            t_years = t_days / 365.0
+            delta = approx_call_delta(spot_price, strike, iv, t_years) if (spot_price and strike and iv) else None
+
+            enriched.append({
+                "strike": strike,
+                "bid": bid,
+                "ask": ask,
+                "mid": mid,
+                "spread": spread,
+                "spreadPct": spread_pct,
+                "oi": oi,
+                "iv": iv,
+                "delta": delta,
+                "symbol": row.get("contractSymbol"),
+                "inTheMoney": row.get("inTheMoney"),
+            })
+
+        otm_calls = [x for x in enriched if x["strike"] is not None and spot_price is not None and x["strike"] >= spot_price]
+        if min_strike is not None:
+            otm_calls = [x for x in otm_calls if x["strike"] >= min_strike]
+
+        if not otm_calls:
+            otm_calls = enriched
+
+        def ranking(x):
+            delta = x["delta"] if x["delta"] is not None else 9
+            delta_dist = abs(delta - 0.20) if delta != 9 else 9
+            oi = x["oi"] if isinstance(x["oi"], (int, float)) else -1
+            spread_pct = x["spreadPct"] if x["spreadPct"] is not None else 9
+            return (delta_dist, spread_pct, -oi)
+
+        short_leg = sorted(otm_calls, key=ranking)[0]
+
+        expected_move, expected_move_pct = compute_expected_move_from_chain(
+            spot_price,
+            short_leg.get("iv"),
+            current_dt,
+            expiration_dt
+        )
+
+        if expected_move is None and spot_price is not None:
+            expected_move = round(spot_price * 0.0085, 2)
+            expected_move_pct = 0.85
+
+        short_strike = short_leg.get("strike")
+        distance_to_short = None if spot_price is None or short_strike is None else round(short_strike - spot_price, 2)
+
+        net_credit = short_leg.get("mid")
+        breakeven = None if short_strike is None or net_credit is None else round(short_strike + net_credit, 2)
+
+        spread_pct_value = short_leg.get("spreadPct")
+        liquidity_ok = False
+        if (
+            short_leg.get("bid") is not None
+            and short_leg.get("ask") is not None
+            and short_leg.get("oi") is not None
+            and short_leg.get("oi") >= 100
+            and spread_pct_value is not None
+            and spread_pct_value <= 0.20
+        ):
+            liquidity_ok = True
+
+        spacing_ok = True
+        quotes_usable = net_credit is not None and short_leg.get("bid") is not None and short_leg.get("ask") is not None
+
+        return {
+            "options": {
+                "expiration": "nearest",
+                "expirationLabel": "0DTE o vencimiento más cercano",
+                "quotesUsable": quotes_usable,
+                "liquidityOk": liquidity_ok,
+                "liquidityLabel": "Aceptable" if liquidity_ok else "Débil",
+                "deltaShort": round(short_leg["delta"], 2) if short_leg.get("delta") is not None else None,
+                "deltaTarget": 0.20,
+                "bidAskSpread": short_leg.get("spread"),
+                "spreadPct": round(short_leg["spreadPct"] * 100.0, 2) if short_leg.get("spreadPct") is not None else None,
+                "openInterestShort": short_leg.get("oi"),
+                "openInterestLong": None,
+                "spacingOk": spacing_ok,
+                "status": "live" if quotes_usable else "theoretical",
+                "notes": f"Cadena obtenida desde Yahoo Finance; short seleccionado {short_leg.get('symbol') or 'N/A'}",
+                "impliedVolatility": short_leg.get("iv"),
+            },
+            "trade": {
+                "bufferPct": buffer_pct,
+                "shortStrike": short_strike,
+                "netCredit": net_credit,
+                "breakeven": breakeven,
+                "distanceToShort": distance_to_short,
+                "expectedMove": expected_move,
+                "expectedMovePct": expected_move_pct,
+            },
+            "optionsMeta": {
+                "source": "yahoo_options",
+                "snapshot": "live_chain",
+                "expirationDate": fmt_date(expiration_dt),
+            }
         }
-    }
+
+    except Exception as e:
+        short_strike = round_to_strike(spot_price * 1.0107 if spot_price else None, step=1)
+        distance_to_short = None if spot_price is None or short_strike is None else round(short_strike - spot_price, 2)
+        fallback_em = round(spot_price * 0.0085, 2) if spot_price else None
+
+        status = "theoretical" if in_options_hours else "unavailable"
+        return {
+            "options": {
+                "expiration": "nearest" if in_options_hours else "market_closed",
+                "expirationLabel": "0DTE o vencimiento más cercano" if in_options_hours else "Mercado cerrado",
+                "quotesUsable": False,
+                "liquidityOk": False if in_options_hours else None,
+                "liquidityLabel": "Débil" if in_options_hours else "No evaluable",
+                "deltaShort": None,
+                "deltaTarget": 0.20,
+                "bidAskSpread": None,
+                "spreadPct": None,
+                "openInterestShort": None,
+                "openInterestLong": None,
+                "spacingOk": True if in_options_hours else None,
+                "status": status,
+                "notes": f"No se pudo usar cadena real ({str(e)[:140]}). Se muestra setup teórico.",
+                "impliedVolatility": None,
+            },
+            "trade": {
+                "bufferPct": 1.07,
+                "shortStrike": short_strike if in_options_hours else None,
+                "netCredit": None,
+                "breakeven": None,
+                "distanceToShort": distance_to_short if in_options_hours else None,
+                "expectedMove": fallback_em if in_options_hours else None,
+                "expectedMovePct": 0.85 if in_options_hours and fallback_em else None,
+            },
+            "optionsMeta": {
+                "source": "yahoo_options",
+                "snapshot": "fallback_theoretical",
+                "expirationDate": None,
+            }
+        }
 
 
 def score_trade_quality(state):
@@ -401,50 +683,84 @@ def score_trade_quality(state):
     score = 0
     reasons = []
 
-    delta_target = options.get("deltaTarget")
-    if delta_target is not None:
-        score += 2
-        reasons.append("Delta objetivo 0.20 definida")
+    delta_short = options.get("deltaShort")
+    if delta_short is not None:
+        delta_dist = abs(delta_short - 0.20)
+        if delta_dist <= 0.03:
+            score += 4
+            reasons.append("Delta cerca del objetivo 0.20")
+        elif delta_dist <= 0.07:
+            score += 1
+            reasons.append("Delta razonable")
+        else:
+            score -= 3
+            reasons.append("Delta lejos del objetivo")
+    else:
+        reasons.append("Delta real no disponible")
+        score -= 3
 
-    if state["trade"].get("netCredit") is None:
+    credit = state["trade"].get("netCredit")
+    if credit is None:
         reasons.append("Crédito no disponible")
         score -= 4
+    elif credit >= 0.6:
+        score += 4
+        reasons.append("Crédito atractivo")
+    elif credit >= 0.3:
+        score += 2
+        reasons.append("Crédito aceptable")
+    else:
+        score -= 3
+        reasons.append("Crédito bajo")
 
     oi_short = options.get("openInterestShort")
     if oi_short is None:
         reasons.append("OI no disponible")
         score -= 4
-    elif oi_short <= 0:
-        reasons.append("OI short en cero")
-        score -= 6
+    elif oi_short >= 500:
+        score += 4
+        reasons.append("OI sólido")
+    elif oi_short >= 100:
+        score += 2
+        reasons.append("OI aceptable")
+    else:
+        score -= 4
+        reasons.append("OI débil")
 
     spread_pct = options.get("spreadPct")
     if spread_pct is None:
         reasons.append("Spread no disponible")
         score -= 4
-    elif spread_pct > 0.15:
-        reasons.append("Spread demasiado amplio")
+    elif spread_pct <= 10:
+        score += 4
+        reasons.append("Spread limpio")
+    elif spread_pct <= 20:
+        score += 1
+        reasons.append("Spread tolerable")
+    else:
+        score -= 5
+        reasons.append("Spread amplio")
+
+    if options.get("quotesUsable") is False:
         score -= 6
+        reasons.append("Quotes no operables")
+
+    if options.get("liquidityOk") is False:
+        score -= 4
+        reasons.append("Liquidez insuficiente")
+    elif options.get("liquidityOk") is True:
+        score += 2
+        reasons.append("Liquidez aceptable")
 
     if options.get("spacingOk") is True:
         score += 1
         reasons.append("Spacing correcto")
-    elif options.get("spacingOk") is False:
-        score -= 3
-        reasons.append("Spacing pobre")
 
-    if options.get("quotesUsable") is False:
-        score -= 8
-        reasons.append("Quotes no operables")
-
-    if options.get("liquidityOk") is False:
-        score -= 6
-        reasons.append("Liquidez insuficiente")
-
+    label = "Operable" if options.get("status") == "live" and options.get("quotesUsable") else "Teórico"
     return {
         "score": score,
         "reasons": reasons,
-        "label": "Teórico" if options.get("status") != "live" else "Operable",
+        "label": label,
     }
 
 
@@ -519,7 +835,7 @@ def decide_trade(state):
         decision_label = "esperar confirmación"
         decision_tone = "yellow"
         risk_label = "Riesgo medio"
-    elif score <= 6:
+    elif score <= 8:
         decision_label = "entrar solo si setup perfecto"
         decision_tone = "blue"
         risk_label = "Riesgo medio"
@@ -545,7 +861,13 @@ def build_state():
     flags = get_opex_flags(current_dt)
     macro = build_macro_block(current_dt)
     execution = build_execution_block(current_dt, session["code"])
+    vwap_block = fetch_intraday_vwap("QQQ", current_dt)
     options_bundle = fetch_options_source("QQQ", quote["price"], current_dt, session["code"])
+
+    vwap = vwap_block.get("vwap")
+    vwap_dist = None
+    if quote["price"] is not None and vwap is not None:
+        vwap_dist = round(quote["price"] - vwap, 2)
 
     base_state = {
         "symbol": "QQQ",
@@ -556,10 +878,10 @@ def build_state():
         "changePct": quote["changePct"],
         "prevClose": quote["prevClose"],
         "session": session,
-        "vwap": None,
-        "vwapDist": None,
-        "expectedMove": None,
-        "expectedMovePct": None,
+        "vwap": vwap,
+        "vwapDist": vwap_dist,
+        "expectedMove": options_bundle["trade"].get("expectedMove"),
+        "expectedMovePct": options_bundle["trade"].get("expectedMovePct"),
         "trade": options_bundle["trade"],
         "execution": execution,
         "options": options_bundle["options"],
@@ -581,6 +903,7 @@ def build_state():
         "dataHealth": {
             "spotSource": quote["source"],
             "optionsSource": options_bundle["optionsMeta"]["source"],
+            "vwapSource": vwap_block["source"],
             "spotDegraded": quote["degraded"],
             "spotDegradedReason": quote["degradedReason"],
             "spotStaleFromPreviousState": quote["staleFromPreviousState"],
@@ -593,7 +916,6 @@ def build_state():
     base_state["tradeQuality"] = score_trade_quality(base_state)
     decision = decide_trade(base_state)
     base_state.update(decision)
-
     return base_state
 
 
