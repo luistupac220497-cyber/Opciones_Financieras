@@ -2,16 +2,19 @@
 <html lang="es" data-theme="dark">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>QQQ 0DTE Dashboard</title>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+
   <style>
     :root, [data-theme="light"] {
       --bg: #f7f6f2;
       --surface: #fbfbf9;
       --surface-2: #f3f0ec;
+      --surface-3: #edeae5;
       --text: #28251d;
       --muted: #7a7974;
+      --faint: #b0aea8;
       --border: #d4d1ca;
       --primary: #01696f;
       --success: #437a22;
@@ -19,14 +22,20 @@
       --danger: #a13544;
       --info: #006494;
       --shadow: 0 12px 32px rgba(0,0,0,.08);
+      --radius-xl: 20px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-full: 999px;
     }
 
     [data-theme="dark"] {
       --bg: #171614;
       --surface: #1c1b19;
       --surface-2: #22211f;
+      --surface-3: #2a2926;
       --text: #cdccca;
       --muted: #8d8b88;
+      --faint: #666461;
       --border: #393836;
       --primary: #4f98a3;
       --success: #6daa45;
@@ -37,47 +46,60 @@
     }
 
     * { box-sizing: border-box; }
-    body {
+
+    html, body {
       margin: 0;
+      padding: 0;
+      min-height: 100%;
+    }
+
+    body {
       font-family: "Satoshi", sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.45;
     }
 
+    button, input, select, textarea {
+      font: inherit;
+    }
+
     .app {
-      max-width: 1380px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 20px;
     }
 
-    .topbar, .hero, .section-card {
+    .topbar,
+    .hero,
+    .section-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: var(--radius-xl);
       box-shadow: var(--shadow);
     }
 
     .topbar {
-      padding: 18px 20px;
       display: flex;
       justify-content: space-between;
-      gap: 16px;
       align-items: flex-start;
+      gap: 16px;
       flex-wrap: wrap;
+      padding: 18px 20px;
       margin-bottom: 18px;
     }
 
     .title-wrap h1 {
       margin: 0 0 8px;
-      font-size: clamp(1.5rem, 1.2rem + 1vw, 2.2rem);
+      font-size: clamp(1.6rem, 1.2rem + 1vw, 2.3rem);
+      line-height: 1.08;
     }
 
     .meta {
-      color: var(--muted);
-      font-size: .95rem;
       display: grid;
       gap: 4px;
+      color: var(--muted);
+      font-size: 0.96rem;
     }
 
     .top-actions {
@@ -86,28 +108,54 @@
       align-items: center;
     }
 
-    button {
+    .icon-btn {
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text);
-      border-radius: 12px;
-      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      font-size: 1rem;
+      transition: transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      background: var(--surface-3);
+    }
+
+    .market-alert {
+      display: none;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(237,179,54,.24);
+      background: rgba(237,179,54,.12);
+      color: var(--text);
     }
 
     .hero {
-      padding: 22px;
-      margin-bottom: 18px;
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 18px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: .95rem;
+      margin-bottom: 8px;
     }
 
     .decision {
       font-size: clamp(2rem, 1.5rem + 2vw, 3.2rem);
       font-weight: 900;
-      margin: 8px 0 10px;
+      line-height: 1;
+      margin: 0 0 12px;
       text-transform: lowercase;
     }
 
@@ -121,11 +169,11 @@
       align-items: center;
       gap: 8px;
       padding: 8px 12px;
-      border-radius: 999px;
+      margin-bottom: 14px;
+      border-radius: var(--radius-full);
       background: var(--surface-2);
       border: 1px solid var(--border);
       font-weight: 700;
-      margin-bottom: 14px;
     }
 
     .chips {
@@ -136,45 +184,47 @@
     }
 
     .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 999px;
+      color: var(--text);
+      border-radius: var(--radius-full);
       padding: 8px 12px;
-      font-size: .95rem;
+      font-size: .94rem;
+      white-space: nowrap;
     }
 
     .phase-note {
       color: var(--muted);
-      margin-bottom: 16px;
       font-size: 1rem;
-    }
-
-    .mini-grid, .main-grid {
-      display: grid;
-      gap: 14px;
+      margin-bottom: 16px;
     }
 
     .mini-grid {
+      display: grid;
       grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
     }
 
-    .mini-card, .section-card {
-      background: var(--surface);
+    .mini-card {
+      background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
+      border-radius: var(--radius-lg);
+      padding: 14px;
     }
 
-    .mini-card .label,
-    .section-card .label {
+    .mini-card .label {
       color: var(--muted);
-      font-size: .92rem;
+      font-size: .9rem;
       margin-bottom: 8px;
     }
 
     .mini-card .value {
-      font-size: 1.4rem;
+      font-size: 1.32rem;
       font-weight: 800;
+      line-height: 1.15;
     }
 
     .side-panel {
@@ -183,53 +233,95 @@
       align-content: start;
     }
 
+    .section-card {
+      padding: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+      line-height: 1.2;
+    }
+
+    .status-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
     .status-badge {
       display: inline-flex;
+      align-items: center;
       padding: 8px 12px;
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       font-weight: 700;
       font-size: .92rem;
       border: 1px solid transparent;
     }
 
-    .status-danger { background: rgba(209,99,167,.14); color: var(--danger); border-color: rgba(209,99,167,.28); }
-    .status-warning { background: rgba(237,179,54,.14); color: var(--warning); border-color: rgba(237,179,54,.28); }
-    .status-success { background: rgba(109,170,69,.14); color: var(--success); border-color: rgba(109,170,69,.28); }
-    .status-info { background: rgba(85,145,199,.14); color: var(--info); border-color: rgba(85,145,199,.28); }
-    .status-neutral { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+    .status-danger {
+      background: rgba(209,99,167,.14);
+      color: var(--danger);
+      border-color: rgba(209,99,167,.28);
+    }
 
-    .alert {
-      display: none;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(237,179,54,.24);
-      background: rgba(237,179,54,.12);
+    .status-warning {
+      background: rgba(237,179,54,.14);
+      color: var(--warning);
+      border-color: rgba(237,179,54,.28);
+    }
+
+    .status-success {
+      background: rgba(109,170,69,.14);
+      color: var(--success);
+      border-color: rgba(109,170,69,.28);
+    }
+
+    .status-info {
+      background: rgba(85,145,199,.14);
+      color: var(--info);
+      border-color: rgba(85,145,199,.28);
+    }
+
+    .status-neutral {
+      background: var(--surface-2);
       color: var(--text);
-      margin-top: 12px;
+      border-color: var(--border);
     }
 
     .main-grid {
+      display: grid;
       grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
     }
 
     .data-list {
       display: grid;
       gap: 10px;
-      margin-top: 8px;
     }
 
     .data-row {
       display: flex;
       justify-content: space-between;
-      gap: 16px;
-      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+      gap: 14px;
       padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
     }
 
-    .data-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .data-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
 
     .data-row .k {
       color: var(--muted);
+      min-width: 42%;
+    }
+
+    .data-row .v {
+      text-align: right;
+      word-break: break-word;
     }
 
     .reasons-box {
@@ -238,26 +330,52 @@
       gap: 10px;
     }
 
-    .section-title {
-      margin: 0 0 8px;
-      font-size: 1.15rem;
-    }
-
     .muted {
       color: var(--muted);
     }
 
+    .loading .decision {
+      opacity: .65;
+    }
+
     @media (max-width: 1100px) {
-      .hero { grid-template-columns: 1fr; }
-      .mini-grid { grid-template-columns: repeat(2, 1fr); }
-      .main-grid { grid-template-columns: 1fr; }
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .mini-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 640px) {
-      .app { padding: 14px; }
-      .mini-grid { grid-template-columns: 1fr; }
-      .topbar { padding: 16px; }
-      .hero { padding: 16px; }
+      .app {
+        padding: 14px;
+      }
+      .topbar,
+      .hero,
+      .section-card {
+        border-radius: 16px;
+      }
+      .topbar {
+        padding: 16px;
+      }
+      .hero {
+        padding: 16px;
+      }
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+      .data-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+      }
+      .data-row .v {
+        text-align: left;
+      }
     }
   </style>
 </head>
@@ -272,18 +390,19 @@
           <div id="browserClock">Hora local: --</div>
         </div>
       </div>
+
       <div class="top-actions">
-        <button id="themeBtn" type="button">◐</button>
-        <button id="refreshBtn" type="button">↻</button>
+        <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">◐</button>
+        <button id="refreshBtn" class="icon-btn" type="button" aria-label="Actualizar datos">↻</button>
       </div>
     </header>
 
-    <div id="marketAlert" class="alert"></div>
+    <div id="marketAlert" class="market-alert"></div>
 
     <section class="hero">
       <div>
-        <div class="muted">Decisión operativa</div>
-        <div id="decisionText" class="decision">--</div>
+        <div class="eyebrow">Decisión operativa</div>
+        <div id="decisionText" class="decision blue">--</div>
         <div id="scoreValue" class="score-pill">Score --</div>
 
         <div class="chips">
@@ -312,7 +431,7 @@
           </div>
           <div class="mini-card">
             <div class="label">Próximo gran evento</div>
-            <div id="miniMacro" class="value" style="font-size:1.05rem">--</div>
+            <div id="miniMacro" class="value" style="font-size:1.02rem;">--</div>
           </div>
         </div>
       </div>
@@ -320,7 +439,7 @@
       <aside class="side-panel">
         <div class="section-card">
           <h3 class="section-title">Estado</h3>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+          <div class="status-wrap">
             <span id="riskBadge" class="status-badge status-neutral">Riesgo --</span>
             <span id="sessionBadge" class="status-badge status-neutral">Sesión --</span>
           </div>
@@ -329,17 +448,17 @@
         <div class="section-card">
           <h3 class="section-title">Fuentes</h3>
           <div class="data-list">
-            <div class="data-row"><span class="k">Spot</span><span id="spotSource">--</span></div>
-            <div class="data-row"><span class="k">Options</span><span id="optionsSource">--</span></div>
+            <div class="data-row"><span class="k">Spot</span><span class="v" id="spotSource">--</span></div>
+            <div class="data-row"><span class="k">Options</span><span class="v" id="optionsSource">--</span></div>
           </div>
         </div>
 
         <div class="section-card">
           <h3 class="section-title">Freshness</h3>
           <div class="data-list">
-            <div class="data-row"><span class="k">Estado</span><span id="freshnessState">--</span></div>
-            <div class="data-row"><span class="k">Dato</span><span id="snapshotState">--</span></div>
-            <div class="data-row"><span class="k">Options</span><span id="optionsStatus">--</span></div>
+            <div class="data-row"><span class="k">Estado</span><span class="v" id="freshnessState">--</span></div>
+            <div class="data-row"><span class="k">Dato</span><span class="v" id="snapshotState">--</span></div>
+            <div class="data-row"><span class="k">Options</span><span class="v" id="optionsStatus">--</span></div>
           </div>
         </div>
       </aside>
@@ -348,32 +467,32 @@
     <section class="main-grid">
       <div class="section-card">
         <h3 class="section-title">Precio y sesión</h3>
-        <div class="data-list" id="priceSessionBox"></div>
+        <div id="priceSessionBox" class="data-list"></div>
       </div>
 
       <div class="section-card">
         <h3 class="section-title">Setup</h3>
-        <div class="data-list" id="setupBox"></div>
+        <div id="setupBox" class="data-list"></div>
       </div>
 
       <div class="section-card">
         <h3 class="section-title">Operabilidad</h3>
-        <div class="data-list" id="operabilityBox"></div>
+        <div id="operabilityBox" class="data-list"></div>
       </div>
 
       <div class="section-card">
         <h3 class="section-title">Macro</h3>
-        <div class="data-list" id="macroBox"></div>
+        <div id="macroBox" class="data-list"></div>
       </div>
 
       <div class="section-card">
         <h3 class="section-title">Ejecución</h3>
-        <div class="data-list" id="executionBox"></div>
+        <div id="executionBox" class="data-list"></div>
       </div>
 
       <div class="section-card">
         <h3 class="section-title">Liquidez y OPEX</h3>
-        <div class="data-list" id="liqOpexBox"></div>
+        <div id="liqOpexBox" class="data-list"></div>
       </div>
 
       <div class="section-card" style="grid-column: 1 / -1;">
@@ -387,19 +506,22 @@
     const $ = (id) => document.getElementById(id);
 
     function fmtMoney(v) {
-      return v == null ? "No disponible" : new Intl.NumberFormat("en-US", {
+      if (v == null || Number.isNaN(Number(v))) return "No disponible";
+      return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
         maximumFractionDigits: 2
-      }).format(v);
+      }).format(Number(v));
     }
 
     function fmtPctRaw(v) {
-      return v == null ? "No disponible" : `${Number(v).toFixed(2)}%`;
+      if (v == null || Number.isNaN(Number(v))) return "No disponible";
+      return `${Number(v).toFixed(2)}%`;
     }
 
     function fmtNumber(v, decimals = 2) {
-      return v == null ? "No disponible" : Number(v).toFixed(decimals);
+      if (v == null || Number.isNaN(Number(v))) return "No disponible";
+      return Number(v).toFixed(decimals);
     }
 
     function fmtText(v) {
@@ -407,7 +529,7 @@
     }
 
     function yesNo(v) {
-      if (v == null) return "No disponible";
+      if (v == null) return "No evaluable";
       return v ? "Sí" : "No";
     }
 
@@ -447,7 +569,7 @@
       if (state.options.liquidityLabel) return state.options.liquidityLabel;
       if (state.options.liquidityOk === true) return "Aceptable";
       if (state.options.liquidityOk === false) return "Débil";
-      return "No disponible";
+      return "No evaluable";
     }
 
     function phaseMessage(state) {
@@ -458,8 +580,14 @@
       if (degraded) {
         return "Dato degradado o reciclado. La lectura es provisional hasta recuperar spot fresco.";
       }
-      if (sessionCode !== "regular") {
-        return "Fuera de sesión regular. Observa, pero evita interpretar el setup como operable.";
+      if (sessionCode === "closed") {
+        return "Mercado cerrado. El spot puede actualizar, pero la operativa 0DTE queda en espera hasta la sesión regular.";
+      }
+      if (sessionCode === "premarket") {
+        return "Pre-market. Observa contexto y gap, pero espera apertura para evaluar opciones y liquidez real.";
+      }
+      if (sessionCode === "afterhours") {
+        return "After hours. No abras nuevas posiciones intradía; prepara niveles para la siguiente sesión.";
       }
       if (execution.entryWindowOpen) {
         const mins = execution.minutesSinceEntryStart;
@@ -506,7 +634,17 @@
       rows.forEach(([k, v]) => {
         const row = document.createElement("div");
         row.className = "data-row";
-        row.innerHTML = `<span class="k">${k}</span><span>${v}</span>`;
+
+        const left = document.createElement("span");
+        left.className = "k";
+        left.textContent = k;
+
+        const right = document.createElement("span");
+        right.className = "v";
+        right.textContent = v;
+
+        row.appendChild(left);
+        row.appendChild(right);
         box.appendChild(row);
       });
     }
@@ -530,6 +668,7 @@
 
     function updateClocks() {
       const now = new Date();
+
       $("liveClock").textContent = "Hora ET: " + new Intl.DateTimeFormat("es-ES", {
         weekday: "short",
         day: "2-digit",
@@ -554,6 +693,7 @@
     }
 
     async function loadState() {
+      document.body.classList.add("loading");
       try {
         const res = await fetch(`./data/state.json?t=${Date.now()}`, {
           cache: "no-store"
@@ -569,6 +709,9 @@
         $("scoreValue").textContent = "Score --";
         $("phaseNote").textContent = "No se pudo cargar data/state.json";
         renderReasons(["Fallo de carga del JSON"]);
+        renderAlert({ alerts: ["No se pudo cargar el snapshot del dashboard"] });
+      } finally {
+        document.body.classList.remove("loading");
       }
     }
 
@@ -595,10 +738,20 @@
       $("miniCredit").textContent = fmtMoney(state.trade?.netCredit);
       $("miniMacro").textContent = fmtText(state.macro?.nextBig?.label || "No disponible");
 
-      const riskType = /alto/i.test(state.riskLabel || "") ? "danger" : /controlado/i.test(state.riskLabel || "") ? "success" : "warning";
+      const riskType = /alto/i.test(state.riskLabel || "")
+        ? "danger"
+        : /controlado/i.test(state.riskLabel || "")
+        ? "success"
+        : "warning";
+
       setBadge($("riskBadge"), humanizeRisk(state.riskLabel), riskType);
 
-      const sessionType = state.session?.code === "regular" ? "success" : state.session?.code === "closed" ? "danger" : "info";
+      const sessionType = state.session?.code === "regular"
+        ? "success"
+        : state.session?.code === "closed"
+        ? "danger"
+        : "info";
+
       setBadge($("sessionBadge"), humanizeSession(state.session?.code), sessionType);
 
       $("spotSource").textContent = humanizeSource(state.dataHealth?.spotSource);
@@ -609,8 +762,18 @@
 
       renderRows("priceSessionBox", [
         ["Spot", fmtMoney(state.price)],
-        ["Cambio", state.change == null || state.changePct == null ? "No disponible" : `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`],
-        ["VWAP", state.vwap == null && state.vwapDist == null ? "No disponible" : `${fmtMoney(state.vwap)} · ${fmtMoney(state.vwapDist)}`],
+        [
+          "Cambio",
+          state.change == null || state.changePct == null
+            ? "No disponible"
+            : `${fmtMoney(state.change)} · ${fmtPctRaw(state.changePct)}`
+        ],
+        [
+          "VWAP",
+          state.vwap == null && state.vwapDist == null
+            ? "No disponible"
+            : `${fmtMoney(state.vwap)} · ${fmtMoney(state.vwapDist)}`
+        ],
         ["Sesión", humanizeSession(state.session?.code)],
         ["Cierre previo", fmtMoney(state.prevClose)]
       ]);
@@ -620,15 +783,33 @@
         ["Short strike", fmtMoney(state.trade?.shortStrike)],
         ["Breakeven", fmtMoney(state.trade?.breakeven)],
         ["Distancia al short", fmtMoney(state.trade?.distanceToShort)],
-        ["Expected move", state.trade?.expectedMove == null && state.trade?.expectedMovePct == null ? "No disponible" : `${fmtMoney(state.trade?.expectedMove)} (${fmtPctRaw(state.trade?.expectedMovePct)})`],
-        ["Quality", `Estado ${fmtText(state.tradeQuality?.label)} · Score ${fmtText(state.tradeQuality?.score)}`]
+        [
+          "Expected move",
+          state.trade?.expectedMove == null && state.trade?.expectedMovePct == null
+            ? "No disponible"
+            : `${fmtMoney(state.trade?.expectedMove)} (${fmtPctRaw(state.trade?.expectedMovePct)})`
+        ],
+        [
+          "Quality",
+          `Estado ${fmtText(state.tradeQuality?.label)} · Score ${fmtText(state.tradeQuality?.score)}`
+        ]
       ]);
 
       renderRows("operabilityBox", [
-        ["Expiración", state.options?.quotesUsable ? fmtText(state.options?.expirationLabel) : `Objetivo · ${fmtText(state.options?.expirationLabel)}`],
+        [
+          "Expiración",
+          state.options?.quotesUsable
+            ? fmtText(state.options?.expirationLabel)
+            : `Objetivo · ${fmtText(state.options?.expirationLabel)}`
+        ],
         ["Quotes válidas", yesNo(state.options?.quotesUsable)],
         ["Liquidez", humanizeLiquidity(state)],
-        ["Delta short", state.options?.deltaShort == null ? `Objetivo ${fmtNumber(state.options?.deltaTarget)}` : fmtNumber(state.options?.deltaShort)],
+        [
+          "Delta short",
+          state.options?.deltaShort == null
+            ? `Objetivo ${fmtNumber(state.options?.deltaTarget)}`
+            : fmtNumber(state.options?.deltaShort)
+        ],
         ["Notas", fmtText(state.options?.notes)]
       ]);
 
@@ -649,16 +830,38 @@
         ["Min. al cutoff", fmtText(state.execution?.minsToCutoff)],
         ["Salida dura", fmtText(state.execution?.hardExitEt)],
         ["Time stop", yesNo(state.execution?.timeStopTriggered)],
-        ["Máx hold", state.execution?.maxHoldMinutes == null ? "No disponible" : `${state.execution.maxHoldMinutes} min`]
+        [
+          "Máx hold",
+          state.execution?.maxHoldMinutes == null
+            ? "No disponible"
+            : `${state.execution.maxHoldMinutes} min`
+        ]
       ]);
 
       renderRows("liqOpexBox", [
         ["Bid-ask spread", fmtMoney(state.options?.bidAskSpread)],
         ["Spread %", fmtPctRaw(state.options?.spreadPct)],
-        ["OI short", state.options?.openInterestShort == null ? "No disponible" : fmtText(state.options.openInterestShort)],
-        ["OI long", state.options?.openInterestLong == null ? "No disponible" : fmtText(state.options.openInterestLong)],
+        [
+          "OI short",
+          state.options?.openInterestShort == null
+            ? "No disponible"
+            : fmtText(state.options.openInterestShort)
+        ],
+        [
+          "OI long",
+          state.options?.openInterestLong == null
+            ? "No disponible"
+            : fmtText(state.options.openInterestLong)
+        ],
         ["Spacing", yesNo(state.options?.spacingOk)],
-        ["OPEX", state.flags?.opexQuarterly ? "Trimestral" : state.flags?.opexDay ? "Sí" : "No"]
+        [
+          "OPEX",
+          state.flags?.opexQuarterly
+            ? "Trimestral"
+            : state.flags?.opexDay
+            ? "Sí"
+            : "No"
+        ]
       ]);
 
       renderReasons(state.reasons || []);
