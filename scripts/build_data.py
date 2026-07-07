@@ -876,7 +876,7 @@ def fetch_earnings_calendar(symbols, current_dt):
             summary = f"Earnings propios muy próximos · {qqq_next['symbol']}"
         elif days_to_qqq <= 3:
             score -= 10
-            summary = f"Earnings propios próximos · {qqqNext['symbol']}"
+            summary = f"Earnings propios próximos · {qqq_next['symbol']}"
 
     if not qqq_next and primary_watch:
         hw_dt = datetime.strptime(primary_watch[0]["date"], "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
@@ -896,7 +896,7 @@ def fetch_earnings_calendar(symbols, current_dt):
             summary = f"Catalyst secundario próximo · {secondary_watch[0]['symbol']}"
         elif days_to_sec <= 3:
             score -= 1
-            summary = f"Catalyst secundario cercano · {secondary_watch[0]['symbol']}"
+            summary = f"Catalyst secundario cercano · {secondaryWatch[0]['symbol']}"
 
     return {
         "today": today[:10],
