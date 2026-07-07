@@ -1,6 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-07 03:50 ET",
+  "updatedAt": "2026-07-07 03:53 ET",
+  "generatedAtUnix": 1783410794,
   "price": 722.82,
   "change": 10.22,
   "changePct": 1.4342,
@@ -25,10 +26,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 399,
-    "minutesSinceEntryStart": -400,
+    "minsToEntryStart": 396,
+    "minutesSinceEntryStart": -397,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 579,
+    "minsToCutoff": 576,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -38,8 +39,8 @@
     "expiration": "market_closed",
     "expirationLabel": "Mercado cerrado",
     "quotesUsable": false,
-    "liquidityOk": false,
-    "liquidityLabel": "Cerrado",
+    "liquidityOk": null,
+    "liquidityLabel": "No evaluable",
     "deltaShort": null,
     "deltaTarget": 0.2,
     "bidAskSpread": null,
@@ -48,7 +49,7 @@
     "openInterestLong": null,
     "spacingOk": null,
     "status": "unavailable",
-    "notes": "Mercado fuera de sesión regular; cadena operativa desactivada"
+    "notes": "Fuera de horario regular de opciones; no se evalúan liquidez, OI, spread ni crédito"
   },
   "optionsMeta": {
     "source": "nasdaq_public",
@@ -144,30 +145,20 @@
     "optionsDataStatus": "unavailable"
   },
   "tradeQuality": {
-    "score": -24,
+    "score": 0,
     "reasons": [
-      "Delta objetivo 0.20 definida",
-      "Crédito no disponible",
-      "OI no disponible",
-      "Spread no disponible",
-      "Quotes no operables",
-      "Liquidez insuficiente"
+      "Fuera de horario de opciones; métricas no evaluables aún"
     ],
-    "label": "Teórico"
+    "label": "Pendiente de apertura"
   },
-  "score": -38,
-  "decisionLabel": "no entrar",
-  "decisionTone": "red",
-  "riskLabel": "Riesgo alto",
+  "score": -6,
+  "decisionLabel": "esperar apertura",
+  "decisionTone": "blue",
+  "riskLabel": "Riesgo medio",
   "reasons": [
-    "Fuera de sesión regular",
+    "Mercado cerrado",
     "Próximo gran evento · Actas del FOMC",
-    "Delta objetivo 0.20 definida",
-    "Crédito no disponible",
-    "OI no disponible",
-    "Spread no disponible",
-    "Quotes no operables",
-    "Liquidez insuficiente"
+    "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
 }
