@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-
 NY = ZoneInfo("America/New_York")
 UTC = ZoneInfo("UTC")
 
@@ -245,6 +244,9 @@ def fetch_intraday_vwap(symbol, current_dt):
 
         return {"vwap": round(pv_sum / v_sum, 2), "source": "finnhub_candles", "status": "ok"}
 
+    except requests.HTTPError as e:
+        status = e.response.status_code if e.response is not None else None
+        return {"vwap": None, "source": "finnhub_candles", "status": f"http_{status}"}
     except Exception:
         return {"vwap": None, "source": "finnhub_candles", "status": "error"}
 
@@ -322,11 +324,7 @@ def fetch_macro_calendar(current_dt):
 
     try:
         url = "https://finnhub.io/api/v1/calendar/economic"
-        params = {
-            "from": frm,
-            "to": to,
-            "token": api_key,
-        }
+        params = {"from": frm, "to": to, "token": api_key}
         r = requests.get(url, params=params, timeout=20)
         r.raise_for_status()
         data = r.json()
@@ -433,15 +431,36 @@ def fetch_macro_calendar(current_dt):
             "source": "finnhub_economic_calendar",
         }
 
-    except Exception as e:
+    except requests.HTTPError as e:
+        status = e.response.status_code if e.response is not None else None
+        if status == 403:
+            return {
+                "todayHighImpact": False,
+                "windowCritical": False,
+                "score": 0,
+                "items": [],
+                "nextBig": None,
+                "summary": "Macro no disponible por acceso/API",
+                "source": "macro_unavailable",
+            }
         return {
             "todayHighImpact": False,
             "windowCritical": False,
             "score": 0,
             "items": [],
             "nextBig": None,
-            "summary": f"Macro no disponible ({str(e)[:120]})",
-            "source": "finnhub_economic_calendar",
+            "summary": f"Macro no disponible (HTTP {status})",
+            "source": "macro_unavailable",
+        }
+    except Exception:
+        return {
+            "todayHighImpact": False,
+            "windowCritical": False,
+            "score": 0,
+            "items": [],
+            "nextBig": None,
+            "summary": "Macro no disponible",
+            "source": "macro_unavailable",
         }
 
 
@@ -728,16 +747,16 @@ def fetch_options_source(symbol, spot_price, current_dt, session_code):
             "trade": {
                 "bufferPct": buffer_pct,
                 "shortStrike": short_strike,
-                "shortStrikeMode": "live",
-                "netCredit": net_credit,
-                "breakeven": breakeven,
+                "shortStrikeMode": "live" if quotes_usable else "estimated",
+                "netCredit": net_credit if quotes_usable else None,
+                "breakeven": breakeven if quotes_usable else None,
                 "distanceToShort": distance_to_short,
                 "expectedMove": expected_move,
                 "expectedMovePct": expected_move_pct,
             },
             "optionsMeta": {
                 "source": "yahoo_options",
-                "snapshot": "live_chain",
+                "snapshot": "live_chain" if quotes_usable else "partial_chain",
                 "expirationDate": fmt_date(expiration_dt),
             }
         }
@@ -857,7 +876,7 @@ def fetch_earnings_calendar(symbols, current_dt):
             summary = f"Earnings propios muy próximos · {qqq_next['symbol']}"
         elif days_to_qqq <= 3:
             score -= 10
-            summary = f"Earnings propios próximos · {qqq_next['symbol']}"
+            summary = f"Earnings propios próximos · {qqqNext['symbol']}"
 
     if not qqq_next and primary_watch:
         hw_dt = datetime.strptime(primary_watch[0]["date"], "%Y-%m-%d").replace(tzinfo=NY, hour=16, minute=0)
@@ -1008,6 +1027,8 @@ def decide_trade(state):
         alerts.append("Macro crítica en ventana operativa")
     elif macro["todayHighImpact"]:
         reasons.append("Hay macro alta hoy")
+    elif macro["source"] == "macro_unavailable":
+        reasons.append("Macro no disponible por API/plan")
 
     if earnings.get("qqqNext"):
         reasons.append(f"Earnings próximos propios · {earnings['qqqNext']['symbol']}")
@@ -1100,11 +1121,16 @@ def build_state():
     dynamic_buffer_pct = compute_dynamic_buffer_pct(session, macro, earnings, options_bundle["trade"], current_dt)
     options_bundle["trade"]["bufferPct"] = dynamic_buffer_pct
 
+    if session["code"] != "regular" or not options_bundle["options"].get("quotesUsable"):
+        options_bundle["trade"]["shortStrikeMode"] = "estimated"
+
     if options_bundle["trade"].get("shortStrike") is None and quote["price"] is not None:
         proposed_short = compute_dynamic_short_strike(quote["price"], dynamic_buffer_pct, step=1.0)
         options_bundle["trade"]["shortStrike"] = proposed_short
         options_bundle["trade"]["shortStrikeMode"] = "estimated"
         options_bundle["trade"]["distanceToShort"] = round(proposed_short - quote["price"], 2) if proposed_short is not None else None
+    elif quote["price"] is not None and options_bundle["trade"].get("shortStrike") is not None:
+        options_bundle["trade"]["distanceToShort"] = round(options_bundle["trade"]["shortStrike"] - quote["price"], 2)
 
     vwap = vwap_block.get("vwap")
     vwap_dist = None
