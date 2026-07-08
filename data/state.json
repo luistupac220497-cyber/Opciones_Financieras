@@ -1,10 +1,10 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-08 13:20 ET",
-  "generatedAtUnix": 1783531253,
-  "price": 709.35,
-  "change": -0.08,
-  "changePct": -0.0113,
+  "updatedAt": "2026-07-08 13:31 ET",
+  "generatedAtUnix": 1783531867,
+  "price": 710.79,
+  "change": 1.36,
+  "changePct": 0.1917,
   "prevClose": 709.43,
   "session": {
     "code": "regular",
@@ -12,28 +12,28 @@
   },
   "vwap": null,
   "vwapDist": null,
-  "expectedMove": 5.67,
+  "expectedMove": 5.69,
   "expectedMovePct": 0.8,
   "trade": {
     "bufferPct": 0.49,
-    "shortStrike": 713.0,
+    "shortStrike": 715.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 3.65,
-    "expectedMove": 5.67,
+    "distanceToShort": 4.21,
+    "expectedMove": 5.69,
     "expectedMovePct": 0.8
   },
   "execution": {
-    "phase": "Ventana de entrada abierta",
+    "phase": "Fuera de ventana",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -171,
-    "minutesSinceEntryStart": 170,
+    "minsToEntryStart": -182,
+    "minutesSinceEntryStart": 181,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 9,
+    "minsToCutoff": -2,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
-    "entryWindowOpen": true,
+    "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
   "options": {
@@ -64,7 +64,7 @@
     "score": 0,
     "items": [],
     "nextBig": null,
-    "summary": "Macro no disponible por acceso/API",
+    "summary": "Macro no disponible (HTTP 502)",
     "source": "macro_unavailable"
   },
   "earnings": {
