@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-08 08:31 ET",
-  "generatedAtUnix": 1783513867,
+  "updatedAt": "2026-07-08 08:40 ET",
+  "generatedAtUnix": 1783514445,
   "price": 709.43,
   "change": -13.39,
   "changePct": -1.8525,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 118,
-    "minutesSinceEntryStart": -119,
+    "minsToEntryStart": 109,
+    "minutesSinceEntryStart": -110,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 298,
+    "minsToCutoff": 289,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -64,7 +64,7 @@
     "score": 0,
     "items": [],
     "nextBig": null,
-    "summary": "Macro no disponible (HTTP 502)",
+    "summary": "Macro no disponible por acceso/API",
     "source": "macro_unavailable"
   },
   "earnings": {
@@ -152,11 +152,11 @@
     "vwapSource": "finnhub_candles",
     "macroSource": "macro_unavailable",
     "earningsSource": "finnhub_earnings_calendar",
-    "spotDegraded": true,
-    "spotDegradedReason": "Finnhub HTTP 502",
-    "spotStaleFromPreviousState": true,
-    "freshnessLabel": "Dato degradado",
-    "snapshotLabel": "Snapshot previo reciclado",
+    "spotDegraded": false,
+    "spotDegradedReason": null,
+    "spotStaleFromPreviousState": false,
+    "freshnessLabel": "Dato reciente",
+    "snapshotLabel": "Snapshot actual",
     "optionsDataStatus": "unavailable"
   },
   "tradeQuality": {
@@ -166,7 +166,7 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -11,
+  "score": -3,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
@@ -174,10 +174,7 @@
     "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · TSLA",
     "Pre-market; esperar apertura",
-    "Spot degradado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
-  "alerts": [
-    "Dato spot degradado; lectura provisional"
-  ]
+  "alerts": []
 }
