@@ -1,10 +1,10 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-09 13:20 ET",
-  "generatedAtUnix": 1783617650,
-  "price": 723.94,
-  "change": 12.5,
-  "changePct": 1.757,
+  "updatedAt": "2026-07-09 13:30 ET",
+  "generatedAtUnix": 1783618255,
+  "price": 724.09,
+  "change": 12.65,
+  "changePct": 1.7781,
   "prevClose": 711.44,
   "session": {
     "code": "regular",
@@ -20,20 +20,20 @@
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 4.06,
+    "distanceToShort": 3.91,
     "expectedMove": 5.79,
     "expectedMovePct": 0.8
   },
   "execution": {
-    "phase": "Ventana de entrada abierta",
+    "phase": "Fuera de ventana",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -171,
-    "minutesSinceEntryStart": 170,
+    "minsToEntryStart": -181,
+    "minutesSinceEntryStart": 180,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 9,
+    "minsToCutoff": -1,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
-    "entryWindowOpen": true,
+    "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
   "options": {
