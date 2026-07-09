@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-08 23:50 ET",
-  "generatedAtUnix": 1783569053,
+  "updatedAt": "2026-07-09 00:01 ET",
+  "generatedAtUnix": 1783569664,
   "price": 711.44,
   "change": 2.01,
   "changePct": 0.2833,
@@ -15,24 +15,24 @@
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.45,
-    "shortStrike": 715.0,
+    "bufferPct": 0.68,
+    "shortStrike": 717.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 3.56,
+    "distanceToShort": 5.56,
     "expectedMove": null,
     "expectedMovePct": null
   },
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -801,
-    "minutesSinceEntryStart": 800,
+    "minsToEntryStart": 628,
+    "minutesSinceEntryStart": -629,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -621,
+    "minsToCutoff": 808,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": true,
+    "timeStopTriggered": false,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -73,7 +73,7 @@
       "symbol": "TSLA",
       "date": "2026-07-22",
       "dateEt": "2026-07-22 16:00 ET",
-      "countdown": "13d 16h",
+      "countdown": "13d 15h",
       "epsEstimate": 0.4784,
       "hour": "amc",
       "quarter": 2,
@@ -87,7 +87,7 @@
         "symbol": "TSLA",
         "date": "2026-07-22",
         "dateEt": "2026-07-22 16:00 ET",
-        "countdown": "13d 16h",
+        "countdown": "13d 15h",
         "epsEstimate": 0.4784,
         "hour": "amc",
         "quarter": 2,
@@ -99,7 +99,7 @@
         "symbol": "MSFT",
         "date": "2026-07-28",
         "dateEt": "2026-07-28 16:00 ET",
-        "countdown": "19d 16h",
+        "countdown": "19d 15h",
         "epsEstimate": 4.3265,
         "hour": "amc",
         "quarter": 4,
@@ -111,7 +111,7 @@
         "symbol": "GOOGL",
         "date": "2026-07-28",
         "dateEt": "2026-07-28 16:00 ET",
-        "countdown": "19d 16h",
+        "countdown": "19d 15h",
         "epsEstimate": 2.9539,
         "hour": "amc",
         "quarter": 2,
@@ -123,12 +123,36 @@
         "symbol": "META",
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
-        "countdown": "20d 16h",
+        "countdown": "20d 15h",
         "epsEstimate": 7.3228,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
         "revenueEstimate": 61331816283,
+        "weight": "primary"
+      },
+      {
+        "symbol": "AAPL",
+        "date": "2026-07-30",
+        "dateEt": "2026-07-30 16:00 ET",
+        "countdown": "21d 15h",
+        "epsEstimate": 1.9304,
+        "hour": "amc",
+        "quarter": 3,
+        "year": 2026,
+        "revenueEstimate": 110751547827,
+        "weight": "primary"
+      },
+      {
+        "symbol": "AMZN",
+        "date": "2026-07-30",
+        "dateEt": "2026-07-30 16:00 ET",
+        "countdown": "21d 15h",
+        "epsEstimate": 1.8519,
+        "hour": "amc",
+        "quarter": 2,
+        "year": 2026,
+        "revenueEstimate": 200167253599,
         "weight": "primary"
       }
     ],
@@ -144,7 +168,7 @@
   "market": {
     "isHoliday": false,
     "name": null,
-    "date": "2026-07-08"
+    "date": "2026-07-09"
   },
   "dataHealth": {
     "spotSource": "finnhub_quote",
@@ -166,7 +190,7 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -16,
+  "score": -4,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
@@ -174,7 +198,6 @@
     "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · TSLA",
     "Mercado cerrado",
-    "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
