@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-10 05:01 ET",
-  "generatedAtUnix": 1783674061,
+  "updatedAt": "2026-07-10 05:10 ET",
+  "generatedAtUnix": 1783674655,
   "price": 723.28,
   "change": 11.84,
   "changePct": 1.6642,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 328,
-    "minutesSinceEntryStart": -329,
+    "minsToEntryStart": 319,
+    "minutesSinceEntryStart": -320,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 508,
+    "minsToCutoff": 499,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -70,19 +70,31 @@
   "earnings": {
     "today": [],
     "next": {
-      "symbol": "TSLA",
+      "symbol": "GOOGL",
       "date": "2026-07-22",
       "dateEt": "2026-07-22 16:00 ET",
       "countdown": "12d 10h",
-      "epsEstimate": 0.4784,
+      "epsEstimate": 2.9539,
       "hour": "amc",
       "quarter": 2,
       "year": 2026,
-      "revenueEstimate": 25534054668,
+      "revenueEstimate": 120188455372,
       "weight": "primary"
     },
     "qqqNext": null,
     "watchlist": [
+      {
+        "symbol": "GOOGL",
+        "date": "2026-07-22",
+        "dateEt": "2026-07-22 16:00 ET",
+        "countdown": "12d 10h",
+        "epsEstimate": 2.9539,
+        "hour": "amc",
+        "quarter": 2,
+        "year": 2026,
+        "revenueEstimate": 120188455372,
+        "weight": "primary"
+      },
       {
         "symbol": "TSLA",
         "date": "2026-07-22",
@@ -120,6 +132,18 @@
         "weight": "primary"
       },
       {
+        "symbol": "MSFT",
+        "date": "2026-07-29",
+        "dateEt": "2026-07-29 16:00 ET",
+        "countdown": "19d 10h",
+        "epsEstimate": 4.3265,
+        "hour": "amc",
+        "quarter": 4,
+        "year": 2026,
+        "revenueEstimate": 89370759268,
+        "weight": "primary"
+      },
+      {
         "symbol": "META",
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
@@ -129,30 +153,6 @@
         "quarter": 2,
         "year": 2026,
         "revenueEstimate": 61331816283,
-        "weight": "primary"
-      },
-      {
-        "symbol": "AAPL",
-        "date": "2026-07-30",
-        "dateEt": "2026-07-30 16:00 ET",
-        "countdown": "20d 10h",
-        "epsEstimate": 1.9304,
-        "hour": "amc",
-        "quarter": 3,
-        "year": 2026,
-        "revenueEstimate": 110751547827,
-        "weight": "primary"
-      },
-      {
-        "symbol": "AMZN",
-        "date": "2026-07-30",
-        "dateEt": "2026-07-30 16:00 ET",
-        "countdown": "20d 10h",
-        "epsEstimate": 1.8519,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 200167253599,
         "weight": "primary"
       }
     ],
@@ -196,7 +196,7 @@
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
-    "Earnings próximos mega-cap · TSLA",
+    "Earnings próximos mega-cap · GOOGL",
     "Pre-market; esperar apertura",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
