@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-15 05:01 ET",
-  "generatedAtUnix": 1784106062,
+  "updatedAt": "2026-07-15 05:11 ET",
+  "generatedAtUnix": 1784106660,
   "price": 719.69,
   "change": 7.95,
   "changePct": 1.117,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 328,
-    "minutesSinceEntryStart": -329,
+    "minsToEntryStart": 318,
+    "minutesSinceEntryStart": -319,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 508,
+    "minsToCutoff": 498,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -120,18 +120,6 @@
         "weight": "primary"
       },
       {
-        "symbol": "AMZN",
-        "date": "2026-07-29",
-        "dateEt": "2026-07-29 16:00 ET",
-        "countdown": "14d 10h",
-        "epsEstimate": 1.8532,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 200287124336,
-        "weight": "primary"
-      },
-      {
         "symbol": "META",
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
@@ -153,6 +141,18 @@
         "quarter": 3,
         "year": 2026,
         "revenueEstimate": 110740860032,
+        "weight": "primary"
+      },
+      {
+        "symbol": "AMZN",
+        "date": "2026-07-30",
+        "dateEt": "2026-07-30 16:00 ET",
+        "countdown": "15d 10h",
+        "epsEstimate": 1.8532,
+        "hour": "amc",
+        "quarter": 2,
+        "year": 2026,
+        "revenueEstimate": 200287124336,
         "weight": "primary"
       }
     ],
