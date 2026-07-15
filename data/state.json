@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-15 03:30 ET",
-  "generatedAtUnix": 1784100658,
+  "updatedAt": "2026-07-15 03:40 ET",
+  "generatedAtUnix": 1784101249,
   "price": 719.69,
   "change": 7.95,
   "changePct": 1.117,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 419,
-    "minutesSinceEntryStart": -420,
+    "minsToEntryStart": 409,
+    "minutesSinceEntryStart": -410,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 599,
+    "minsToCutoff": 589,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -74,11 +74,11 @@
       "date": "2026-07-22",
       "dateEt": "2026-07-22 16:00 ET",
       "countdown": "7d 12h",
-      "epsEstimate": 2.9539,
+      "epsEstimate": 2.971,
       "hour": "amc",
       "quarter": 2,
       "year": 2026,
-      "revenueEstimate": 120188455372,
+      "revenueEstimate": 120296842581,
       "weight": "primary"
     },
     "qqqNext": null,
@@ -88,11 +88,11 @@
         "date": "2026-07-22",
         "dateEt": "2026-07-22 16:00 ET",
         "countdown": "7d 12h",
-        "epsEstimate": 2.9539,
+        "epsEstimate": 2.971,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
-        "revenueEstimate": 120188455372,
+        "revenueEstimate": 120296842581,
         "weight": "primary"
       },
       {
@@ -100,11 +100,11 @@
         "date": "2026-07-22",
         "dateEt": "2026-07-22 16:00 ET",
         "countdown": "7d 12h",
-        "epsEstimate": 0.4784,
+        "epsEstimate": 0.5089,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
-        "revenueEstimate": 25534054668,
+        "revenueEstimate": 25962881069,
         "weight": "primary"
       },
       {
@@ -112,11 +112,11 @@
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
         "countdown": "14d 12h",
-        "epsEstimate": 4.3265,
+        "epsEstimate": 4.3268,
         "hour": "amc",
         "quarter": 4,
         "year": 2026,
-        "revenueEstimate": 89370759268,
+        "revenueEstimate": 89373851857,
         "weight": "primary"
       },
       {
@@ -124,11 +124,11 @@
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
         "countdown": "14d 12h",
-        "epsEstimate": 7.3228,
+        "epsEstimate": 7.3651,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
-        "revenueEstimate": 61331816283,
+        "revenueEstimate": 61362557583,
         "weight": "primary"
       },
       {
@@ -136,11 +136,11 @@
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
         "countdown": "15d 12h",
-        "epsEstimate": 1.9304,
+        "epsEstimate": 1.9299,
         "hour": "amc",
         "quarter": 3,
         "year": 2026,
-        "revenueEstimate": 110751547827,
+        "revenueEstimate": 110740860032,
         "weight": "primary"
       },
       {
@@ -148,11 +148,11 @@
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
         "countdown": "15d 12h",
-        "epsEstimate": 1.8519,
+        "epsEstimate": 1.8532,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
-        "revenueEstimate": 200167253599,
+        "revenueEstimate": 200287124336,
         "weight": "primary"
       }
     ],
