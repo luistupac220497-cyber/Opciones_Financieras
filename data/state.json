@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-18 23:50 ET",
-  "generatedAtUnix": 1784433026,
+  "updatedAt": "2026-07-19 00:01 ET",
+  "generatedAtUnix": 1784433693,
   "price": 695.33,
   "change": -10.61,
   "changePct": -1.503,
@@ -15,24 +15,24 @@
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.45,
-    "shortStrike": 699.0,
+    "bufferPct": 0.68,
+    "shortStrike": 701.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 3.67,
+    "distanceToShort": 5.67,
     "expectedMove": null,
     "expectedMovePct": null
   },
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -801,
-    "minutesSinceEntryStart": 800,
+    "minsToEntryStart": 628,
+    "minutesSinceEntryStart": -629,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -621,
+    "minsToCutoff": 808,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": true,
+    "timeStopTriggered": false,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -73,7 +73,7 @@
       "symbol": "GOOGL",
       "date": "2026-07-22",
       "dateEt": "2026-07-22 16:00 ET",
-      "countdown": "3d 16h",
+      "countdown": "3d 15h",
       "epsEstimate": 2.971,
       "hour": "amc",
       "quarter": 2,
@@ -87,7 +87,7 @@
         "symbol": "GOOGL",
         "date": "2026-07-22",
         "dateEt": "2026-07-22 16:00 ET",
-        "countdown": "3d 16h",
+        "countdown": "3d 15h",
         "epsEstimate": 2.971,
         "hour": "amc",
         "quarter": 2,
@@ -99,7 +99,7 @@
         "symbol": "TSLA",
         "date": "2026-07-22",
         "dateEt": "2026-07-22 16:00 ET",
-        "countdown": "3d 16h",
+        "countdown": "3d 15h",
         "epsEstimate": 0.5089,
         "hour": "amc",
         "quarter": 2,
@@ -111,7 +111,7 @@
         "symbol": "MSFT",
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
-        "countdown": "10d 16h",
+        "countdown": "10d 15h",
         "epsEstimate": 4.3268,
         "hour": "amc",
         "quarter": 4,
@@ -123,7 +123,7 @@
         "symbol": "META",
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
-        "countdown": "10d 16h",
+        "countdown": "10d 15h",
         "epsEstimate": 7.3651,
         "hour": "amc",
         "quarter": 2,
@@ -135,7 +135,7 @@
         "symbol": "AAPL",
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
-        "countdown": "11d 16h",
+        "countdown": "11d 15h",
         "epsEstimate": 1.9299,
         "hour": "amc",
         "quarter": 3,
@@ -147,7 +147,7 @@
         "symbol": "AMZN",
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
-        "countdown": "11d 16h",
+        "countdown": "11d 15h",
         "epsEstimate": 1.8532,
         "hour": "amc",
         "quarter": 2,
@@ -161,7 +161,7 @@
         "symbol": "SPCX",
         "date": "2026-08-06",
         "dateEt": "2026-08-06 16:00 ET",
-        "countdown": "18d 16h",
+        "countdown": "18d 15h",
         "epsEstimate": -0.2659,
         "hour": "",
         "quarter": 2,
@@ -170,8 +170,8 @@
         "weight": "secondary"
       }
     ],
-    "score": 0,
-    "summary": "Sin earnings relevantes cercanos",
+    "score": -4,
+    "summary": "Mega-cap earnings próximos · GOOGL",
     "source": "finnhub_earnings_calendar"
   },
   "flags": {
@@ -181,7 +181,7 @@
   "market": {
     "isHoliday": false,
     "name": null,
-    "date": "2026-07-18"
+    "date": "2026-07-19"
   },
   "dataHealth": {
     "spotSource": "finnhub_quote",
@@ -203,7 +203,7 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -16,
+  "score": -8,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
@@ -211,7 +211,6 @@
     "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · GOOGL",
     "Mercado cerrado",
-    "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
