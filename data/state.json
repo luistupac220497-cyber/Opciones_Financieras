@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-19 09:40 ET",
-  "generatedAtUnix": 1784468428,
+  "updatedAt": "2026-07-19 09:50 ET",
+  "generatedAtUnix": 1784469031,
   "price": 695.33,
   "change": -10.61,
   "changePct": -1.503,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 49,
-    "minutesSinceEntryStart": -50,
+    "minsToEntryStart": 39,
+    "minutesSinceEntryStart": -40,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 229,
+    "minsToCutoff": 219,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -74,11 +74,11 @@
       "date": "2026-07-22",
       "dateEt": "2026-07-22 16:00 ET",
       "countdown": "3d 6h",
-      "epsEstimate": 2.971,
+      "epsEstimate": 2.9753,
       "hour": "amc",
       "quarter": 2,
       "year": 2026,
-      "revenueEstimate": 120296842581,
+      "revenueEstimate": 120361387510,
       "weight": "primary"
     },
     "qqqNext": null,
@@ -88,11 +88,11 @@
         "date": "2026-07-22",
         "dateEt": "2026-07-22 16:00 ET",
         "countdown": "3d 6h",
-        "epsEstimate": 2.971,
+        "epsEstimate": 2.9753,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
-        "revenueEstimate": 120296842581,
+        "revenueEstimate": 120361387510,
         "weight": "primary"
       },
       {
@@ -100,11 +100,11 @@
         "date": "2026-07-22",
         "dateEt": "2026-07-22 16:00 ET",
         "countdown": "3d 6h",
-        "epsEstimate": 0.5089,
+        "epsEstimate": 0.5103,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
-        "revenueEstimate": 25962881069,
+        "revenueEstimate": 26220627327,
         "weight": "primary"
       },
       {
@@ -112,11 +112,11 @@
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
         "countdown": "10d 6h",
-        "epsEstimate": 4.3268,
+        "epsEstimate": 4.3277,
         "hour": "amc",
         "quarter": 4,
         "year": 2026,
-        "revenueEstimate": 89373851857,
+        "revenueEstimate": 89378725509,
         "weight": "primary"
       },
       {
@@ -124,11 +124,11 @@
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
         "countdown": "10d 6h",
-        "epsEstimate": 7.3651,
+        "epsEstimate": 7.3817,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
-        "revenueEstimate": 61362557583,
+        "revenueEstimate": 61376242168,
         "weight": "primary"
       },
       {
@@ -148,11 +148,11 @@
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
         "countdown": "11d 6h",
-        "epsEstimate": 1.8532,
+        "epsEstimate": 1.8556,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
-        "revenueEstimate": 200287124336,
+        "revenueEstimate": 200308047341,
         "weight": "primary"
       }
     ],
