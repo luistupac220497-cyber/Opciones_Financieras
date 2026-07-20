@@ -1,10 +1,10 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-20 09:40 ET",
-  "generatedAtUnix": 1784554827,
-  "price": 704.83,
-  "change": 9.5,
-  "changePct": 1.3663,
+  "updatedAt": "2026-07-20 09:50 ET",
+  "generatedAtUnix": 1784555430,
+  "price": 704.1,
+  "change": 8.77,
+  "changePct": 1.2613,
   "prevClose": 695.33,
   "session": {
     "code": "regular",
@@ -16,21 +16,21 @@
   "expectedMovePct": 1.1,
   "trade": {
     "bufferPct": 0.68,
-    "shortStrike": 710.0,
+    "shortStrike": 709.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 5.17,
+    "distanceToShort": 4.9,
     "expectedMove": 7.75,
     "expectedMovePct": 1.1
   },
   "execution": {
     "phase": "Esperando primera hora",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 49,
-    "minutesSinceEntryStart": -50,
+    "minsToEntryStart": 39,
+    "minutesSinceEntryStart": -40,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 229,
+    "minsToCutoff": 219,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -50,7 +50,7 @@
     "openInterestLong": null,
     "spacingOk": true,
     "status": "theoretical",
-    "notes": "No se pudo usar cadena real (502 Server Error: Connection reset by peer for url: https://query2.finance.yahoo.com/v7/finance/options/QQQ). Se muestra setup teórico.",
+    "notes": "No se pudo usar cadena real (401 Client Error: Unauthorized for url: https://query2.finance.yahoo.com/v7/finance/options/QQQ). Se muestra setup teórico.",
     "impliedVolatility": null
   },
   "optionsMeta": {
