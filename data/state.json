@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-22 23:50 ET",
-  "generatedAtUnix": 1784778627,
+  "updatedAt": "2026-07-23 00:00 ET",
+  "generatedAtUnix": 1784779248,
   "price": 705.35,
   "change": -3.62,
   "changePct": -0.5106,
@@ -15,24 +15,24 @@
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.45,
-    "shortStrike": 709.0,
+    "bufferPct": 0.68,
+    "shortStrike": 711.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 3.65,
+    "distanceToShort": 5.65,
     "expectedMove": null,
     "expectedMovePct": null
   },
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -801,
-    "minutesSinceEntryStart": 800,
+    "minsToEntryStart": 629,
+    "minutesSinceEntryStart": -630,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -621,
+    "minsToCutoff": 809,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": true,
+    "timeStopTriggered": false,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -68,75 +68,26 @@
     "source": "macro_unavailable"
   },
   "earnings": {
-    "today": [
-      {
-        "symbol": "GOOGL",
-        "date": "2026-07-22",
-        "dateEt": "2026-07-22 16:00 ET",
-        "countdown": "ya ocurrido",
-        "epsEstimate": 2.9753,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 120361387510,
-        "weight": "primary"
-      },
-      {
-        "symbol": "TSLA",
-        "date": "2026-07-22",
-        "dateEt": "2026-07-22 16:00 ET",
-        "countdown": "ya ocurrido",
-        "epsEstimate": 0.5103,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 26220627327,
-        "weight": "primary"
-      }
-    ],
+    "today": [],
     "next": {
-      "symbol": "GOOGL",
-      "date": "2026-07-22",
-      "dateEt": "2026-07-22 16:00 ET",
-      "countdown": "ya ocurrido",
-      "epsEstimate": 2.9753,
+      "symbol": "MSFT",
+      "date": "2026-07-29",
+      "dateEt": "2026-07-29 16:00 ET",
+      "countdown": "6d 15h",
+      "epsEstimate": 4.3277,
       "hour": "amc",
-      "quarter": 2,
+      "quarter": 4,
       "year": 2026,
-      "revenueEstimate": 120361387510,
+      "revenueEstimate": 89378725509,
       "weight": "primary"
     },
     "qqqNext": null,
     "watchlist": [
       {
-        "symbol": "GOOGL",
-        "date": "2026-07-22",
-        "dateEt": "2026-07-22 16:00 ET",
-        "countdown": "ya ocurrido",
-        "epsEstimate": 2.9753,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 120361387510,
-        "weight": "primary"
-      },
-      {
-        "symbol": "TSLA",
-        "date": "2026-07-22",
-        "dateEt": "2026-07-22 16:00 ET",
-        "countdown": "ya ocurrido",
-        "epsEstimate": 0.5103,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 26220627327,
-        "weight": "primary"
-      },
-      {
         "symbol": "MSFT",
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
-        "countdown": "6d 16h",
+        "countdown": "6d 15h",
         "epsEstimate": 4.3277,
         "hour": "amc",
         "quarter": 4,
@@ -148,7 +99,7 @@
         "symbol": "META",
         "date": "2026-07-29",
         "dateEt": "2026-07-29 16:00 ET",
-        "countdown": "6d 16h",
+        "countdown": "6d 15h",
         "epsEstimate": 7.3817,
         "hour": "amc",
         "quarter": 2,
@@ -160,7 +111,7 @@
         "symbol": "AAPL",
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
-        "countdown": "7d 16h",
+        "countdown": "7d 15h",
         "epsEstimate": 1.9299,
         "hour": "amc",
         "quarter": 3,
@@ -172,7 +123,7 @@
         "symbol": "AMZN",
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
-        "countdown": "7d 16h",
+        "countdown": "7d 15h",
         "epsEstimate": 1.8556,
         "hour": "amc",
         "quarter": 2,
@@ -186,7 +137,7 @@
         "symbol": "SPCX",
         "date": "2026-08-06",
         "dateEt": "2026-08-06 16:00 ET",
-        "countdown": "14d 16h",
+        "countdown": "14d 15h",
         "epsEstimate": -0.2538,
         "hour": "",
         "quarter": 2,
@@ -195,8 +146,8 @@
         "weight": "secondary"
       }
     ],
-    "score": -8,
-    "summary": "Mega-cap earnings muy próximos · GOOGL",
+    "score": 0,
+    "summary": "Sin earnings relevantes cercanos",
     "source": "finnhub_earnings_calendar"
   },
   "flags": {
@@ -206,7 +157,7 @@
   "market": {
     "isHoliday": false,
     "name": null,
-    "date": "2026-07-22"
+    "date": "2026-07-23"
   },
   "dataHealth": {
     "spotSource": "finnhub_quote",
@@ -228,15 +179,14 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -24,
+  "score": -4,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
-    "Earnings próximos mega-cap · GOOGL",
+    "Earnings próximos mega-cap · MSFT",
     "Mercado cerrado",
-    "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
