@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-25 15:10 ET",
-  "generatedAtUnix": 1785006628,
+  "updatedAt": "2026-07-25 15:20 ET",
+  "generatedAtUnix": 1785007234,
   "price": 684.23,
   "change": -7.73,
   "changePct": -1.1171,
@@ -27,12 +27,12 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -281,
-    "minutesSinceEntryStart": 280,
+    "minsToEntryStart": -291,
+    "minutesSinceEntryStart": 290,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -101,
+    "minsToCutoff": -111,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": false,
+    "timeStopTriggered": true,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -179,7 +179,7 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -4,
+  "score": -16,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
@@ -187,6 +187,7 @@
     "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · MSFT",
     "Mercado cerrado",
+    "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
