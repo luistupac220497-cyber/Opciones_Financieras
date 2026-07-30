@@ -1,14 +1,14 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-29 19:50 ET",
-  "generatedAtUnix": 1785369033,
+  "updatedAt": "2026-07-29 20:00 ET",
+  "generatedAtUnix": 1785369654,
   "price": 661.73,
   "change": -13.76,
   "changePct": -2.037,
   "prevClose": 675.49,
   "session": {
-    "code": "afterhours",
-    "label": "After hours"
+    "code": "closed",
+    "label": "Mercado cerrado"
   },
   "vwap": null,
   "vwapDist": null,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -561,
-    "minutesSinceEntryStart": 560,
+    "minsToEntryStart": -571,
+    "minutesSinceEntryStart": 570,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -381,
+    "minsToCutoff": -391,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": true,
     "entryWindowOpen": false,
@@ -136,7 +136,7 @@
         "symbol": "AAPL",
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
-        "countdown": "20h 9m",
+        "countdown": "19h 59m",
         "epsEstimate": 1.9271,
         "hour": "amc",
         "quarter": 3,
@@ -148,7 +148,7 @@
         "symbol": "AMZN",
         "date": "2026-07-30",
         "dateEt": "2026-07-30 16:00 ET",
-        "countdown": "20h 9m",
+        "countdown": "19h 59m",
         "epsEstimate": 1.8556,
         "hour": "amc",
         "quarter": 2,
@@ -162,7 +162,7 @@
         "symbol": "SPCX",
         "date": "2026-08-04",
         "dateEt": "2026-08-04 16:00 ET",
-        "countdown": "5d 20h",
+        "countdown": "5d 19h",
         "epsEstimate": -0.2538,
         "hour": "amc",
         "quarter": 2,
@@ -211,7 +211,7 @@
   "reasons": [
     "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · MSFT",
-    "After hours; no abrir nuevas posiciones",
+    "Mercado cerrado",
     "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
