@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-31 09:10 ET",
-  "generatedAtUnix": 1785503431,
+  "updatedAt": "2026-07-31 09:20 ET",
+  "generatedAtUnix": 1785504028,
   "price": 683.55,
   "change": 21.82,
   "changePct": 3.2974,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 79,
-    "minutesSinceEntryStart": -80,
+    "minsToEntryStart": 69,
+    "minutesSinceEntryStart": -70,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 259,
+    "minsToCutoff": 249,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -116,11 +116,11 @@
     "vwapSource": "finnhub_candles",
     "macroSource": "macro_unavailable",
     "earningsSource": "finnhub_earnings_calendar",
-    "spotDegraded": true,
-    "spotDegradedReason": "Timeout consultando Finnhub",
-    "spotStaleFromPreviousState": true,
-    "freshnessLabel": "Dato degradado",
-    "snapshotLabel": "Snapshot previo reciclado",
+    "spotDegraded": false,
+    "spotDegradedReason": null,
+    "spotStaleFromPreviousState": false,
+    "freshnessLabel": "Dato reciente",
+    "snapshotLabel": "Snapshot actual",
     "optionsDataStatus": "unavailable"
   },
   "tradeQuality": {
@@ -130,7 +130,7 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -11,
+  "score": -3,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
@@ -138,10 +138,7 @@
     "Macro no disponible por API/plan",
     "Catalyst secundario próximo · SPCX",
     "Pre-market; esperar apertura",
-    "Spot degradado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
-  "alerts": [
-    "Dato spot degradado; lectura provisional"
-  ]
+  "alerts": []
 }
