@@ -1,14 +1,14 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-07-31 19:50 ET",
-  "generatedAtUnix": 1785541832,
+  "updatedAt": "2026-07-31 20:00 ET",
+  "generatedAtUnix": 1785542444,
   "price": 687.99,
   "change": 4.44,
   "changePct": 0.6496,
   "prevClose": 683.55,
   "session": {
-    "code": "afterhours",
-    "label": "After hours"
+    "code": "closed",
+    "label": "Mercado cerrado"
   },
   "vwap": null,
   "vwapDist": null,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -561,
-    "minutesSinceEntryStart": 560,
+    "minsToEntryStart": -571,
+    "minutesSinceEntryStart": 570,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -381,
+    "minsToCutoff": -391,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": true,
     "entryWindowOpen": false,
@@ -73,8 +73,8 @@
       "symbol": "SPCX",
       "date": "2026-08-04",
       "dateEt": "2026-08-04 16:00 ET",
-      "countdown": "3d 20h",
-      "epsEstimate": -0.2538,
+      "countdown": "3d 19h",
+      "epsEstimate": -0.2635,
       "hour": "amc",
       "quarter": 2,
       "year": 2026,
@@ -88,8 +88,8 @@
         "symbol": "SPCX",
         "date": "2026-08-04",
         "dateEt": "2026-08-04 16:00 ET",
-        "countdown": "3d 20h",
-        "epsEstimate": -0.2538,
+        "countdown": "3d 19h",
+        "epsEstimate": -0.2635,
         "hour": "amc",
         "quarter": 2,
         "year": 2026,
@@ -137,7 +137,7 @@
   "reasons": [
     "Macro no disponible por API/plan",
     "Catalyst secundario próximo · SPCX",
-    "After hours; no abrir nuevas posiciones",
+    "Mercado cerrado",
     "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
