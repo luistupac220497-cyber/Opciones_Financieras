@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-02 15:10 ET",
-  "generatedAtUnix": 1785697835,
+  "updatedAt": "2026-08-02 15:20 ET",
+  "generatedAtUnix": 1785698433,
   "price": 687.99,
   "change": 4.44,
   "changePct": 0.6496,
@@ -27,12 +27,12 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -281,
-    "minutesSinceEntryStart": 280,
+    "minsToEntryStart": -291,
+    "minutesSinceEntryStart": 290,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -101,
+    "minsToCutoff": -111,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": false,
+    "timeStopTriggered": true,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -130,7 +130,7 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -5,
+  "score": -17,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
@@ -138,6 +138,7 @@
     "Macro no disponible por API/plan",
     "Catalyst secundario próximo · SPCX",
     "Mercado cerrado",
+    "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
