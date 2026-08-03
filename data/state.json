@@ -1,10 +1,10 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-03 13:20 ET",
-  "generatedAtUnix": 1785777632,
-  "price": 699.31,
-  "change": 11.32,
-  "changePct": 1.6454,
+  "updatedAt": "2026-08-03 13:30 ET",
+  "generatedAtUnix": 1785778247,
+  "price": 699.73,
+  "change": 11.74,
+  "changePct": 1.7064,
   "prevClose": 687.99,
   "session": {
     "code": "regular",
@@ -12,7 +12,7 @@
   },
   "vwap": null,
   "vwapDist": null,
-  "expectedMove": 5.59,
+  "expectedMove": 5.6,
   "expectedMovePct": 0.8,
   "trade": {
     "bufferPct": 0.46,
@@ -20,20 +20,20 @@
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 3.69,
-    "expectedMove": 5.59,
+    "distanceToShort": 3.27,
+    "expectedMove": 5.6,
     "expectedMovePct": 0.8
   },
   "execution": {
-    "phase": "Ventana de entrada abierta",
+    "phase": "Fuera de ventana",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -171,
-    "minutesSinceEntryStart": 170,
+    "minsToEntryStart": -181,
+    "minutesSinceEntryStart": 180,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 9,
+    "minsToCutoff": -1,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
-    "entryWindowOpen": true,
+    "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
   "options": {
