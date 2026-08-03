@@ -1,10 +1,10 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-03 10:40 ET",
-  "generatedAtUnix": 1785768042,
-  "price": 695.56,
-  "change": 7.57,
-  "changePct": 1.1003,
+  "updatedAt": "2026-08-03 10:50 ET",
+  "generatedAtUnix": 1785768633,
+  "price": 695.93,
+  "change": 7.94,
+  "changePct": 1.1541,
   "prevClose": 687.99,
   "session": {
     "code": "regular",
@@ -15,22 +15,22 @@
   "expectedMove": 6.61,
   "expectedMovePct": 0.95,
   "trade": {
-    "bufferPct": 0.55,
+    "bufferPct": 0.52,
     "shortStrike": 700.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 4.44,
+    "distanceToShort": 4.07,
     "expectedMove": 6.61,
     "expectedMovePct": 0.95
   },
   "execution": {
     "phase": "Ventana de entrada abierta",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -11,
-    "minutesSinceEntryStart": 10,
+    "minsToEntryStart": -21,
+    "minutesSinceEntryStart": 20,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 169,
+    "minsToCutoff": 159,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": true,
@@ -69,36 +69,12 @@
   },
   "earnings": {
     "today": [],
-    "next": {
-      "symbol": "SPCX",
-      "date": "2026-08-04",
-      "dateEt": "2026-08-04 16:00 ET",
-      "countdown": "1d 5h",
-      "epsEstimate": -0.2635,
-      "hour": "amc",
-      "quarter": 2,
-      "year": 2026,
-      "revenueEstimate": 7072528999,
-      "weight": "secondary"
-    },
+    "next": null,
     "qqqNext": null,
     "watchlist": [],
-    "secondaryWatchlist": [
-      {
-        "symbol": "SPCX",
-        "date": "2026-08-04",
-        "dateEt": "2026-08-04 16:00 ET",
-        "countdown": "1d 5h",
-        "epsEstimate": -0.2635,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 7072528999,
-        "weight": "secondary"
-      }
-    ],
-    "score": -2,
-    "summary": "Catalyst secundario próximo · SPCX",
+    "secondaryWatchlist": [],
+    "score": 0,
+    "summary": "Sin earnings relevantes cercanos",
     "source": "finnhub_earnings_calendar"
   },
   "flags": {
@@ -136,13 +112,12 @@
     ],
     "label": "Teórico"
   },
-  "score": -26,
+  "score": -24,
   "decisionLabel": "no entrar",
   "decisionTone": "red",
   "riskLabel": "Riesgo alto",
   "reasons": [
     "Macro no disponible por API/plan",
-    "Catalyst secundario próximo · SPCX",
     "Delta real no disponible",
     "Crédito no disponible",
     "OI no disponible",
