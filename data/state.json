@@ -1,21 +1,21 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-03 03:50 ET",
-  "generatedAtUnix": 1785743434,
+  "updatedAt": "2026-08-03 04:00 ET",
+  "generatedAtUnix": 1785744048,
   "price": 687.99,
   "change": 4.44,
   "changePct": 0.6496,
   "prevClose": 683.55,
   "session": {
-    "code": "closed",
-    "label": "Mercado cerrado"
+    "code": "premarket",
+    "label": "Pre-market"
   },
   "vwap": null,
   "vwapDist": null,
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.64,
+    "bufferPct": 0.7,
     "shortStrike": 693.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 399,
-    "minutesSinceEntryStart": -400,
+    "minsToEntryStart": 389,
+    "minutesSinceEntryStart": -390,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 579,
+    "minsToCutoff": 569,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -73,7 +73,7 @@
       "symbol": "SPCX",
       "date": "2026-08-04",
       "dateEt": "2026-08-04 16:00 ET",
-      "countdown": "1d 12h",
+      "countdown": "1d 11h",
       "epsEstimate": -0.2635,
       "hour": "amc",
       "quarter": 2,
@@ -88,7 +88,7 @@
         "symbol": "SPCX",
         "date": "2026-08-04",
         "dateEt": "2026-08-04 16:00 ET",
-        "countdown": "1d 12h",
+        "countdown": "1d 11h",
         "epsEstimate": -0.2635,
         "hour": "amc",
         "quarter": 2,
@@ -130,14 +130,14 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -6,
+  "score": -5,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
     "Catalyst secundario próximo · SPCX",
-    "Mercado cerrado",
+    "Pre-market; esperar apertura",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
