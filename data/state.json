@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-02 23:50 ET",
-  "generatedAtUnix": 1785729027,
+  "updatedAt": "2026-08-03 00:00 ET",
+  "generatedAtUnix": 1785729647,
   "price": 687.99,
   "change": 4.44,
   "changePct": 0.6496,
@@ -15,24 +15,24 @@
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.45,
-    "shortStrike": 692.0,
+    "bufferPct": 0.64,
+    "shortStrike": 693.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 4.01,
+    "distanceToShort": 5.01,
     "expectedMove": null,
     "expectedMovePct": null
   },
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -801,
-    "minutesSinceEntryStart": 800,
+    "minsToEntryStart": 629,
+    "minutesSinceEntryStart": -630,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -621,
+    "minsToCutoff": 809,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": true,
+    "timeStopTriggered": false,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -73,7 +73,7 @@
       "symbol": "SPCX",
       "date": "2026-08-04",
       "dateEt": "2026-08-04 16:00 ET",
-      "countdown": "1d 16h",
+      "countdown": "1d 15h",
       "epsEstimate": -0.2635,
       "hour": "amc",
       "quarter": 2,
@@ -88,7 +88,7 @@
         "symbol": "SPCX",
         "date": "2026-08-04",
         "dateEt": "2026-08-04 16:00 ET",
-        "countdown": "1d 16h",
+        "countdown": "1d 15h",
         "epsEstimate": -0.2635,
         "hour": "amc",
         "quarter": 2,
@@ -97,8 +97,8 @@
         "weight": "secondary"
       }
     ],
-    "score": -1,
-    "summary": "Catalyst secundario cercano · SPCX",
+    "score": -2,
+    "summary": "Catalyst secundario próximo · SPCX",
     "source": "finnhub_earnings_calendar"
   },
   "flags": {
@@ -108,7 +108,7 @@
   "market": {
     "isHoliday": false,
     "name": null,
-    "date": "2026-08-02"
+    "date": "2026-08-03"
   },
   "dataHealth": {
     "spotSource": "finnhub_quote",
@@ -130,7 +130,7 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -17,
+  "score": -6,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
@@ -138,7 +138,6 @@
     "Macro no disponible por API/plan",
     "Catalyst secundario próximo · SPCX",
     "Mercado cerrado",
-    "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
