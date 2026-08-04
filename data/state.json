@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-03 23:50 ET",
-  "generatedAtUnix": 1785815435,
+  "updatedAt": "2026-08-04 00:00 ET",
+  "generatedAtUnix": 1785816053,
   "price": 700.07,
   "change": 12.08,
   "changePct": 1.7558,
@@ -15,24 +15,24 @@
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.45,
-    "shortStrike": 704.0,
+    "bufferPct": 0.64,
+    "shortStrike": 705.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 3.93,
+    "distanceToShort": 4.93,
     "expectedMove": null,
     "expectedMovePct": null
   },
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -801,
-    "minutesSinceEntryStart": 800,
+    "minsToEntryStart": 629,
+    "minutesSinceEntryStart": -630,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -621,
+    "minsToCutoff": 809,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": true,
+    "timeStopTriggered": false,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -68,12 +68,25 @@
     "source": "macro_unavailable"
   },
   "earnings": {
-    "today": [],
+    "today": [
+      {
+        "symbol": "SPCX",
+        "date": "2026-08-04",
+        "dateEt": "2026-08-04 16:00 ET",
+        "countdown": "15h 59m",
+        "epsEstimate": -0.2635,
+        "hour": "amc",
+        "quarter": 2,
+        "year": 2026,
+        "revenueEstimate": 7072528999,
+        "weight": "secondary"
+      }
+    ],
     "next": {
       "symbol": "SPCX",
       "date": "2026-08-04",
       "dateEt": "2026-08-04 16:00 ET",
-      "countdown": "16h 9m",
+      "countdown": "15h 59m",
       "epsEstimate": -0.2635,
       "hour": "amc",
       "quarter": 2,
@@ -88,7 +101,7 @@
         "symbol": "SPCX",
         "date": "2026-08-04",
         "dateEt": "2026-08-04 16:00 ET",
-        "countdown": "16h 9m",
+        "countdown": "15h 59m",
         "epsEstimate": -0.2635,
         "hour": "amc",
         "quarter": 2,
@@ -108,7 +121,7 @@
   "market": {
     "isHoliday": false,
     "name": null,
-    "date": "2026-08-03"
+    "date": "2026-08-04"
   },
   "dataHealth": {
     "spotSource": "finnhub_quote",
@@ -130,7 +143,7 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -18,
+  "score": -6,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
@@ -138,7 +151,6 @@
     "Macro no disponible por API/plan",
     "Catalyst secundario próximo · SPCX",
     "Mercado cerrado",
-    "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
