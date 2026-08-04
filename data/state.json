@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-04 02:50 ET",
-  "generatedAtUnix": 1785826236,
+  "updatedAt": "2026-08-04 03:00 ET",
+  "generatedAtUnix": 1785826854,
   "price": 700.07,
   "change": 12.08,
   "changePct": 1.7558,
@@ -15,7 +15,7 @@
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.61,
+    "bufferPct": 0.64,
     "shortStrike": 705.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 459,
-    "minutesSinceEntryStart": -460,
+    "minsToEntryStart": 449,
+    "minutesSinceEntryStart": -450,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 639,
+    "minsToCutoff": 629,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -68,13 +68,50 @@
     "source": "macro_unavailable"
   },
   "earnings": {
-    "today": [],
-    "next": null,
+    "today": [
+      {
+        "symbol": "SPCX",
+        "date": "2026-08-04",
+        "dateEt": "2026-08-04 16:00 ET",
+        "countdown": "12h 59m",
+        "epsEstimate": -0.2635,
+        "hour": "amc",
+        "quarter": 2,
+        "year": 2026,
+        "revenueEstimate": 7072528999,
+        "weight": "secondary"
+      }
+    ],
+    "next": {
+      "symbol": "SPCX",
+      "date": "2026-08-04",
+      "dateEt": "2026-08-04 16:00 ET",
+      "countdown": "12h 59m",
+      "epsEstimate": -0.2635,
+      "hour": "amc",
+      "quarter": 2,
+      "year": 2026,
+      "revenueEstimate": 7072528999,
+      "weight": "secondary"
+    },
     "qqqNext": null,
     "watchlist": [],
-    "secondaryWatchlist": [],
-    "score": 0,
-    "summary": "Sin earnings relevantes cercanos",
+    "secondaryWatchlist": [
+      {
+        "symbol": "SPCX",
+        "date": "2026-08-04",
+        "dateEt": "2026-08-04 16:00 ET",
+        "countdown": "12h 59m",
+        "epsEstimate": -0.2635,
+        "hour": "amc",
+        "quarter": 2,
+        "year": 2026,
+        "revenueEstimate": 7072528999,
+        "weight": "secondary"
+      }
+    ],
+    "score": -2,
+    "summary": "Catalyst secundario próximo · SPCX",
     "source": "finnhub_earnings_calendar"
   },
   "flags": {
@@ -106,12 +143,13 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -4,
+  "score": -6,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
+    "Catalyst secundario próximo · SPCX",
     "Mercado cerrado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
