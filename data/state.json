@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-04 23:50 ET",
-  "generatedAtUnix": 1785901832,
+  "updatedAt": "2026-08-05 00:00 ET",
+  "generatedAtUnix": 1785902457,
   "price": 723.85,
   "change": 23.78,
   "changePct": 3.3968,
@@ -15,24 +15,24 @@
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.45,
-    "shortStrike": 728.0,
+    "bufferPct": 0.68,
+    "shortStrike": 729.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 4.15,
+    "distanceToShort": 5.15,
     "expectedMove": null,
     "expectedMovePct": null
   },
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -801,
-    "minutesSinceEntryStart": 800,
+    "minsToEntryStart": 629,
+    "minutesSinceEntryStart": -630,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -621,
+    "minsToCutoff": 809,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": true,
+    "timeStopTriggered": false,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -68,50 +68,37 @@
     "source": "macro_unavailable"
   },
   "earnings": {
-    "today": [
-      {
-        "symbol": "SPCX",
-        "date": "2026-08-04",
-        "dateEt": "2026-08-04 16:00 ET",
-        "countdown": "ya ocurrido",
-        "epsEstimate": -0.2635,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 7072528999,
-        "weight": "secondary"
-      }
-    ],
+    "today": [],
     "next": {
-      "symbol": "SPCX",
-      "date": "2026-08-04",
-      "dateEt": "2026-08-04 16:00 ET",
-      "countdown": "ya ocurrido",
-      "epsEstimate": -0.2635,
+      "symbol": "NVDA",
+      "date": "2026-08-26",
+      "dateEt": "2026-08-26 16:00 ET",
+      "countdown": "21d 15h",
+      "epsEstimate": 2.1274,
       "hour": "amc",
       "quarter": 2,
-      "year": 2026,
-      "revenueEstimate": 7072528999,
-      "weight": "secondary"
+      "year": 2027,
+      "revenueEstimate": 93606383310,
+      "weight": "primary"
     },
     "qqqNext": null,
-    "watchlist": [],
-    "secondaryWatchlist": [
+    "watchlist": [
       {
-        "symbol": "SPCX",
-        "date": "2026-08-04",
-        "dateEt": "2026-08-04 16:00 ET",
-        "countdown": "ya ocurrido",
-        "epsEstimate": -0.2635,
+        "symbol": "NVDA",
+        "date": "2026-08-26",
+        "dateEt": "2026-08-26 16:00 ET",
+        "countdown": "21d 15h",
+        "epsEstimate": 2.1274,
         "hour": "amc",
         "quarter": 2,
-        "year": 2026,
-        "revenueEstimate": 7072528999,
-        "weight": "secondary"
+        "year": 2027,
+        "revenueEstimate": 93606383310,
+        "weight": "primary"
       }
     ],
-    "score": -2,
-    "summary": "Catalyst secundario próximo · SPCX",
+    "secondaryWatchlist": [],
+    "score": 0,
+    "summary": "Sin earnings relevantes cercanos",
     "source": "finnhub_earnings_calendar"
   },
   "flags": {
@@ -121,7 +108,7 @@
   "market": {
     "isHoliday": false,
     "name": null,
-    "date": "2026-08-04"
+    "date": "2026-08-05"
   },
   "dataHealth": {
     "spotSource": "finnhub_quote",
@@ -143,15 +130,14 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -18,
+  "score": -4,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
-    "Catalyst secundario próximo · SPCX",
+    "Earnings próximos mega-cap · NVDA",
     "Mercado cerrado",
-    "Time stop activado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
