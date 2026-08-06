@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-06 14:43 ET",
-  "generatedAtUnix": 1786041783,
+  "updatedAt": "2026-08-06 15:50 ET",
+  "generatedAtUnix": 1786045853,
   "price": 714.83,
   "change": -2.47,
   "changePct": -0.3443,
@@ -25,14 +25,14 @@
     "expectedMovePct": 0.65
   },
   "execution": {
-    "phase": "Fuera de ventana",
+    "phase": "Salida dura / no abrir",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -254,
-    "minutesSinceEntryStart": 253,
+    "minsToEntryStart": -321,
+    "minutesSinceEntryStart": 320,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -74,
+    "minsToCutoff": -141,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": false,
+    "timeStopTriggered": true,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -64,7 +64,7 @@
     "score": 0,
     "items": [],
     "nextBig": null,
-    "summary": "Macro no disponible por acceso/API",
+    "summary": "Macro no disponible (HTTP 503)",
     "source": "macro_unavailable"
   },
   "earnings": {
@@ -73,7 +73,7 @@
       "symbol": "NVDA",
       "date": "2026-08-26",
       "dateEt": "2026-08-26 16:00 ET",
-      "countdown": "20d 1h",
+      "countdown": "20d 0h",
       "epsEstimate": 2.1274,
       "hour": "amc",
       "quarter": 2,
@@ -87,7 +87,7 @@
         "symbol": "NVDA",
         "date": "2026-08-26",
         "dateEt": "2026-08-26 16:00 ET",
-        "countdown": "20d 1h",
+        "countdown": "20d 0h",
         "epsEstimate": 2.1274,
         "hour": "amc",
         "quarter": 2,
@@ -116,11 +116,11 @@
     "vwapSource": "finnhub_candles",
     "macroSource": "macro_unavailable",
     "earningsSource": "finnhub_earnings_calendar",
-    "spotDegraded": false,
-    "spotDegradedReason": null,
-    "spotStaleFromPreviousState": false,
-    "freshnessLabel": "Dato reciente",
-    "snapshotLabel": "Snapshot actual",
+    "spotDegraded": true,
+    "spotDegradedReason": "Timeout consultando Finnhub",
+    "spotStaleFromPreviousState": true,
+    "freshnessLabel": "Dato degradado",
+    "snapshotLabel": "Snapshot previo reciclado",
     "optionsDataStatus": "theoretical"
   },
   "tradeQuality": {
@@ -136,13 +136,15 @@
     ],
     "label": "Teórico"
   },
-  "score": -24,
+  "score": -44,
   "decisionLabel": "no entrar",
   "decisionTone": "red",
   "riskLabel": "Riesgo alto",
   "reasons": [
     "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · NVDA",
+    "Time stop activado",
+    "Spot degradado",
     "Delta real no disponible",
     "Crédito no disponible",
     "OI no disponible",
@@ -151,5 +153,7 @@
     "Liquidez insuficiente",
     "Spacing correcto"
   ],
-  "alerts": []
+  "alerts": [
+    "Dato spot degradado; lectura provisional"
+  ]
 }
