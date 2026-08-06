@@ -1,21 +1,21 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-06 03:50 ET",
-  "generatedAtUnix": 1786002640,
+  "updatedAt": "2026-08-06 04:00 ET",
+  "generatedAtUnix": 1786003254,
   "price": 717.3,
   "change": -6.55,
   "changePct": -0.9049,
   "prevClose": 723.85,
   "session": {
-    "code": "closed",
-    "label": "Mercado cerrado"
+    "code": "premarket",
+    "label": "Pre-market"
   },
   "vwap": null,
   "vwapDist": null,
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.68,
+    "bufferPct": 0.75,
     "shortStrike": 723.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 399,
-    "minutesSinceEntryStart": -400,
+    "minsToEntryStart": 389,
+    "minutesSinceEntryStart": -390,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 579,
+    "minsToCutoff": 569,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -73,7 +73,7 @@
       "symbol": "NVDA",
       "date": "2026-08-26",
       "dateEt": "2026-08-26 16:00 ET",
-      "countdown": "20d 12h",
+      "countdown": "20d 11h",
       "epsEstimate": 2.1274,
       "hour": "amc",
       "quarter": 2,
@@ -87,7 +87,7 @@
         "symbol": "NVDA",
         "date": "2026-08-26",
         "dateEt": "2026-08-26 16:00 ET",
-        "countdown": "20d 12h",
+        "countdown": "20d 11h",
         "epsEstimate": 2.1274,
         "hour": "amc",
         "quarter": 2,
@@ -130,14 +130,14 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -4,
+  "score": -3,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · NVDA",
-    "Mercado cerrado",
+    "Pre-market; esperar apertura",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": []
