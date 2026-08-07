@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-07 11:40 ET",
-  "generatedAtUnix": 1786117235,
+  "updatedAt": "2026-08-07 11:50 ET",
+  "generatedAtUnix": 1786117838,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Ventana de entrada abierta",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -71,
-    "minutesSinceEntryStart": 70,
+    "minsToEntryStart": -81,
+    "minutesSinceEntryStart": 80,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 109,
+    "minsToCutoff": 99,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": true,
@@ -116,11 +116,11 @@
     "vwapSource": "finnhub_candles",
     "macroSource": "macro_unavailable",
     "earningsSource": "finnhub_earnings_calendar",
-    "spotDegraded": false,
-    "spotDegradedReason": null,
-    "spotStaleFromPreviousState": false,
-    "freshnessLabel": "Dato reciente",
-    "snapshotLabel": "Snapshot actual",
+    "spotDegraded": true,
+    "spotDegradedReason": "401 Client Error: Unauthorized for url: https://finnhub.io/api/v1/quote?symbol=QQQ&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g",
+    "spotStaleFromPreviousState": true,
+    "freshnessLabel": "Dato degradado",
+    "snapshotLabel": "Snapshot previo reciclado",
     "optionsDataStatus": "theoretical"
   },
   "tradeQuality": {
@@ -136,13 +136,14 @@
     ],
     "label": "Teórico"
   },
-  "score": -24,
+  "score": -32,
   "decisionLabel": "no entrar",
   "decisionTone": "red",
   "riskLabel": "Riesgo alto",
   "reasons": [
     "Macro no disponible por API/plan",
     "Earnings próximos mega-cap · NVDA",
+    "Spot degradado",
     "Delta real no disponible",
     "Crédito no disponible",
     "OI no disponible",
@@ -151,5 +152,7 @@
     "Liquidez insuficiente",
     "Spacing correcto"
   ],
-  "alerts": []
+  "alerts": [
+    "Dato spot degradado; lectura provisional"
+  ]
 }
