@@ -1,10 +1,10 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-07 11:30 ET",
-  "generatedAtUnix": 1786116642,
-  "price": 722.96,
-  "change": 8.31,
-  "changePct": 1.1628,
+  "updatedAt": "2026-08-07 11:39 ET",
+  "generatedAtUnix": 1786117158,
+  "price": 723.12,
+  "change": 8.47,
+  "changePct": 1.1852,
   "prevClose": 714.65,
   "session": {
     "code": "regular",
@@ -20,17 +20,17 @@
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 5.04,
+    "distanceToShort": 4.88,
     "expectedMove": 6.87,
     "expectedMovePct": 0.95
   },
   "execution": {
     "phase": "Ventana de entrada abierta",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -61,
-    "minutesSinceEntryStart": 60,
+    "minsToEntryStart": -70,
+    "minutesSinceEntryStart": 69,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 119,
+    "minsToCutoff": 110,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": true,
@@ -64,7 +64,7 @@
     "score": 0,
     "items": [],
     "nextBig": null,
-    "summary": "Macro no disponible por acceso/API",
+    "summary": "Macro no disponible (HTTP 401)",
     "source": "macro_unavailable"
   },
   "earnings": {
