@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-07 11:50 ET",
-  "generatedAtUnix": 1786117838,
+  "updatedAt": "2026-08-07 12:00 ET",
+  "generatedAtUnix": 1786118457,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
@@ -15,22 +15,22 @@
   "expectedMove": 6.87,
   "expectedMovePct": 0.95,
   "trade": {
-    "bufferPct": 0.59,
-    "shortStrike": 728.0,
+    "bufferPct": 0.52,
+    "shortStrike": 727.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 5.16,
+    "distanceToShort": 4.16,
     "expectedMove": 6.87,
     "expectedMovePct": 0.95
   },
   "execution": {
     "phase": "Ventana de entrada abierta",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -81,
-    "minutesSinceEntryStart": 80,
+    "minsToEntryStart": -91,
+    "minutesSinceEntryStart": 90,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 99,
+    "minsToCutoff": 89,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": true,
@@ -69,33 +69,9 @@
   },
   "earnings": {
     "today": [],
-    "next": {
-      "symbol": "NVDA",
-      "date": "2026-08-26",
-      "dateEt": "2026-08-26 16:00 ET",
-      "countdown": "19d 4h",
-      "epsEstimate": 2.1274,
-      "hour": "amc",
-      "quarter": 2,
-      "year": 2027,
-      "revenueEstimate": 93606383310,
-      "weight": "primary"
-    },
+    "next": null,
     "qqqNext": null,
-    "watchlist": [
-      {
-        "symbol": "NVDA",
-        "date": "2026-08-26",
-        "dateEt": "2026-08-26 16:00 ET",
-        "countdown": "19d 4h",
-        "epsEstimate": 2.1274,
-        "hour": "amc",
-        "quarter": 2,
-        "year": 2027,
-        "revenueEstimate": 93606383310,
-        "weight": "primary"
-      }
-    ],
+    "watchlist": [],
     "secondaryWatchlist": [],
     "score": 0,
     "summary": "Sin earnings relevantes cercanos",
@@ -142,7 +118,6 @@
   "riskLabel": "Riesgo alto",
   "reasons": [
     "Macro no disponible por API/plan",
-    "Earnings próximos mega-cap · NVDA",
     "Spot degradado",
     "Delta real no disponible",
     "Crédito no disponible",
