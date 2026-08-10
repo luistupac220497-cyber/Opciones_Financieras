@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-09 23:50 ET",
-  "generatedAtUnix": 1786333831,
+  "updatedAt": "2026-08-10 00:00 ET",
+  "generatedAtUnix": 1786334448,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
@@ -15,24 +15,24 @@
   "expectedMove": null,
   "expectedMovePct": null,
   "trade": {
-    "bufferPct": 0.45,
-    "shortStrike": 727.0,
+    "bufferPct": 0.61,
+    "shortStrike": 728.0,
     "shortStrikeMode": "estimated",
     "netCredit": null,
     "breakeven": null,
-    "distanceToShort": 4.16,
+    "distanceToShort": 5.16,
     "expectedMove": null,
     "expectedMovePct": null
   },
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -801,
-    "minutesSinceEntryStart": 800,
+    "minsToEntryStart": 629,
+    "minutesSinceEntryStart": -630,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -621,
+    "minsToCutoff": 809,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": true,
+    "timeStopTriggered": false,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -84,7 +84,7 @@
   "market": {
     "isHoliday": false,
     "name": null,
-    "date": "2026-08-09"
+    "date": "2026-08-10"
   },
   "dataHealth": {
     "spotSource": "finnhub_quote",
@@ -106,14 +106,13 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -24,
+  "score": -12,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
     "Mercado cerrado",
-    "Time stop activado",
     "Spot degradado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
