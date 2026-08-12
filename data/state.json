@@ -1,19 +1,19 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-12 15:50 ET",
-  "generatedAtUnix": 1786564229,
+  "updatedAt": "2026-08-12 16:00 ET",
+  "generatedAtUnix": 1786564847,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
   "prevClose": 714.65,
   "session": {
-    "code": "regular",
-    "label": "Sesión regular"
+    "code": "afterhours",
+    "label": "After hours"
   },
   "vwap": null,
   "vwapDist": null,
-  "expectedMove": 4.7,
-  "expectedMovePct": 0.65,
+  "expectedMove": null,
+  "expectedMovePct": null,
   "trade": {
     "bufferPct": 0.45,
     "shortStrike": 727.0,
@@ -21,41 +21,41 @@
     "netCredit": null,
     "breakeven": null,
     "distanceToShort": 4.16,
-    "expectedMove": 4.7,
-    "expectedMovePct": 0.65
+    "expectedMove": null,
+    "expectedMovePct": null
   },
   "execution": {
-    "phase": "Salida dura / no abrir",
+    "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -321,
-    "minutesSinceEntryStart": 320,
+    "minsToEntryStart": -331,
+    "minutesSinceEntryStart": 330,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -141,
+    "minsToCutoff": -151,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": true,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
   "options": {
-    "expiration": "nearest",
-    "expirationLabel": "0DTE o vencimiento más cercano",
+    "expiration": "market_closed",
+    "expirationLabel": "Mercado cerrado",
     "quotesUsable": false,
-    "liquidityOk": false,
-    "liquidityLabel": "Débil",
+    "liquidityOk": null,
+    "liquidityLabel": "No evaluable",
     "deltaShort": null,
     "deltaTarget": 0.2,
     "bidAskSpread": null,
     "spreadPct": null,
     "openInterestShort": null,
     "openInterestLong": null,
-    "spacingOk": true,
-    "status": "theoretical",
-    "notes": "No se pudo usar cadena real (401 Client Error: Unauthorized for url: https://query2.finance.yahoo.com/v7/finance/options/QQQ). Se muestra setup teórico.",
+    "spacingOk": null,
+    "status": "unavailable",
+    "notes": "Fuera de horario regular de opciones; no se evalúan liquidez, OI, spread ni crédito",
     "impliedVolatility": null
   },
   "optionsMeta": {
     "source": "yahoo_options",
-    "snapshot": "fallback_theoretical",
+    "snapshot": "no_live_chain",
     "expirationDate": null
   },
   "macro": {
@@ -97,36 +97,25 @@
     "spotStaleFromPreviousState": true,
     "freshnessLabel": "Dato degradado",
     "snapshotLabel": "Snapshot previo reciclado",
-    "optionsDataStatus": "theoretical"
+    "optionsDataStatus": "unavailable"
   },
   "tradeQuality": {
-    "score": -24,
+    "score": 0,
     "reasons": [
-      "Delta real no disponible",
-      "Crédito no disponible",
-      "OI no disponible",
-      "Spread no disponible",
-      "Quotes no operables",
-      "Liquidez insuficiente",
-      "Spacing correcto"
+      "Fuera de horario de opciones; métricas no evaluables aún"
     ],
-    "label": "Teórico"
+    "label": "Pendiente de apertura"
   },
-  "score": -44,
-  "decisionLabel": "no entrar",
-  "decisionTone": "red",
-  "riskLabel": "Riesgo alto",
+  "score": -24,
+  "decisionLabel": "esperar apertura",
+  "decisionTone": "blue",
+  "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
+    "After hours; no abrir nuevas posiciones",
     "Time stop activado",
     "Spot degradado",
-    "Delta real no disponible",
-    "Crédito no disponible",
-    "OI no disponible",
-    "Spread no disponible",
-    "Quotes no operables",
-    "Liquidez insuficiente",
-    "Spacing correcto"
+    "Fuera de horario de opciones; métricas no evaluables aún"
   ],
   "alerts": [
     "Dato spot degradado; lectura provisional"
