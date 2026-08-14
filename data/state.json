@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-14 15:10 ET",
-  "generatedAtUnix": 1786734630,
+  "updatedAt": "2026-08-14 15:20 ET",
+  "generatedAtUnix": 1786735227,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
@@ -25,14 +25,14 @@
     "expectedMovePct": 0.65
   },
   "execution": {
-    "phase": "Fuera de ventana",
+    "phase": "Salida dura / no abrir",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -281,
-    "minutesSinceEntryStart": 280,
+    "minsToEntryStart": -291,
+    "minutesSinceEntryStart": 290,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -101,
+    "minsToCutoff": -111,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": false,
+    "timeStopTriggered": true,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -112,12 +112,13 @@
     ],
     "label": "Teórico"
   },
-  "score": -32,
+  "score": -44,
   "decisionLabel": "no entrar",
   "decisionTone": "red",
   "riskLabel": "Riesgo alto",
   "reasons": [
     "Macro no disponible por API/plan",
+    "Time stop activado",
     "Spot degradado",
     "Delta real no disponible",
     "Crédito no disponible",
