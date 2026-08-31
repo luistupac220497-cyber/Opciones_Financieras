@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-08-31 08:00 ET",
-  "generatedAtUnix": 1788177649,
+  "updatedAt": "2026-08-31 08:10 ET",
+  "generatedAtUnix": 1788178227,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 149,
-    "minutesSinceEntryStart": -150,
+    "minsToEntryStart": 139,
+    "minutesSinceEntryStart": -140,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 329,
+    "minsToCutoff": 319,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -64,7 +64,7 @@
     "score": 0,
     "items": [],
     "nextBig": null,
-    "summary": "Macro no disponible (HTTP 401)",
+    "summary": "Macro no disponible (HTTP 503)",
     "source": "macro_unavailable"
   },
   "earnings": {
@@ -93,7 +93,7 @@
     "macroSource": "macro_unavailable",
     "earningsSource": "finnhub_earnings_calendar",
     "spotDegraded": true,
-    "spotDegradedReason": "401 Client Error: Unauthorized for url: https://finnhub.io/api/v1/quote?symbol=QQQ&token=d93num9r01qj7hdev800d93num9r01qj7hdev80g",
+    "spotDegradedReason": "Finnhub HTTP 503",
     "spotStaleFromPreviousState": true,
     "freshnessLabel": "Dato degradado",
     "snapshotLabel": "Snapshot previo reciclado",
