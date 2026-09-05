@@ -1,14 +1,14 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-09-04 19:50 ET",
-  "generatedAtUnix": 1788565827,
+  "updatedAt": "2026-09-04 20:00 ET",
+  "generatedAtUnix": 1788566444,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
   "prevClose": 714.65,
   "session": {
-    "code": "afterhours",
-    "label": "After hours"
+    "code": "closed",
+    "label": "Mercado cerrado"
   },
   "vwap": null,
   "vwapDist": null,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -561,
-    "minutesSinceEntryStart": 560,
+    "minsToEntryStart": -571,
+    "minutesSinceEntryStart": 570,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -381,
+    "minsToCutoff": -391,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": true,
     "entryWindowOpen": false,
@@ -112,7 +112,7 @@
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
-    "After hours; no abrir nuevas posiciones",
+    "Mercado cerrado",
     "Time stop activado",
     "Spot degradado",
     "Fuera de horario de opciones; métricas no evaluables aún"
