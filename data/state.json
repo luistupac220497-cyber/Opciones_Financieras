@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-09-05 15:10 ET",
-  "generatedAtUnix": 1788635424,
+  "updatedAt": "2026-09-05 15:20 ET",
+  "generatedAtUnix": 1788636026,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
@@ -27,12 +27,12 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": -281,
-    "minutesSinceEntryStart": 280,
+    "minsToEntryStart": -291,
+    "minutesSinceEntryStart": 290,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": -101,
+    "minsToCutoff": -111,
     "hardExitEt": "15:15 ET",
-    "timeStopTriggered": false,
+    "timeStopTriggered": true,
     "entryWindowOpen": false,
     "maxHoldMinutes": 60
   },
@@ -106,13 +106,14 @@
     ],
     "label": "Pendiente de apertura"
   },
-  "score": -12,
+  "score": -24,
   "decisionLabel": "esperar apertura",
   "decisionTone": "blue",
   "riskLabel": "Riesgo medio",
   "reasons": [
     "Macro no disponible por API/plan",
     "Mercado cerrado",
+    "Time stop activado",
     "Spot degradado",
     "Fuera de horario de opciones; métricas no evaluables aún"
   ],
