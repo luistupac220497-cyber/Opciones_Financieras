@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-09-09 10:10 ET",
-  "generatedAtUnix": 1788963036,
+  "updatedAt": "2026-09-09 10:20 ET",
+  "generatedAtUnix": 1788963630,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Esperando primera hora",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 19,
-    "minutesSinceEntryStart": -20,
+    "minsToEntryStart": 9,
+    "minutesSinceEntryStart": -10,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 199,
+    "minsToCutoff": 189,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -50,7 +50,7 @@
     "openInterestLong": null,
     "spacingOk": true,
     "status": "theoretical",
-    "notes": "No se pudo usar cadena real (401 Client Error: Unauthorized for url: https://query2.finance.yahoo.com/v7/finance/options/QQQ). Se muestra setup teórico.",
+    "notes": "No se pudo usar cadena real (502 Server Error: Bad Gateway for url: https://query2.finance.yahoo.com/v7/finance/options/QQQ). Se muestra setup teórico.",
     "impliedVolatility": null
   },
   "optionsMeta": {
