@@ -1,7 +1,7 @@
 {
   "symbol": "QQQ",
-  "updatedAt": "2026-09-25 07:30 ET",
-  "generatedAtUnix": 1790335839,
+  "updatedAt": "2026-09-25 07:40 ET",
+  "generatedAtUnix": 1790336427,
   "price": 722.84,
   "change": 8.19,
   "changePct": 1.146,
@@ -27,10 +27,10 @@
   "execution": {
     "phase": "Fuera de sesión regular",
     "entryStartEt": "10:30 ET",
-    "minsToEntryStart": 179,
-    "minutesSinceEntryStart": -180,
+    "minsToEntryStart": 169,
+    "minutesSinceEntryStart": -170,
     "entryCutoffEt": "13:30 ET",
-    "minsToCutoff": 359,
+    "minsToCutoff": 349,
     "hardExitEt": "15:15 ET",
     "timeStopTriggered": false,
     "entryWindowOpen": false,
@@ -64,7 +64,7 @@
     "score": 0,
     "items": [],
     "nextBig": null,
-    "summary": "Macro no disponible",
+    "summary": "Macro no disponible (HTTP 401)",
     "source": "macro_unavailable"
   },
   "earnings": {
